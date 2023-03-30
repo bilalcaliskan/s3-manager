@@ -1,0 +1,60 @@
+---
+project_name: s3-manager
+
+env:
+  - CGO_ENABLED=0
+  - GO111MODULE=auto
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: binary
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+    binary: s3-manager
+    ldflags:
+      - -s -w -X github.com/bilalcaliskan/s3-manager/internal/version.gitVersion={{ .Version }} -X github.com/bilalcaliskan/s3-manager/internal/version.gitCommit={{ .ShortCommit }}  -X github.com/bilalcaliskan/s3-manager/internal/version.buildDate={{ .CommitDate }}
+    main: ./main.go
+
+archives:
+  - replacements:
+      amd64: x86_64
+    files:
+      - README.md
+      - LICENSE
+
+release:
+  github:
+    owner: bilalcaliskan
+    name: s3-manager
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^build:'
+      - '^style:'
+      - 'README'
+      - '^Merge branch'
+      - '^Merge pull request'
+
+brews:
+  - name: s3-manager
+    tap:
+      owner: bilalcaliskan
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    folder: Formula
+    goarm: 6
+    homepage: https://github.com/bilalcaliskan/s3-manager
+    license: apache-2.0
+    description: s3-manager does something
