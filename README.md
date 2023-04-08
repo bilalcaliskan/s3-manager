@@ -34,6 +34,7 @@ After then, you can simply run binary by providing required command line argumen
 $ ./s3-manager search --accessKey asdasfasfasfasfasfas --secretKey asdasfasfasfasfasfas --bucketName demo-bucket --region us-east-2 --substring "catch me if you can"
 ```
 
+
 ### Homebrew
 This project can also be installed with [Homebrew](https://brew.sh/):
 ```shell
