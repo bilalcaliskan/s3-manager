@@ -35,6 +35,7 @@ $ ./s3-manager search --accessKey asdasfasfasfasfasfas --secretKey asdasfasfasfa
 ```
 
 
+
 ### Homebrew
 This project can also be installed with [Homebrew](https://brew.sh/):
 ```shell
