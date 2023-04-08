@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"os"
 
 	"github.com/rs/zerolog"
@@ -17,7 +18,12 @@ func init() {
 	logger = zerolog.New(consoleWriter).With().Timestamp().Logger().Level(Level)
 }
 
-func GetLogger() zerolog.Logger {
+func GetLogger(opts *options.RootOptions) zerolog.Logger {
+	logger = logger.With().
+		Str("bucketName", opts.BucketName).
+		Str("region", opts.Region).
+		Logger()
+
 	return logger
 }
 

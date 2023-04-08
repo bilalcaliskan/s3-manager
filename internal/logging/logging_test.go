@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,7 +9,7 @@ import (
 
 // TestGetLogger function tests if GetLogger function running properly
 func TestGetLogger(t *testing.T) {
-	logger := GetLogger()
+	logger := GetLogger(options.GetRootOptions())
 	assert.NotNil(t, logger)
 }
 
