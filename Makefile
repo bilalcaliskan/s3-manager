@@ -129,9 +129,9 @@ cross-compile:
 
 .PHONY: prepare-initial-project
 GITHUB_USERNAME ?= $(shell read -p "Your Github username(ex: bilalcaliskan): " github_username; echo $$github_username)
-PROJECT_NAME ?= $(shell read -p "'Kebab-cased' Project Name(ex: golang-cli-template): " project_name; echo $$project_name)
+PROJECT_NAME ?= $(shell read -p "'Kebab-cased' Project Name(ex: s3-manager): " project_name; echo $$project_name)
 prepare-initial-project:
 	grep -rl bilalcaliskan . --exclude={README.md,Makefile} --exclude-dir=.git --exclude-dir=.idea | xargs sed -i 's/bilalcaliskan/$(GITHUB_USERNAME)/g'
-	grep -rl golang-cli-template . --exclude-dir=.git --exclude-dir=.idea | xargs sed -i 's/golang-cli-template/$(PROJECT_NAME)/g'
+	grep -rl s3-manager . --exclude-dir=.git --exclude-dir=.idea | xargs sed -i 's/s3-manager/$(PROJECT_NAME)/g'
 	echo "Please refer to *Additional nice-to-have steps* in README.md for additional features"
 	echo "Cheers!"

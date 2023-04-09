@@ -1,6 +1,6 @@
 FROM gcr.io/distroless/static:nonroot-amd64
 
-ADD golang-cli-template /usr/local/bin/golang-cli-template
+ADD s3-manager /usr/local/bin/s3-manager
 
 USER nonroot
-ENTRYPOINT ["golang-cli-template"]
+ENTRYPOINT ["s3-manager"]
