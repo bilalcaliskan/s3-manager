@@ -33,11 +33,14 @@ func (opts *CleanOptions) InitFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVarP(&opts.AutoApprove, "autoApprove", "", false, "Skip interactive approval (default false)")
 	cmd.Flags().BoolVarP(&opts.DryRun, "dryRun", "", false, "specifies that if you "+
 		"just want to see what to delete or completely delete them all (default false)")
+
+	//opts.RootOptions = options.GetRootOptions()
 }
 
 // GetCleanOptions returns the pointer of CleanOptions
 func GetCleanOptions() *CleanOptions {
 	cleanOptions.RootOptions = options.GetRootOptions()
+
 	return cleanOptions
 }
 
