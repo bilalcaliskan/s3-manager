@@ -26,8 +26,9 @@ var (
 	svc             *s3.S3
 	// CleanCmd represents the clean command
 	CleanCmd = &cobra.Command{
-		Use:   "clean",
-		Short: "clean subcommand cleans the app, finds and clears desired files",
+		Use:          "clean",
+		Short:        "clean subcommand cleans the app, finds and clears desired files",
+		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			logger = cmd.Context().Value(rootopts.LoggerKey{}).(zerolog.Logger)
 			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)

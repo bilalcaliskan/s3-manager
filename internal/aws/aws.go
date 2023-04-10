@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/rs/zerolog"
-	"github.com/schollz/progressbar/v3"
 )
 
 // CreateSession initializes session with provided credentials
@@ -96,7 +95,6 @@ func Find(svc s3iface.S3API, opts *options2.FindOptions, logger zerolog.Logger) 
 		}
 	}
 
-	bar := progressbar.Default(int64(len(resultArr)))
 	// check each txt file individually if it contains provided substring
 	for _, obj := range resultArr {
 		wg.Add(1)
@@ -130,7 +128,6 @@ func Find(svc s3iface.S3API, opts *options2.FindOptions, logger zerolog.Logger) 
 				}
 			}()
 
-			_ = bar.Add(1)
 		}(obj, &wg)
 	}
 

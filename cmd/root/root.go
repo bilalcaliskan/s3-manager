@@ -64,13 +64,12 @@ var (
 				return err
 			}
 
+			logger.Info().Msg("session successfully created with provided AWS credentials")
+
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.S3SvcKey{}, s3.New(sess)))
 
-			return nil
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},
 	}
