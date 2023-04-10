@@ -7,7 +7,7 @@ require (
 	github.com/dimiro1/banner v1.1.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/rs/zerolog v1.29.0
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
 )
