@@ -2,6 +2,7 @@
 bin/
 vendor/
 coverage.txt
+.credentials
 
 # Binaries for programs and plugins
 *.exe
