@@ -1,6 +1,0 @@
-FROM gcr.io/distroless/static:nonroot-amd64
-
-ADD s3-manager /usr/local/bin/s3-manager
-
-USER nonroot
-ENTRYPOINT ["s3-manager"]
