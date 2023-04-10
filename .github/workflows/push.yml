@@ -134,7 +134,7 @@ jobs:
       - test
       - gosec
       - codeql
-#      - sonarcloud
+      - sonarcloud
       - build
     steps:
       - name: Checkout
