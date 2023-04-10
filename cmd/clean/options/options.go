@@ -12,6 +12,7 @@ type CleanOptions struct {
 	MinFileSizeInMb int64
 	MaxFileSizeInMb int64
 	FileExtensions  string
+	FileNamePrefix  string
 	KeepLastNFiles  int
 	DryRun          bool
 	AutoApprove     bool
@@ -20,6 +21,8 @@ type CleanOptions struct {
 }
 
 func (opts *CleanOptions) InitFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringVarP(&opts.FileNamePrefix, "fileNamePrefix", "", "",
+		"folder name of target bucket objects, means it can be used for folder-based object grouping buckets (default \"\")")
 	cmd.Flags().Int64VarP(&opts.MinFileSizeInMb, "minFileSizeInMb", "", 0,
 		"minimum size in mb to clean from target bucket, 0 means no lower limit")
 	cmd.Flags().Int64VarP(&opts.MaxFileSizeInMb, "maxFileSizeInMb", "", 0,
@@ -33,14 +36,10 @@ func (opts *CleanOptions) InitFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVarP(&opts.AutoApprove, "autoApprove", "", false, "Skip interactive approval (default false)")
 	cmd.Flags().BoolVarP(&opts.DryRun, "dryRun", "", false, "specifies that if you "+
 		"just want to see what to delete or completely delete them all (default false)")
-
-	//opts.RootOptions = options.GetRootOptions()
 }
 
 // GetCleanOptions returns the pointer of CleanOptions
 func GetCleanOptions() *CleanOptions {
-	cleanOptions.RootOptions = options.GetRootOptions()
-
 	return cleanOptions
 }
 
@@ -52,5 +51,6 @@ func (opts *CleanOptions) SetZeroValues() {
 	opts.DryRun = false
 	opts.AutoApprove = false
 	opts.SortBy = "lastModificationDate"
-	opts.RootOptions = options.GetRootOptions()
+
+	opts.RootOptions.SetZeroValues()
 }

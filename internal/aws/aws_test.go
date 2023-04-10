@@ -19,6 +19,7 @@ var (
 	listObjectsErr           error
 	getObjectsErr            error
 	deleteObjectsErr         error
+	fileNamePrefix           string
 	defaultListObjectsOutput = &s3.ListObjectsOutput{
 		Name:        aws.String(""),
 		Marker:      aws.String(""),
@@ -83,7 +84,7 @@ func TestGetAllFilesHappyPath(t *testing.T) {
 		},
 	}
 
-	result, err := GetAllFiles(m, options.GetRootOptions())
+	result, err := GetAllFiles(m, options.GetRootOptions(), fileNamePrefix)
 	assert.NotEmpty(t, result)
 	assert.Nil(t, err)
 }
@@ -91,7 +92,7 @@ func TestGetAllFilesHappyPath(t *testing.T) {
 func TestGetAllFilesFailedListObjectsCall(t *testing.T) {
 	m := &mockS3Client{}
 	listObjectsErr = errors.New("dummy error thrown")
-	_, err := GetAllFiles(m, options.GetRootOptions())
+	_, err := GetAllFiles(m, options.GetRootOptions(), fileNamePrefix)
 	assert.NotNil(t, err)
 	listObjectsErr = nil
 }
