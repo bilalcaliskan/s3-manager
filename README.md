@@ -23,7 +23,28 @@ will override environment variables if you set both of them:
 ```
 
 ## Configuration
-**TBD**
+```
+Usage:
+  s3-manager [flags]
+  s3-manager [command]
+
+Available Commands:
+  clean       clean subcommand cleans the app, finds and clears desired files
+  completion  Generate the autocompletion script for the specified shell
+  find        find subcommand finds the files which has desired substrings in it
+  help        Help about any command
+
+Flags:
+      --accessKey string    access key credential to access S3 bucket, this value also can be passed via "AWS_ACCESS_KEY" environment variable (default "")
+      --bucketName string   name of the target bucket on S3, this value also can be passed via "AWS_BUCKET_NAME" environment variable (default "")
+  -h, --help                help for s3-manager
+      --region string       region of the target bucket on S3, this value also can be passed via "AWS_REGION" environment variable (default "")
+      --secretKey string    secret key credential to access S3 bucket, this value also can be passed via "AWS_SECRET_KEY" environment variable (default "")
+      --verbose             verbose output of the logging library (default false)
+  -v, --version             version for s3-manager
+
+Use "s3-manager [command] --help" for more information about a command.
+```
 
 ## Installation
 ### Binary
