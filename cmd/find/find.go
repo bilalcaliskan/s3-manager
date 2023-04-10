@@ -40,6 +40,14 @@ var (
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			fmt.Println(findOpts)
+			if findOpts.Interactive {
+				if err := findOpts.PromptInteractiveValues(); err != nil {
+					logger.Error().Str("error", err.Error()).Msg("an error occurred while prompting values")
+					return err
+				}
+			}
+
 			logger.Debug().
 				Str("fileExtensions", findOpts.FileExtensions).
 				Msg("trying to find files on target bucket")

@@ -1,7 +1,9 @@
 package options
 
 import (
+	"errors"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
@@ -33,4 +35,34 @@ func (opts *FindOptions) SetZeroValues() {
 	opts.FileExtensions = "txt"
 
 	opts.RootOptions.SetZeroValues()
+}
+
+func (opts *FindOptions) PromptInteractiveValues() error {
+	prompt := promptui.Prompt{
+		Label: "Substring to search",
+		Validate: func(s string) error {
+			if len(s) > 50 {
+				return errors.New("to long substring to search")
+			}
+
+			return nil
+		},
+	}
+
+	res, err := prompt.Run()
+	if err != nil {
+		return err
+	}
+	opts.Substring = res
+
+	prompt = promptui.Prompt{
+		Label: "Target file extensions (comma seperated)",
+	}
+	res, err = prompt.Run()
+	if err != nil {
+		return err
+	}
+	opts.FileExtensions = res
+
+	return nil
 }

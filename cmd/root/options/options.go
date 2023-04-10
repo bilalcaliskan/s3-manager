@@ -27,6 +27,8 @@ type RootOptions struct {
 	Region string
 	// VerboseLog is the verbosity of the logging library
 	VerboseLog bool
+	// Interactive is the decision of that if you want to use interactive feature
+	Interactive bool
 }
 
 func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
@@ -43,6 +45,8 @@ func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
 			"variable (default \"\")")
 	cmd.PersistentFlags().BoolVarP(&opts.VerboseLog, "verbose", "", false,
 		"verbose output of the logging library (default false)")
+	cmd.PersistentFlags().BoolVarP(&opts.Interactive, "interactive", "i", false,
+		"decision of that if you want to use interactive feature (default false)")
 }
 
 func (opts *RootOptions) SetAccessCredentialsFromEnv(cmd *cobra.Command) error {
