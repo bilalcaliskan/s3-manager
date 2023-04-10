@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/bilalcaliskan/s3-manager/cmd/find"
+	"github.com/bilalcaliskan/s3-manager/cmd/search"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/clean"
@@ -30,7 +30,7 @@ func init() {
 	}
 
 	rootCmd.AddCommand(clean.CleanCmd)
-	rootCmd.AddCommand(find.FindCmd)
+	rootCmd.AddCommand(search.SearchCmd)
 }
 
 var (
@@ -79,7 +79,7 @@ var (
 			if opts.Interactive {
 				prompt := promptui.Select{
 					Label: "Select operation",
-					Items: []string{"find", "clean"},
+					Items: []string{"search", "clean"},
 				}
 
 				_, result, err := prompt.Run()
@@ -90,12 +90,12 @@ var (
 				}
 
 				switch result {
-				case "find":
-					if err := find.FindCmd.PreRunE(cmd, args); err != nil {
+				case "search":
+					if err := search.SearchCmd.PreRunE(cmd, args); err != nil {
 						panic(err)
 					}
 
-					if err := find.FindCmd.RunE(cmd, args); err != nil {
+					if err := search.SearchCmd.RunE(cmd, args); err != nil {
 						panic(err)
 					}
 				case "clean":

@@ -7,37 +7,37 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var findOptions = &FindOptions{}
+var searchOptions = &SearchOptions{}
 
-// FindOptions contains frequent command line and application options.
-type FindOptions struct {
-	// Substring is the target string to find in a bucket
+// SearchOptions contains frequent command line and application options.
+type SearchOptions struct {
+	// Substring is the target string to search in a bucket
 	Substring string
 	// FileExtensions is a comma separated list of file extensions to search on S3 bucket (txt, json etc)
 	FileExtensions string
 	*options.RootOptions
 }
 
-func (opts *FindOptions) InitFlags(cmd *cobra.Command) {
+func (opts *SearchOptions) InitFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&opts.Substring, "substring", "", "",
-		"substring to find on txt files on target bucket (default \"\")")
+		"substring to search on txt files on target bucket (default \"\")")
 	cmd.Flags().StringVarP(&opts.FileExtensions, "fileExtensions", "", "txt",
 		"comma separated list of file extensions to search on S3 bucket")
 }
 
 // GetFindOptions returns the pointer of FindOptions
-func GetFindOptions() *FindOptions {
-	return findOptions
+func GetSearchOptions() *SearchOptions {
+	return searchOptions
 }
 
-func (opts *FindOptions) SetZeroValues() {
+func (opts *SearchOptions) SetZeroValues() {
 	opts.Substring = ""
 	opts.FileExtensions = "txt"
 
 	opts.RootOptions.SetZeroValues()
 }
 
-func (opts *FindOptions) PromptInteractiveValues() error {
+func (opts *SearchOptions) PromptInteractiveValues() error {
 	prompt := promptui.Prompt{
 		Label: "Substring to search",
 		Validate: func(s string) error {

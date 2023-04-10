@@ -30,7 +30,7 @@ Usage:
 Available Commands:
   clean       clean subcommand cleans the app, finds and clears desired files
   completion  Generate the autocompletion script for the specified shell
-  find        find subcommand finds the files which has desired substrings in it
+  search      search subcommand searches the files which has desired substrings in it
   help        Help about any command
 
 Flags:

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	options2 "github.com/bilalcaliskan/s3-manager/cmd/find/options"
+	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -66,7 +66,7 @@ func DeleteFiles(svc s3iface.S3API, bucketName string, slice []*s3.Object, dryRu
 }
 
 // Find does the heavy lifting, communicates with the S3 and finds the files
-func Find(svc s3iface.S3API, opts *options2.FindOptions, logger zerolog.Logger) ([]string, []error) {
+func Find(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolog.Logger) ([]string, []error) {
 	var errors []error
 	var matchedFiles []string
 	mu := &sync.Mutex{}

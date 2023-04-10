@@ -51,7 +51,7 @@ var (
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			logger.Info().Msg("trying to find files on target bucket")
+			logger.Info().Msg("trying to search files on target bucket")
 
 			return cleaner.StartCleaning(svc, cleanOpts, logger)
 		},
