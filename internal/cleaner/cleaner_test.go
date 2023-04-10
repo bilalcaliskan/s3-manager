@@ -91,67 +91,72 @@ func (m *mockS3Client) DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObje
 func TestStartCleaning(t *testing.T) {
 	m := &mockS3Client{}
 
-	startOpts := options2.GetCleanOptions()
-	startOpts.DryRun = false
-	startOpts.AutoApprove = true
-	err := StartCleaning(m, startOpts, mockLogger)
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = false
+	cleanOpts.AutoApprove = true
+	err := StartCleaning(m, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
-	startOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 }
 
 func TestStartCleaningSortBySize(t *testing.T) {
 	m := &mockS3Client{}
 
-	startOpts := options2.GetCleanOptions()
-	startOpts.DryRun = false
-	startOpts.AutoApprove = true
-	startOpts.SortBy = "size"
-	err := StartCleaning(m, startOpts, mockLogger)
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = false
+	cleanOpts.AutoApprove = true
+	cleanOpts.SortBy = "size"
+	err := StartCleaning(m, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
-	startOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 }
 
 func TestStartCleaningWrongBorder(t *testing.T) {
 	m := &mockS3Client{}
 
-	startOpts := options2.GetCleanOptions()
-	startOpts.DryRun = true
-	startOpts.AutoApprove = true
-	startOpts.MinFileSizeInMb = 0
-	startOpts.MaxFileSizeInMb = 0
-	startOpts.KeepLastNFiles = 300
-	err := StartCleaning(m, startOpts, mockLogger)
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = true
+	cleanOpts.AutoApprove = true
+	cleanOpts.MinFileSizeInMb = 0
+	cleanOpts.MaxFileSizeInMb = 0
+	cleanOpts.KeepLastNFiles = 300
+	err := StartCleaning(m, cleanOpts, mockLogger)
 	// normally we would expect err not to be nil but we are ignoring the error in that case
 	assert.Nil(t, err)
 
-	startOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 }
 
 func TestStartCleaningDryRunEqualMinMaxValues(t *testing.T) {
 	m := &mockS3Client{}
 
-	startOpts := options2.GetCleanOptions()
-	startOpts.DryRun = true
-	startOpts.AutoApprove = true
-	startOpts.MinFileSizeInMb = 0
-	startOpts.MaxFileSizeInMb = 0
-	err := StartCleaning(m, startOpts, mockLogger)
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = true
+	cleanOpts.AutoApprove = true
+	cleanOpts.MinFileSizeInMb = 0
+	cleanOpts.MaxFileSizeInMb = 0
+	err := StartCleaning(m, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
-	startOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 }
 
 func TestStartCleaningSpecificFileExtensions(t *testing.T) {
 	m := &mockS3Client{}
 
-	startOpts := options2.GetCleanOptions()
-	startOpts.DryRun = true
-	startOpts.AutoApprove = true
-	startOpts.MinFileSizeInMb = 0
-	startOpts.MaxFileSizeInMb = 0
-	startOpts.FileExtensions = "txt,json"
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = true
+	cleanOpts.AutoApprove = true
+	cleanOpts.MinFileSizeInMb = 0
+	cleanOpts.MaxFileSizeInMb = 0
+	cleanOpts.FileExtensions = "txt,json"
 	defaultListObjectsOutput = &s3.ListObjectsOutput{
 		Name:        aws.String(""),
 		Marker:      aws.String(""),
@@ -196,38 +201,40 @@ func TestStartCleaningSpecificFileExtensions(t *testing.T) {
 			},
 		},
 	}
-	err := StartCleaning(m, startOpts, mockLogger)
+	err := StartCleaning(m, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
-	startOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 	setZeroValuesForVars()
 }
 
 func TestStartCleaningDryRunNotEqualMinMaxValues(t *testing.T) {
 	m := &mockS3Client{}
 
-	startOpts := options2.GetCleanOptions()
-	startOpts.DryRun = true
-	startOpts.AutoApprove = true
-	startOpts.MinFileSizeInMb = 0
-	startOpts.MaxFileSizeInMb = 10
-	err := StartCleaning(m, startOpts, mockLogger)
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = true
+	cleanOpts.AutoApprove = true
+	cleanOpts.MinFileSizeInMb = 0
+	cleanOpts.MaxFileSizeInMb = 10
+	err := StartCleaning(m, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
-	startOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 }
 
 func TestStartCleaningListError(t *testing.T) {
 	m := &mockS3Client{}
 
 	listObjectsErr = errors.New("dummy list error")
-	startOpts := options2.GetCleanOptions()
-	startOpts.DryRun = false
-	startOpts.AutoApprove = true
-	err := StartCleaning(m, startOpts, mockLogger)
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = false
+	cleanOpts.AutoApprove = true
+	err := StartCleaning(m, cleanOpts, mockLogger)
 	assert.NotNil(t, err)
 
-	startOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 	setZeroValuesForVars()
 }
 
@@ -235,13 +242,14 @@ func TestStartCleaningDeleteError(t *testing.T) {
 	m := &mockS3Client{}
 
 	deleteObjectErr = errors.New("dummy delete error")
-	startOpts := options2.GetCleanOptions()
-	startOpts.DryRun = false
-	startOpts.AutoApprove = true
-	err := StartCleaning(m, startOpts, mockLogger)
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = false
+	cleanOpts.AutoApprove = true
+	err := StartCleaning(m, cleanOpts, mockLogger)
 	assert.NotNil(t, err)
 
-	startOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 	setZeroValuesForVars()
 }
 

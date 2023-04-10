@@ -5,6 +5,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/bilalcaliskan/s3-manager/cmd/find"
+	"github.com/bilalcaliskan/s3-manager/internal/aws"
+
 	"github.com/bilalcaliskan/s3-manager/cmd/clean"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
@@ -19,7 +23,12 @@ func init() {
 	opts = options.GetRootOptions()
 	opts.InitFlags(rootCmd)
 
+	if err := opts.SetAccessCredentialsFromEnv(rootCmd); err != nil {
+		panic(err)
+	}
+
 	rootCmd.AddCommand(clean.CleanCmd)
+	rootCmd.AddCommand(find.FindCmd)
 }
 
 var (
@@ -47,8 +56,17 @@ var (
 				Str("goArch", ver.GoArch).Str("gitCommit", ver.GitCommit).Str("buildDate", ver.BuildDate).
 				Msg("s3-manager is started!")
 
+			sess, err := aws.CreateSession(opts)
+			if err != nil {
+				logger.Error().
+					Str("error", err.Error()).
+					Msg("an error occurred while creating session")
+				return err
+			}
+
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
+			cmd.SetContext(context.WithValue(cmd.Context(), options.S3SvcKey{}, s3.New(sess)))
 
 			return nil
 		},

@@ -2,6 +2,7 @@ package options
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -11,6 +12,7 @@ var rootOptions = &RootOptions{}
 type (
 	OptsKey   struct{}
 	LoggerKey struct{}
+	S3SvcKey  struct{}
 )
 
 // RootOptions contains frequent command line and application options.
@@ -21,8 +23,6 @@ type RootOptions struct {
 	SecretKey string
 	// BucketName is the name of target bucket
 	BucketName string
-	// FileNamePrefix is the prefix of target bucket objects, means it can be used for folder-based object grouping buckets
-	FileNamePrefix string
 	// Region is the region of the target bucket
 	Region string
 	// VerboseLog is the verbosity of the logging library
@@ -32,8 +32,6 @@ type RootOptions struct {
 func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&opts.BucketName, "bucketName", "", "", "name of "+
 		"the target bucket on S3, this value also can be passed via \"AWS_BUCKET_NAME\" environment variable (default \"\")")
-	cmd.PersistentFlags().StringVarP(&opts.FileNamePrefix, "fileNamePrefix", "", "",
-		"folder name of target bucket objects, means it can be used for folder-based object grouping buckets (default \"\")")
 	cmd.PersistentFlags().StringVarP(&opts.AccessKey, "accessKey", "", "",
 		"access key credential to access S3 bucket, this value also can be passed via \"AWS_ACCESS_KEY\" "+
 			"environment variable (default \"\")")
@@ -84,4 +82,12 @@ func (opts *RootOptions) SetAccessCredentialsFromEnv(cmd *cobra.Command) error {
 // GetRootOptions returns the pointer of S3CleanerOptions
 func GetRootOptions() *RootOptions {
 	return rootOptions
+}
+
+func (opts *RootOptions) SetZeroValues() {
+	opts.BucketName = ""
+	opts.AccessKey = ""
+	opts.SecretKey = ""
+	opts.Region = ""
+	opts.VerboseLog = false
 }
