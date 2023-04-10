@@ -1,6 +1,5 @@
 # S3 Manager
 [![CI](https://github.com/bilalcaliskan/s3-manager/workflows/CI/badge.svg?event=push)](https://github.com/bilalcaliskan/s3-manager/actions?query=workflow%3ACI)
-[![Docker pulls](https://img.shields.io/docker/pulls/bilalcaliskan/s3-manager)](https://hub.docker.com/r/bilalcaliskan/s3-manager/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bilalcaliskan/s3-manager)](https://goreportcard.com/report/github.com/bilalcaliskan/s3-manager)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=bilalcaliskan_s3-manager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=bilalcaliskan_s3-manager)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=bilalcaliskan_s3-manager&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=bilalcaliskan_s3-manager)
