@@ -2,6 +2,7 @@ package root
 
 import (
 	"context"
+	"fmt"
 	"github.com/manifoldco/promptui"
 	"github.com/rs/zerolog"
 	"os"
@@ -33,6 +34,11 @@ func init() {
 	rootCmd.AddCommand(search.SearchCmd)
 }
 
+/*
+- persistentprerun, prerun dan daha once calisiyor
+- required olan bir flagi gecmesen bile persistentprerun ve prerun calisiyor (root command icin)
+*/
+
 var (
 	opts           *options.RootOptions
 	ver            = version.Get()
@@ -45,6 +51,22 @@ var (
 		Long:    ``,
 		Version: ver.GitVersion,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Flag("interactive").Value.String() == "false" && cmd.Flag("accessKey").Value.String() == "" {
+				_ = cmd.MarkPersistentFlagRequired("accessKey")
+			}
+
+			if cmd.Flag("interactive").Value.String() == "false" && cmd.Flag("secretKey").Value.String() == "" {
+				_ = cmd.MarkPersistentFlagRequired("secretKey")
+			}
+
+			if cmd.Flag("interactive").Value.String() == "false" && cmd.Flag("region").Value.String() == "" {
+				_ = cmd.MarkPersistentFlagRequired("region")
+			}
+
+			if cmd.Flag("interactive").Value.String() == "false" && cmd.Flag("bucketName").Value.String() == "" {
+				_ = cmd.MarkPersistentFlagRequired("bucketName")
+			}
+
 			if _, err := os.Stat("build/ci/banner.txt"); err == nil {
 				bannerBytes, _ := os.ReadFile(bannerFilePath)
 				banner.Init(os.Stdout, true, false, strings.NewReader(string(bannerBytes)))
@@ -75,15 +97,23 @@ var (
 
 			return nil
 		},
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("helloprerun")
+
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if opts.Interactive {
+				if err := opts.PromptAccessCredentials(); err != nil {
+					return err
+				}
+
 				prompt := promptui.Select{
 					Label: "Select operation",
 					Items: []string{"search", "clean"},
 				}
 
 				_, result, err := prompt.Run()
-
 				if err != nil {
 					logger.Error().Str("error", err.Error()).Msg("unknown error occurred while prompting user")
 					return err
@@ -99,6 +129,10 @@ var (
 						panic(err)
 					}
 				case "clean":
+					if err := clean.CleanCmd.PreRunE(cmd, args); err != nil {
+						panic(err)
+					}
+
 					if err := clean.CleanCmd.RunE(cmd, args); err != nil {
 						panic(err)
 					}

@@ -2,6 +2,7 @@ package options
 
 import (
 	"fmt"
+	"github.com/manifoldco/promptui"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -58,26 +59,86 @@ func (opts *RootOptions) SetAccessCredentialsFromEnv(cmd *cobra.Command) error {
 
 	if accessKey := viper.Get("access_key"); accessKey != nil {
 		opts.AccessKey = fmt.Sprintf("%v", accessKey)
-	} else {
-		_ = cmd.MarkPersistentFlagRequired("accessKey")
 	}
+	//else {
+	//	_ = cmd.MarkPersistentFlagRequired("accessKey")
+	//}
 
 	if secretKey := viper.Get("secret_key"); secretKey != nil {
 		opts.SecretKey = fmt.Sprintf("%v", secretKey)
-	} else {
-		_ = cmd.MarkPersistentFlagRequired("secretKey")
 	}
+	//else {
+	//	_ = cmd.MarkPersistentFlagRequired("secretKey")
+	//}
 
 	if bucketName := viper.Get("bucket_name"); bucketName != nil {
 		opts.BucketName = fmt.Sprintf("%v", bucketName)
-	} else {
-		_ = cmd.MarkPersistentFlagRequired("bucketName")
 	}
+	//else {
+	//	_ = cmd.MarkPersistentFlagRequired("bucketName")
+	//}
 
 	if region := viper.Get("region"); region != nil {
 		opts.Region = fmt.Sprintf("%v", region)
-	} else {
-		_ = cmd.MarkPersistentFlagRequired("region")
+	}
+	//else {
+	//	_ = cmd.MarkPersistentFlagRequired("region")
+	//}
+
+	return nil
+}
+
+func (opts *RootOptions) PromptAccessCredentials() error {
+	if opts.AccessKey == "" {
+		accessKeyPrompt := promptui.Prompt{
+			Label: "Provide AWS Access Key",
+		}
+
+		result, err := accessKeyPrompt.Run()
+
+		if err != nil {
+			return err
+		}
+		opts.AccessKey = result
+	}
+
+	if opts.SecretKey == "" {
+		secretKeyPrompt := promptui.Prompt{
+			Label: "Provide AWS Secret Key",
+		}
+
+		result, err := secretKeyPrompt.Run()
+
+		if err != nil {
+			return err
+		}
+		opts.SecretKey = result
+	}
+
+	if opts.Region == "" {
+		regionPrompt := promptui.Prompt{
+			Label: "Provide AWS Region",
+		}
+
+		result, err := regionPrompt.Run()
+
+		if err != nil {
+			return err
+		}
+		opts.Region = result
+	}
+
+	if opts.BucketName == "" {
+		bucketPrompt := promptui.Prompt{
+			Label: "Provide AWS Bucket Name",
+		}
+
+		result, err := bucketPrompt.Run()
+
+		if err != nil {
+			return err
+		}
+		opts.BucketName = result
 	}
 
 	return nil
