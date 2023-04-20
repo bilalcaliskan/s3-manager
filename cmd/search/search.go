@@ -3,9 +3,11 @@ package search
 import (
 	"errors"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/search/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
+	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
@@ -27,20 +29,24 @@ var (
 		Use:          "search",
 		Short:        "search subcommand searches the files which has desired substrings in it",
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			logger = cmd.Context().Value(rootopts.LoggerKey{}).(zerolog.Logger)
+		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
 			searchOpts.RootOptions = rootOpts
-			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(*s3.S3)
+			logger = logging.GetLogger(rootOpts)
 
-			if searchOpts.Substring == "" {
-				logger.Warn().Msg("will list all files in specified file extensions since --substring flag is empty")
+			svc, err = aws.CreateAwsService(rootOpts)
+			if err != nil {
+				logger.Error().
+					Str("error", err.Error()).
+					Msg("an error occurred while creating aws service")
+				return err
 			}
+
+			logger.Info().Msg("aws service successfully created with provided AWS credentials")
 
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			fmt.Println(searchOpts)
 			if searchOpts.Interactive {
 				if err := searchOpts.PromptInteractiveValues(); err != nil {
 					logger.Error().Str("error", err.Error()).Msg("an error occurred while prompting values")
@@ -48,7 +54,11 @@ var (
 				}
 			}
 
-			logger.Debug().
+			if searchOpts.Substring == "" {
+				logger.Warn().Msg("will list all files in specified file extensions since substring flag is empty")
+			}
+
+			logger.Info().
 				Str("fileExtensions", searchOpts.FileExtensions).
 				Msg("trying to search files on target bucket")
 

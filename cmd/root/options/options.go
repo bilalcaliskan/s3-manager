@@ -2,7 +2,9 @@ package options
 
 import (
 	"fmt"
+
 	"github.com/manifoldco/promptui"
+	"github.com/rs/zerolog"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -50,6 +52,32 @@ func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
 		"decision of that if you want to use interactive feature (default false)")
 }
 
+func (opts *RootOptions) SetAccessFlagsRequired(cmd *cobra.Command) {
+	if opts.AccessKey == "" {
+		_ = cmd.MarkPersistentFlagRequired("accessKey")
+	}
+
+	if opts.SecretKey == "" {
+		_ = cmd.MarkPersistentFlagRequired("secretKey")
+	}
+
+	if opts.BucketName == "" {
+		_ = cmd.MarkPersistentFlagRequired("bucketName")
+	}
+
+	if opts.Region == "" {
+		_ = cmd.MarkPersistentFlagRequired("region")
+	}
+
+	/*if !opts.Interactive && opts.AccessKey == "" {
+		_ = cmd.MarkPersistentFlagRequired("accessKey")
+	}
+
+	if !opts.Interactive && opts.SecretKey == "" {
+		_ = cmd.MarkPersistentFlagRequired("secretKey")
+	}*/
+}
+
 func (opts *RootOptions) SetAccessCredentialsFromEnv(cmd *cobra.Command) error {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("aws")
@@ -88,7 +116,9 @@ func (opts *RootOptions) SetAccessCredentialsFromEnv(cmd *cobra.Command) error {
 	return nil
 }
 
-func (opts *RootOptions) PromptAccessCredentials() error {
+func (opts *RootOptions) PromptAccessCredentials(logger zerolog.Logger) error {
+	infoLog := "skipping %s prompt since it is provided either by environment variable or flag"
+
 	if opts.AccessKey == "" {
 		accessKeyPrompt := promptui.Prompt{
 			Label: "Provide AWS Access Key",
@@ -100,6 +130,8 @@ func (opts *RootOptions) PromptAccessCredentials() error {
 			return err
 		}
 		opts.AccessKey = result
+	} else {
+		logger.Info().Msg(fmt.Sprintf(infoLog, "accessKey"))
 	}
 
 	if opts.SecretKey == "" {
@@ -113,6 +145,8 @@ func (opts *RootOptions) PromptAccessCredentials() error {
 			return err
 		}
 		opts.SecretKey = result
+	} else {
+		logger.Info().Msg(fmt.Sprintf(infoLog, "secretKey"))
 	}
 
 	if opts.Region == "" {
@@ -126,6 +160,8 @@ func (opts *RootOptions) PromptAccessCredentials() error {
 			return err
 		}
 		opts.Region = result
+	} else {
+		logger.Info().Msg(fmt.Sprintf(infoLog, "region"))
 	}
 
 	if opts.BucketName == "" {
@@ -139,6 +175,8 @@ func (opts *RootOptions) PromptAccessCredentials() error {
 			return err
 		}
 		opts.BucketName = result
+	} else {
+		logger.Info().Msg(fmt.Sprintf(infoLog, "bucketName"))
 	}
 
 	return nil

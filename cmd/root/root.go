@@ -2,18 +2,15 @@ package root
 
 import (
 	"context"
-	"fmt"
-	"github.com/manifoldco/promptui"
-	"github.com/rs/zerolog"
 	"os"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/bilalcaliskan/s3-manager/cmd/search"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
+	"github.com/manifoldco/promptui"
+	"github.com/rs/zerolog"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/clean"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	"github.com/bilalcaliskan/s3-manager/cmd/search"
 
 	"github.com/dimiro1/banner"
 
@@ -51,20 +48,8 @@ var (
 		Long:    ``,
 		Version: ver.GitVersion,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if cmd.Flag("interactive").Value.String() == "false" && cmd.Flag("accessKey").Value.String() == "" {
-				_ = cmd.MarkPersistentFlagRequired("accessKey")
-			}
-
-			if cmd.Flag("interactive").Value.String() == "false" && cmd.Flag("secretKey").Value.String() == "" {
-				_ = cmd.MarkPersistentFlagRequired("secretKey")
-			}
-
-			if cmd.Flag("interactive").Value.String() == "false" && cmd.Flag("region").Value.String() == "" {
-				_ = cmd.MarkPersistentFlagRequired("region")
-			}
-
-			if cmd.Flag("interactive").Value.String() == "false" && cmd.Flag("bucketName").Value.String() == "" {
-				_ = cmd.MarkPersistentFlagRequired("bucketName")
+			if !opts.Interactive {
+				opts.SetAccessFlagsRequired(cmd)
 			}
 
 			if _, err := os.Stat("build/ci/banner.txt"); err == nil {
@@ -81,32 +66,18 @@ var (
 				Str("goArch", ver.GoArch).Str("gitCommit", ver.GitCommit).Str("buildDate", ver.BuildDate).
 				Msg("s3-manager is started!")
 
-			sess, err := aws.CreateSession(opts)
-			if err != nil {
-				logger.Error().
-					Str("error", err.Error()).
-					Msg("an error occurred while creating session")
-				return err
-			}
-
-			logger.Info().Msg("session successfully created with provided AWS credentials")
-
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
-			cmd.SetContext(context.WithValue(cmd.Context(), options.S3SvcKey{}, s3.New(sess)))
-
-			return nil
-		},
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("helloprerun")
 
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if opts.Interactive {
-				if err := opts.PromptAccessCredentials(); err != nil {
+				if err := opts.PromptAccessCredentials(logger); err != nil {
 					return err
 				}
+
+				cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 
 				prompt := promptui.Select{
 					Label: "Select operation",
@@ -122,29 +93,25 @@ var (
 				switch result {
 				case "search":
 					if err := search.SearchCmd.PreRunE(cmd, args); err != nil {
-						panic(err)
+						logger.Error().Str("error", err.Error()).Msg("an error occurred while running search subcommand")
+						return err
 					}
 
 					if err := search.SearchCmd.RunE(cmd, args); err != nil {
-						panic(err)
+						logger.Error().Str("error", err.Error()).Msg("an error occurred while running search subcommand")
+						return err
 					}
 				case "clean":
 					if err := clean.CleanCmd.PreRunE(cmd, args); err != nil {
-						panic(err)
+						logger.Error().Str("error", err.Error()).Msg("an error occurred while running clean subcommand")
+						return err
 					}
 
 					if err := clean.CleanCmd.RunE(cmd, args); err != nil {
-						panic(err)
+						logger.Error().Str("error", err.Error()).Msg("an error occurred while running clean subcommand")
+						return err
 					}
 				}
-
-				/*if res, err := prompt.Run(); err != nil {
-					if strings.ToLower(res) == "n" {
-						return errors.New("user terminated the process")
-					}
-
-					return errors.New("invalid input")
-				}*/
 			}
 
 			return nil
