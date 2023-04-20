@@ -3,6 +3,9 @@ package options
 import (
 	"fmt"
 
+	"github.com/manifoldco/promptui"
+	"github.com/rs/zerolog"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,6 +30,8 @@ type RootOptions struct {
 	Region string
 	// VerboseLog is the verbosity of the logging library
 	VerboseLog bool
+	// Interactive is the decision of that if you want to use interactive feature
+	Interactive bool
 }
 
 func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
@@ -43,6 +48,34 @@ func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
 			"variable (default \"\")")
 	cmd.PersistentFlags().BoolVarP(&opts.VerboseLog, "verbose", "", false,
 		"verbose output of the logging library (default false)")
+	cmd.PersistentFlags().BoolVarP(&opts.Interactive, "interactive", "i", false,
+		"decision of that if you want to use interactive feature (default false)")
+}
+
+func (opts *RootOptions) SetAccessFlagsRequired(cmd *cobra.Command) {
+	if opts.AccessKey == "" {
+		_ = cmd.MarkPersistentFlagRequired("accessKey")
+	}
+
+	if opts.SecretKey == "" {
+		_ = cmd.MarkPersistentFlagRequired("secretKey")
+	}
+
+	if opts.BucketName == "" {
+		_ = cmd.MarkPersistentFlagRequired("bucketName")
+	}
+
+	if opts.Region == "" {
+		_ = cmd.MarkPersistentFlagRequired("region")
+	}
+
+	/*if !opts.Interactive && opts.AccessKey == "" {
+		_ = cmd.MarkPersistentFlagRequired("accessKey")
+	}
+
+	if !opts.Interactive && opts.SecretKey == "" {
+		_ = cmd.MarkPersistentFlagRequired("secretKey")
+	}*/
 }
 
 func (opts *RootOptions) SetAccessCredentialsFromEnv(cmd *cobra.Command) error {
@@ -54,26 +87,96 @@ func (opts *RootOptions) SetAccessCredentialsFromEnv(cmd *cobra.Command) error {
 
 	if accessKey := viper.Get("access_key"); accessKey != nil {
 		opts.AccessKey = fmt.Sprintf("%v", accessKey)
-	} else {
-		_ = cmd.MarkPersistentFlagRequired("accessKey")
 	}
+	//else {
+	//	_ = cmd.MarkPersistentFlagRequired("accessKey")
+	//}
 
 	if secretKey := viper.Get("secret_key"); secretKey != nil {
 		opts.SecretKey = fmt.Sprintf("%v", secretKey)
-	} else {
-		_ = cmd.MarkPersistentFlagRequired("secretKey")
 	}
+	//else {
+	//	_ = cmd.MarkPersistentFlagRequired("secretKey")
+	//}
 
 	if bucketName := viper.Get("bucket_name"); bucketName != nil {
 		opts.BucketName = fmt.Sprintf("%v", bucketName)
-	} else {
-		_ = cmd.MarkPersistentFlagRequired("bucketName")
 	}
+	//else {
+	//	_ = cmd.MarkPersistentFlagRequired("bucketName")
+	//}
 
 	if region := viper.Get("region"); region != nil {
 		opts.Region = fmt.Sprintf("%v", region)
+	}
+	//else {
+	//	_ = cmd.MarkPersistentFlagRequired("region")
+	//}
+
+	return nil
+}
+
+func (opts *RootOptions) PromptAccessCredentials(logger zerolog.Logger) error {
+	infoLog := "skipping %s prompt since it is provided either by environment variable or flag"
+
+	if opts.AccessKey == "" {
+		accessKeyPrompt := promptui.Prompt{
+			Label: "Provide AWS Access Key",
+		}
+
+		result, err := accessKeyPrompt.Run()
+
+		if err != nil {
+			return err
+		}
+		opts.AccessKey = result
 	} else {
-		_ = cmd.MarkPersistentFlagRequired("region")
+		logger.Info().Msg(fmt.Sprintf(infoLog, "accessKey"))
+	}
+
+	if opts.SecretKey == "" {
+		secretKeyPrompt := promptui.Prompt{
+			Label: "Provide AWS Secret Key",
+		}
+
+		result, err := secretKeyPrompt.Run()
+
+		if err != nil {
+			return err
+		}
+		opts.SecretKey = result
+	} else {
+		logger.Info().Msg(fmt.Sprintf(infoLog, "secretKey"))
+	}
+
+	if opts.Region == "" {
+		regionPrompt := promptui.Prompt{
+			Label: "Provide AWS Region",
+		}
+
+		result, err := regionPrompt.Run()
+
+		if err != nil {
+			return err
+		}
+		opts.Region = result
+	} else {
+		logger.Info().Msg(fmt.Sprintf(infoLog, "region"))
+	}
+
+	if opts.BucketName == "" {
+		bucketPrompt := promptui.Prompt{
+			Label: "Provide AWS Bucket Name",
+		}
+
+		result, err := bucketPrompt.Run()
+
+		if err != nil {
+			return err
+		}
+		opts.BucketName = result
+	} else {
+		logger.Info().Msg(fmt.Sprintf(infoLog, "bucketName"))
 	}
 
 	return nil

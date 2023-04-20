@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	options2 "github.com/bilalcaliskan/s3-manager/cmd/find/options"
+	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -17,14 +17,24 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// CreateSession initializes session with provided credentials
-func CreateSession(opts *options.RootOptions) (*session.Session, error) {
+// createSession initializes session with provided credentials
+func createSession(accessKey, secretKey, region string) (*session.Session, error) {
 	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(opts.Region),
-		Credentials: credentials.NewStaticCredentials(opts.AccessKey, opts.SecretKey, ""),
+		Region:      aws.String(region),
+		Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
 	})
 
 	return sess, err
+}
+
+func CreateAwsService(opts *options.RootOptions) (svc *s3.S3, err error) {
+	var sess *session.Session
+	sess, err = createSession(opts.AccessKey, opts.SecretKey, opts.Region)
+	if err != nil {
+		return svc, err
+	}
+
+	return s3.New(sess), err
 }
 
 // GetAllFiles gets all of the files in the target bucket as the function name indicates
@@ -66,7 +76,7 @@ func DeleteFiles(svc s3iface.S3API, bucketName string, slice []*s3.Object, dryRu
 }
 
 // Find does the heavy lifting, communicates with the S3 and finds the files
-func Find(svc s3iface.S3API, opts *options2.FindOptions, logger zerolog.Logger) ([]string, []error) {
+func Find(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolog.Logger) ([]string, []error) {
 	var errors []error
 	var matchedFiles []string
 	mu := &sync.Mutex{}

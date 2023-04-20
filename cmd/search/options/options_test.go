@@ -8,12 +8,12 @@ import (
 )
 
 func TestGetFindOptions(t *testing.T) {
-	opts := GetFindOptions()
+	opts := GetSearchOptions()
 	assert.NotNil(t, opts)
 }
 
 func TestFindOptions_InitFlags(t *testing.T) {
 	cmd := cobra.Command{}
-	opts := GetFindOptions()
+	opts := GetSearchOptions()
 	opts.InitFlags(&cmd)
 }

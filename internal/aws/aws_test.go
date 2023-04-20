@@ -129,8 +129,8 @@ func TestDeleteFilesFailedDeleteObjectCall(t *testing.T) {
 	deleteObjectsErr = nil
 }
 
-func TestCreateSession(t *testing.T) {
-	sess, err := CreateSession(options.GetRootOptions())
+func TestCreateAwsService(t *testing.T) {
+	svc, err := CreateAwsService(options.GetRootOptions())
 	assert.Nil(t, err)
-	assert.NotNil(t, sess)
+	assert.NotNil(t, svc)
 }
