@@ -2,6 +2,7 @@ package root
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -58,6 +59,7 @@ var (
 			}
 
 			if opts.VerboseLog {
+				fmt.Println("here")
 				logging.EnableDebugLogging()
 			}
 
