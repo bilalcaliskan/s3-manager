@@ -16,6 +16,7 @@ import (
 	"github.com/dimiro1/banner"
 
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/bilalcaliskan/s3-manager/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -38,10 +39,11 @@ func init() {
 */
 
 var (
-	opts           *options.RootOptions
-	ver            = version.Get()
-	logger         zerolog.Logger
-	bannerFilePath = "build/ci/banner.txt"
+	selectRunner prompt.SelectRunner = prompt.GetSelectRunner()
+	promptRunner prompt.PromptRunner = prompt.GetPromptRunner()
+	opts         *options.RootOptions
+	ver          = version.Get()
+	logger       zerolog.Logger
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
 		Use:     "s3-manager",
@@ -53,8 +55,8 @@ var (
 				opts.SetAccessFlagsRequired(cmd)
 			}
 
-			if _, err := os.Stat("build/ci/banner.txt"); err == nil {
-				bannerBytes, _ := os.ReadFile(bannerFilePath)
+			if _, err := os.Stat(opts.BannerFilePath); err == nil {
+				bannerBytes, _ := os.ReadFile(opts.BannerFilePath)
 				banner.Init(os.Stdout, true, false, strings.NewReader(string(bannerBytes)))
 			}
 

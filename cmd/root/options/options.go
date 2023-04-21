@@ -32,6 +32,8 @@ type RootOptions struct {
 	VerboseLog bool
 	// Interactive is the decision of that if you want to use interactive feature
 	Interactive bool
+	// BannerFilePath is the relative path to the banner file
+	BannerFilePath string
 }
 
 func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
@@ -50,6 +52,8 @@ func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
 		"verbose output of the logging library (default false)")
 	cmd.PersistentFlags().BoolVarP(&opts.Interactive, "interactive", "i", false,
 		"decision of that if you want to use interactive feature (default false)")
+	cmd.PersistentFlags().StringVarP(&opts.BannerFilePath, "bannerFilePath", "", "banner.txt",
+		"relative path of the banner file")
 }
 
 func (opts *RootOptions) SetAccessFlagsRequired(cmd *cobra.Command) {
@@ -68,14 +72,6 @@ func (opts *RootOptions) SetAccessFlagsRequired(cmd *cobra.Command) {
 	if opts.Region == "" {
 		_ = cmd.MarkPersistentFlagRequired("region")
 	}
-
-	/*if !opts.Interactive && opts.AccessKey == "" {
-		_ = cmd.MarkPersistentFlagRequired("accessKey")
-	}
-
-	if !opts.Interactive && opts.SecretKey == "" {
-		_ = cmd.MarkPersistentFlagRequired("secretKey")
-	}*/
 }
 
 func (opts *RootOptions) SetAccessCredentialsFromEnv(cmd *cobra.Command) error {
@@ -88,30 +84,18 @@ func (opts *RootOptions) SetAccessCredentialsFromEnv(cmd *cobra.Command) error {
 	if accessKey := viper.Get("access_key"); accessKey != nil {
 		opts.AccessKey = fmt.Sprintf("%v", accessKey)
 	}
-	//else {
-	//	_ = cmd.MarkPersistentFlagRequired("accessKey")
-	//}
 
 	if secretKey := viper.Get("secret_key"); secretKey != nil {
 		opts.SecretKey = fmt.Sprintf("%v", secretKey)
 	}
-	//else {
-	//	_ = cmd.MarkPersistentFlagRequired("secretKey")
-	//}
 
 	if bucketName := viper.Get("bucket_name"); bucketName != nil {
 		opts.BucketName = fmt.Sprintf("%v", bucketName)
 	}
-	//else {
-	//	_ = cmd.MarkPersistentFlagRequired("bucketName")
-	//}
 
 	if region := viper.Get("region"); region != nil {
 		opts.Region = fmt.Sprintf("%v", region)
 	}
-	//else {
-	//	_ = cmd.MarkPersistentFlagRequired("region")
-	//}
 
 	return nil
 }
@@ -193,4 +177,5 @@ func (opts *RootOptions) SetZeroValues() {
 	opts.SecretKey = ""
 	opts.Region = ""
 	opts.VerboseLog = false
+	opts.BannerFilePath = "banner.txt"
 }
