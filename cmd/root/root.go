@@ -6,7 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/manifoldco/promptui"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	"github.com/rs/zerolog"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/clean"
@@ -16,7 +17,6 @@ import (
 	"github.com/dimiro1/banner"
 
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/bilalcaliskan/s3-manager/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -39,8 +39,8 @@ func init() {
 */
 
 var (
-	selectRunner prompt.SelectRunner = prompt.GetSelectRunner()
-	promptRunner prompt.PromptRunner = prompt.GetPromptRunner()
+	selectRunner prompt.SelectRunner
+	promptRunner prompt.PromptRunner
 	opts         *options.RootOptions
 	ver          = version.Get()
 	logger       zerolog.Logger
@@ -77,18 +77,14 @@ var (
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if opts.Interactive {
-				if err := opts.PromptAccessCredentials(logger); err != nil {
+				if err := prompt.PromptAccessCreds(opts, logger); err != nil {
 					return err
 				}
 
 				cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 
-				prompt := promptui.Select{
-					Label: "Select operation",
-					Items: []string{"search", "clean"},
-				}
-
-				_, result, err := prompt.Run()
+				selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+				_, result, err := selectRunner.Run()
 				if err != nil {
 					logger.Error().Str("error", err.Error()).Msg("unknown error occurred while prompting user")
 					return err
