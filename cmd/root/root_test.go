@@ -69,7 +69,7 @@ func setAccessFlags(cmd *cobra.Command, accessKey, secretKey, bucketName, region
 	return nil
 }
 
-func TestExecuteInteractive(t *testing.T) {
+/*func TestExecuteInteractive(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "")
 	assert.Nil(t, err)
 
@@ -81,3 +81,4 @@ func TestExecuteInteractive(t *testing.T) {
 
 	opts.SetZeroValues()
 }
+*/

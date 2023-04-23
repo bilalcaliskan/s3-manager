@@ -7,11 +7,11 @@ import (
 )
 
 func TestGetPromptRunner(t *testing.T) {
-	runner := GetPromptRunner()
+	runner := GetPromptRunner("dummy prompt", nil)
 	assert.NotNil(t, runner)
 }
 
 func TestGetSelectRunner(t *testing.T) {
-	runner := GetSelectRunner()
+	runner := GetSelectRunner("dummy prompt", nil)
 	assert.NotNil(t, runner)
 }
