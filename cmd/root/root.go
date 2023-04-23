@@ -40,10 +40,10 @@ func init() {
 
 var (
 	selectRunner prompt.SelectRunner
-	promptRunner prompt.PromptRunner
-	opts         *options.RootOptions
-	ver          = version.Get()
-	logger       zerolog.Logger
+	//promptRunner prompt.PromptRunner
+	opts   *options.RootOptions
+	ver    = version.Get()
+	logger zerolog.Logger
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
 		Use:     "s3-manager",

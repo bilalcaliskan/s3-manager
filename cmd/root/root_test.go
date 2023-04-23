@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type promptMock struct {
+/*type promptMock struct {
 	msg string
 	err error
 }
@@ -26,7 +26,7 @@ type selectMock struct {
 func (p selectMock) Run() (int, string, error) {
 	// return expected result
 	return 1, p.msg, p.err
-}
+}*/
 
 func TestOuterExecute(t *testing.T) {
 	err := setAccessFlags(rootCmd, "", "", "", "")
@@ -62,11 +62,7 @@ func setAccessFlags(cmd *cobra.Command, accessKey, secretKey, bucketName, region
 		return err
 	}
 
-	if err := cmd.PersistentFlags().Set("region", region); err != nil {
-		return err
-	}
-
-	return nil
+	return cmd.PersistentFlags().Set("region", region)
 }
 
 /*func TestExecuteInteractive(t *testing.T) {
