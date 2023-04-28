@@ -95,11 +95,11 @@ run-vet:
 .PHONY: test
 test: tidy
 	echo "starting the test for whole module..."
-	go test -failfast -vet=off -race ./... || (echo an error while testing, exiting!; sh -c 'exit 1';)
+	CGO_ENABLED=1 go test -failfast -vet=off -race ./... || (echo an error while testing, exiting!; sh -c 'exit 1';)
 
 .PHONY: test-with-coverage
 test-with-coverage: tidy
-	go test ./... -race -coverprofile=coverage.txt -covermode=atomic
+	CGO_ENABLED=1 go test ./... -race -coverprofile=coverage.txt -covermode=atomic
 
 .PHONY: update
 update: tidy

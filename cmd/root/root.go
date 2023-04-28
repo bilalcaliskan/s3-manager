@@ -2,10 +2,12 @@ package root
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
-	"github.com/manifoldco/promptui"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	"github.com/rs/zerolog"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/clean"
@@ -23,7 +25,7 @@ func init() {
 	opts = options.GetRootOptions()
 	opts.InitFlags(rootCmd)
 
-	if err := opts.SetAccessCredentialsFromEnv(rootCmd); err != nil {
+	if err := opts.SetAccessCredentialsFromEnv(); err != nil {
 		panic(err)
 	}
 
@@ -37,10 +39,11 @@ func init() {
 */
 
 var (
-	opts           *options.RootOptions
-	ver            = version.Get()
-	logger         zerolog.Logger
-	bannerFilePath = "build/ci/banner.txt"
+	selectRunner prompt.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+	//promptRunner prompt.PromptRunner
+	opts   *options.RootOptions
+	ver    = version.Get()
+	logger zerolog.Logger
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
 		Use:     "s3-manager",
@@ -52,12 +55,13 @@ var (
 				opts.SetAccessFlagsRequired(cmd)
 			}
 
-			if _, err := os.Stat("build/ci/banner.txt"); err == nil {
-				bannerBytes, _ := os.ReadFile(bannerFilePath)
+			if _, err := os.Stat(opts.BannerFilePath); err == nil {
+				bannerBytes, _ := os.ReadFile(opts.BannerFilePath)
 				banner.Init(os.Stdout, true, false, strings.NewReader(string(bannerBytes)))
 			}
 
 			if opts.VerboseLog {
+				fmt.Println("here")
 				logging.EnableDebugLogging()
 			}
 
@@ -69,22 +73,20 @@ var (
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 
+			fmt.Println("inside prerune")
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(opts.Interactive)
 			if opts.Interactive {
-				if err := opts.PromptAccessCredentials(logger); err != nil {
+				if err := prompt.PromptAccessCreds(opts, logger); err != nil {
 					return err
 				}
-
+				fmt.Println("inside rune")
 				cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 
-				prompt := promptui.Select{
-					Label: "Select operation",
-					Items: []string{"search", "clean"},
-				}
-
-				_, result, err := prompt.Run()
+				_, result, err := selectRunner.Run()
 				if err != nil {
 					logger.Error().Str("error", err.Error()).Msg("unknown error occurred while prompting user")
 					return err
