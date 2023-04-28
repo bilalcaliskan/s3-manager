@@ -80,9 +80,9 @@ var (
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println(opts.Interactive)
 			if opts.Interactive {
-				/*				if err := prompt.PromptAccessCreds(opts, logger); err != nil {
-								return err
-							}*/
+				if err := prompt.PromptAccessCreds(opts, logger); err != nil {
+					return err
+				}
 				fmt.Println("inside rune")
 				cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 
