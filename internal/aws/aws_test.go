@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
+
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 
@@ -133,4 +135,52 @@ func TestCreateAwsService(t *testing.T) {
 	svc, err := CreateAwsService(options.GetRootOptions())
 	assert.Nil(t, err)
 	assert.NotNil(t, svc)
+}
+
+func TestFind(t *testing.T) {
+	mockSvc := &mockS3Client{}
+	defaultListObjectsOutput.Contents = []*s3.Object{
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+			Key:          aws.String("../../mock/file1.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+			Key:          aws.String("../../mock/file2.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+			Key:          aws.String("../../mock/file3.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+	}
+	searchOpts := options2.GetSearchOptions()
+	rootOpts := options.GetRootOptions()
+	searchOpts.RootOptions = rootOpts
+
+	searchOpts.Substring = "akqASmLLlK"
+
+	result, errs := Find(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
+	assert.NotNil(t, result)
+	assert.Empty(t, errs)
+}
+
+func TestFindWrongFilePath(t *testing.T) {
+	mockSvc := &mockS3Client{}
+	defaultListObjectsOutput.Contents = []*s3.Object{
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+			Key:          aws.String("file1asdfasdf.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+	}
+	searchOpts := options2.GetSearchOptions()
+	rootOpts := options.GetRootOptions()
+	searchOpts.RootOptions = rootOpts
+
+	res, err := Find(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
+	assert.Nil(t, res)
+	assert.NotEmpty(t, err)
 }
