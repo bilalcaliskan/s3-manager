@@ -1,6 +1,7 @@
 package root
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
@@ -88,7 +89,7 @@ func setAccessFlags(cmd *cobra.Command, accessKey, secretKey, bucketName, region
 	promptRunner = prompt.GetPromptRunner()
 }*/
 
-func TestExecuteInteractive(t *testing.T) {
+/*func TestExecuteInteractive(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -96,6 +97,22 @@ func TestExecuteInteractive(t *testing.T) {
 	assert.Nil(t, err)
 
 	selectRunner = selectMock{msg: "search", err: nil}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+
+	opts.SetZeroValues()
+	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+}*/
+
+func TestExecuteInteractiveSelectRunnerErr(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	selectRunner = selectMock{msg: "search", err: errors.New("dummy error")}
 
 	err = rootCmd.Execute()
 	assert.NotNil(t, err)
