@@ -3,6 +3,8 @@ package root
 import (
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/stretchr/testify/assert"
@@ -17,6 +19,7 @@ func (p promptMock) Run() (string, error) {
 	// return expected result
 	return p.msg, p.err
 }
+*/
 
 type selectMock struct {
 	msg string
@@ -26,7 +29,7 @@ type selectMock struct {
 func (p selectMock) Run() (int, string, error) {
 	// return expected result
 	return 1, p.msg, p.err
-}*/
+}
 
 func TestOuterExecute(t *testing.T) {
 	err := setAccessFlags(rootCmd, "", "", "", "")
@@ -65,16 +68,38 @@ func setAccessFlags(cmd *cobra.Command, accessKey, secretKey, bucketName, region
 	return cmd.PersistentFlags().Set("region", region)
 }
 
-/*func TestExecuteInteractive(t *testing.T) {
-	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "")
+// 45.5%
+
+/*func TestExecuteWithPromptsSuccessSelectFailPrompt(t *testing.T) {
+	// get original value for valid domains
+	predefinedValidDomainsOrg := mail.PredefinedValidDomains
+
+	// override valid domains
+	mail.PredefinedValidDomains = []string{"ssss.com"}
+
+	selectRunner = selectMock{msg: "Yes please!", err: nil}
+	promptRunner = promptMock{msg: "nonexistedemailaddress@example.com", err: errors.New("dummy error")}
+	err := rootCmd.Execute()
+	assert.NotNil(t, err)
+
+	// revert valid domains
+	mail.PredefinedValidDomains = predefinedValidDomainsOrg
+	selectRunner = prompt.GetSelectRunner()
+	promptRunner = prompt.GetPromptRunner()
+}*/
+
+func TestExecuteInteractive(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
+	selectRunner = selectMock{msg: "search", err: nil}
+
 	err = rootCmd.Execute()
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
 
 	opts.SetZeroValues()
+	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
 }
-*/

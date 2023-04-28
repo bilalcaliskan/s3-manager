@@ -39,7 +39,7 @@ func init() {
 */
 
 var (
-	selectRunner prompt.SelectRunner
+	selectRunner prompt.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
 	//promptRunner prompt.PromptRunner
 	opts   *options.RootOptions
 	ver    = version.Get()
@@ -73,17 +73,19 @@ var (
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 
+			fmt.Println("inside prerune")
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(opts.Interactive)
 			if opts.Interactive {
-				if err := prompt.PromptAccessCreds(opts, logger); err != nil {
-					return err
-				}
-
+				/*				if err := prompt.PromptAccessCreds(opts, logger); err != nil {
+								return err
+							}*/
+				fmt.Println("inside rune")
 				cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 
-				selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
 				_, result, err := selectRunner.Run()
 				if err != nil {
 					logger.Error().Str("error", err.Error()).Msg("unknown error occurred while prompting user")
