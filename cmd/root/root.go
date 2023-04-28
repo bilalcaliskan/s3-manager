@@ -25,7 +25,7 @@ func init() {
 	opts = options.GetRootOptions()
 	opts.InitFlags(rootCmd)
 
-	if err := opts.SetAccessCredentialsFromEnv(rootCmd); err != nil {
+	if err := opts.SetAccessCredentialsFromEnv(); err != nil {
 		panic(err)
 	}
 

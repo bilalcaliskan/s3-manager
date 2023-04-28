@@ -74,7 +74,7 @@ func (opts *RootOptions) SetAccessFlagsRequired(cmd *cobra.Command) {
 	}
 }
 
-func (opts *RootOptions) SetAccessCredentialsFromEnv(cmd *cobra.Command) error {
+func (opts *RootOptions) SetAccessCredentialsFromEnv() error {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("aws")
 	if err := viper.BindEnv("access_key", "secret_key", "bucket_name", "region"); err != nil {
