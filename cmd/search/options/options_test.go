@@ -42,6 +42,7 @@ func TestSearchOptions_PromptInteractiveValuesSubstringErr(t *testing.T) {
 	assert.Equal(t, opts.Substring, "")
 
 	substringRunner = substringRunnerOrg
+	opts.SetZeroValues()
 }
 
 func TestSearchOptions_PromptInteractiveValuesSubstringSuccess(t *testing.T) {
@@ -57,6 +58,7 @@ func TestSearchOptions_PromptInteractiveValuesSubstringSuccess(t *testing.T) {
 	assert.Equal(t, opts.Substring, "thisissubstring")
 
 	substringRunner = substringRunnerOrg
+	opts.SetZeroValues()
 }
 
 func TestSearchOptions_PromptInteractiveValuesExtensionsErr(t *testing.T) {
@@ -81,6 +83,7 @@ func TestSearchOptions_PromptInteractiveValuesExtensionsErr(t *testing.T) {
 
 	substringRunner = substringRunnerOrg
 	extensionRunner = extensionRunnerOrg
+	opts.SetZeroValues()
 }
 
 func TestSearchOptions_PromptInteractiveValuesExtensionsSuccess(t *testing.T) {
@@ -106,4 +109,5 @@ func TestSearchOptions_PromptInteractiveValuesExtensionsSuccess(t *testing.T) {
 
 	substringRunner = substringRunnerOrg
 	extensionRunner = extensionRunnerOrg
+	opts.SetZeroValues()
 }

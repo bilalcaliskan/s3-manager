@@ -1,20 +1,13 @@
 package options
 
 import (
-	"errors"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/spf13/cobra"
 )
 
 var (
-	substringRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide substring to search", func(s string) error {
-		if len(s) > 50 {
-			return errors.New("to long substring to search")
-		}
-
-		return nil
-	})
+	substringRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide substring to search", nil)
 	extensionRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide target file extensions (comma seperated)", nil)
 	searchOptions                       = &SearchOptions{}
 )
@@ -43,8 +36,6 @@ func GetSearchOptions() *SearchOptions {
 func (opts *SearchOptions) SetZeroValues() {
 	opts.Substring = ""
 	opts.FileExtensions = "txt"
-
-	opts.RootOptions.SetZeroValues()
 }
 
 func (opts *SearchOptions) PromptInteractiveValues() error {
