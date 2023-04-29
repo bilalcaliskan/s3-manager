@@ -70,25 +70,7 @@ func setAccessFlags(cmd *cobra.Command, accessKey, secretKey, bucketName, region
 
 // 45.5%
 
-/*func TestExecuteWithPromptsSuccessSelectFailPrompt(t *testing.T) {
-	// get original value for valid domains
-	predefinedValidDomainsOrg := mail.PredefinedValidDomains
-
-	// override valid domains
-	mail.PredefinedValidDomains = []string{"ssss.com"}
-
-	selectRunner = selectMock{msg: "Yes please!", err: nil}
-	promptRunner = promptMock{msg: "nonexistedemailaddress@example.com", err: errors.New("dummy error")}
-	err := rootCmd.Execute()
-	assert.NotNil(t, err)
-
-	// revert valid domains
-	mail.PredefinedValidDomains = predefinedValidDomainsOrg
-	selectRunner = prompt.GetSelectRunner()
-	promptRunner = prompt.GetPromptRunner()
-}*/
-
-/*func TestExecuteInteractive(t *testing.T) {
+func TestExecuteInteractiveSelectRunnerSearchSuccess(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -102,7 +84,55 @@ func setAccessFlags(cmd *cobra.Command, accessKey, secretKey, bucketName, region
 
 	opts.SetZeroValues()
 	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
-}*/
+}
+
+func TestExecuteInteractiveSelectRunnerSearchErr(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	selectRunner = selectMock{msg: "search", err: errors.New("dummy error")}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+
+	opts.SetZeroValues()
+	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+}
+
+func TestExecuteInteractiveSelectRunnerCleanSuccess(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	selectRunner = selectMock{msg: "clean", err: nil}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+
+	opts.SetZeroValues()
+	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+}
+
+func TestExecuteInteractiveSelectRunnerErr(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	selectRunner = selectMock{msg: "", err: errors.New("dummy error")}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+
+	opts.SetZeroValues()
+	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+}
 
 func TestExecuteInteractiveAccessPromptErr(t *testing.T) {
 	err := setAccessFlags(rootCmd, "", "thisissecretkey", "thisisbucketname", "thisisregion")
@@ -270,20 +300,4 @@ func TestExecuteInteractiveRegionPromptSuccess(t *testing.T) {
 
 	opts.SetZeroValues()
 	regionRunner = regionRunnerOrg
-}
-
-func TestExecuteInteractiveSelectRunnerErr(t *testing.T) {
-	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
-	assert.Nil(t, err)
-
-	err = rootCmd.PersistentFlags().Set("interactive", "true")
-	assert.Nil(t, err)
-
-	selectRunner = selectMock{msg: "search", err: errors.New("dummy error")}
-
-	err = rootCmd.Execute()
-	assert.NotNil(t, err)
-
-	opts.SetZeroValues()
-	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
 }
