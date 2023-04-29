@@ -2,7 +2,6 @@ package search
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/search/options"
@@ -64,10 +63,6 @@ var (
 
 			matchedFiles, errs := aws.Find(svc, searchOpts, logger)
 			if len(errs) != 0 {
-				for _, v := range errs {
-					fmt.Println(v.Error())
-				}
-
 				err := errors.New("multiple errors occurred while searching files, try to target individual files")
 				logger.Error().Str("error", err.Error())
 				return err

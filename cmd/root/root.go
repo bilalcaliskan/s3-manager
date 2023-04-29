@@ -2,7 +2,6 @@ package root
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -66,7 +65,6 @@ var (
 			}
 
 			if opts.VerboseLog {
-				fmt.Println("here")
 				logging.EnableDebugLogging()
 			}
 
@@ -77,8 +75,6 @@ var (
 
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
-
-			fmt.Println("inside prerune")
 
 			return nil
 		},
