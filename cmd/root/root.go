@@ -2,7 +2,6 @@ package root
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -39,8 +38,13 @@ func init() {
 */
 
 var (
-	selectRunner prompt.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+	selectRunner    prompt.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+	accessKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Access Key", nil)
+	secretKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Secret Key", nil)
+	regionRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Region", nil)
+	bucketRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Bucket Name", nil)
 	//promptRunner prompt.PromptRunner
+
 	opts   *options.RootOptions
 	ver    = version.Get()
 	logger zerolog.Logger
@@ -61,7 +65,6 @@ var (
 			}
 
 			if opts.VerboseLog {
-				fmt.Println("here")
 				logging.EnableDebugLogging()
 			}
 
@@ -73,46 +76,76 @@ var (
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 
-			fmt.Println("inside prerune")
-
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println(opts.Interactive)
-			if opts.Interactive {
-				if err := prompt.PromptAccessCreds(opts, logger); err != nil {
-					return err
-				}
-				fmt.Println("inside rune")
-				cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
+			if !opts.Interactive {
+				return nil
+			}
 
-				_, result, err := selectRunner.Run()
+			if opts.AccessKey == "" {
+				res, err := accessKeyRunner.Run()
 				if err != nil {
-					logger.Error().Str("error", err.Error()).Msg("unknown error occurred while prompting user")
 					return err
 				}
 
-				switch result {
-				case "search":
-					if err := search.SearchCmd.PreRunE(cmd, args); err != nil {
-						logger.Error().Str("error", err.Error()).Msg("an error occurred while running search subcommand")
-						return err
-					}
+				opts.AccessKey = res
+			}
 
-					if err := search.SearchCmd.RunE(cmd, args); err != nil {
-						logger.Error().Str("error", err.Error()).Msg("an error occurred while running search subcommand")
-						return err
-					}
-				case "clean":
-					if err := clean.CleanCmd.PreRunE(cmd, args); err != nil {
-						logger.Error().Str("error", err.Error()).Msg("an error occurred while running clean subcommand")
-						return err
-					}
+			if opts.SecretKey == "" {
+				res, err := secretKeyRunner.Run()
+				if err != nil {
+					return err
+				}
 
-					if err := clean.CleanCmd.RunE(cmd, args); err != nil {
-						logger.Error().Str("error", err.Error()).Msg("an error occurred while running clean subcommand")
-						return err
-					}
+				opts.SecretKey = res
+			}
+
+			if opts.Region == "" {
+				res, err := regionRunner.Run()
+				if err != nil {
+					return err
+				}
+
+				opts.Region = res
+			}
+
+			if opts.BucketName == "" {
+				res, err := bucketRunner.Run()
+				if err != nil {
+					return err
+				}
+
+				opts.BucketName = res
+			}
+
+			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
+			_, result, err := selectRunner.Run()
+			if err != nil {
+				logger.Error().Str("error", err.Error()).Msg("unknown error occurred while prompting user")
+				return err
+			}
+
+			switch result {
+			case "search":
+				if err := search.SearchCmd.PreRunE(cmd, args); err != nil {
+					logger.Error().Str("error", err.Error()).Msg("an error occurred while running search subcommand")
+					return err
+				}
+
+				if err := search.SearchCmd.RunE(cmd, args); err != nil {
+					logger.Error().Str("error", err.Error()).Msg("an error occurred while running search subcommand")
+					return err
+				}
+			case "clean":
+				if err := clean.CleanCmd.PreRunE(cmd, args); err != nil {
+					logger.Error().Str("error", err.Error()).Msg("an error occurred while running clean subcommand")
+					return err
+				}
+
+				if err := clean.CleanCmd.RunE(cmd, args); err != nil {
+					logger.Error().Str("error", err.Error()).Msg("an error occurred while running clean subcommand")
+					return err
 				}
 			}
 

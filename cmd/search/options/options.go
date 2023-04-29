@@ -1,13 +1,16 @@
 package options
 
 import (
-	"errors"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	"github.com/manifoldco/promptui"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/spf13/cobra"
 )
 
-var searchOptions = &SearchOptions{}
+var (
+	substringRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide substring to search", nil)
+	extensionRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide target file extensions (comma seperated)", nil)
+	searchOptions                       = &SearchOptions{}
+)
 
 // SearchOptions contains frequent command line and application options.
 type SearchOptions struct {
@@ -33,32 +36,16 @@ func GetSearchOptions() *SearchOptions {
 func (opts *SearchOptions) SetZeroValues() {
 	opts.Substring = ""
 	opts.FileExtensions = "txt"
-
-	opts.RootOptions.SetZeroValues()
 }
 
 func (opts *SearchOptions) PromptInteractiveValues() error {
-	prompt := promptui.Prompt{
-		Label: "Substring to search",
-		Validate: func(s string) error {
-			if len(s) > 50 {
-				return errors.New("to long substring to search")
-			}
-
-			return nil
-		},
-	}
-
-	res, err := prompt.Run()
+	res, err := substringRunner.Run()
 	if err != nil {
 		return err
 	}
 	opts.Substring = res
 
-	prompt = promptui.Prompt{
-		Label: "Target file extensions (comma seperated)",
-	}
-	res, err = prompt.Run()
+	res, err = extensionRunner.Run()
 	if err != nil {
 		return err
 	}

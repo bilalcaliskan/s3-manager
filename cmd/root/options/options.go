@@ -3,14 +3,13 @@ package options
 import (
 	"fmt"
 
-	"github.com/manifoldco/promptui"
-	"github.com/rs/zerolog"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var rootOptions = &RootOptions{}
+var (
+	rootOptions = &RootOptions{}
+)
 
 type (
 	OptsKey   struct{}
@@ -95,72 +94,6 @@ func (opts *RootOptions) SetAccessCredentialsFromEnv() error {
 
 	if region := viper.Get("region"); region != nil {
 		opts.Region = fmt.Sprintf("%v", region)
-	}
-
-	return nil
-}
-
-func (opts *RootOptions) PromptAccessCredentials(logger zerolog.Logger) error {
-	infoLog := "skipping %s prompt since it is provided either by environment variable or flag"
-
-	if opts.AccessKey == "" {
-		accessKeyPrompt := promptui.Prompt{
-			Label: "Provide AWS Access Key",
-		}
-
-		result, err := accessKeyPrompt.Run()
-
-		if err != nil {
-			return err
-		}
-		opts.AccessKey = result
-	} else {
-		logger.Info().Msg(fmt.Sprintf(infoLog, "accessKey"))
-	}
-
-	if opts.SecretKey == "" {
-		secretKeyPrompt := promptui.Prompt{
-			Label: "Provide AWS Secret Key",
-		}
-
-		result, err := secretKeyPrompt.Run()
-
-		if err != nil {
-			return err
-		}
-		opts.SecretKey = result
-	} else {
-		logger.Info().Msg(fmt.Sprintf(infoLog, "secretKey"))
-	}
-
-	if opts.Region == "" {
-		regionPrompt := promptui.Prompt{
-			Label: "Provide AWS Region",
-		}
-
-		result, err := regionPrompt.Run()
-
-		if err != nil {
-			return err
-		}
-		opts.Region = result
-	} else {
-		logger.Info().Msg(fmt.Sprintf(infoLog, "region"))
-	}
-
-	if opts.BucketName == "" {
-		bucketPrompt := promptui.Prompt{
-			Label: "Provide AWS Bucket Name",
-		}
-
-		result, err := bucketPrompt.Run()
-
-		if err != nil {
-			return err
-		}
-		opts.BucketName = result
-	} else {
-		logger.Info().Msg(fmt.Sprintf(infoLog, "bucketName"))
 	}
 
 	return nil

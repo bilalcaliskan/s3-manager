@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-/*type promptMock struct {
+type promptMock struct {
 	msg string
 	err error
 }
@@ -20,7 +20,6 @@ func (p promptMock) Run() (string, error) {
 	// return expected result
 	return p.msg, p.err
 }
-*/
 
 type selectMock struct {
 	msg string
@@ -71,25 +70,7 @@ func setAccessFlags(cmd *cobra.Command, accessKey, secretKey, bucketName, region
 
 // 45.5%
 
-/*func TestExecuteWithPromptsSuccessSelectFailPrompt(t *testing.T) {
-	// get original value for valid domains
-	predefinedValidDomainsOrg := mail.PredefinedValidDomains
-
-	// override valid domains
-	mail.PredefinedValidDomains = []string{"ssss.com"}
-
-	selectRunner = selectMock{msg: "Yes please!", err: nil}
-	promptRunner = promptMock{msg: "nonexistedemailaddress@example.com", err: errors.New("dummy error")}
-	err := rootCmd.Execute()
-	assert.NotNil(t, err)
-
-	// revert valid domains
-	mail.PredefinedValidDomains = predefinedValidDomainsOrg
-	selectRunner = prompt.GetSelectRunner()
-	promptRunner = prompt.GetPromptRunner()
-}*/
-
-/*func TestExecuteInteractive(t *testing.T) {
+func TestExecuteInteractiveSelectRunnerSearchSuccess(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -103,9 +84,9 @@ func setAccessFlags(cmd *cobra.Command, accessKey, secretKey, bucketName, region
 
 	opts.SetZeroValues()
 	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
-}*/
+}
 
-func TestExecuteInteractiveSelectRunnerErr(t *testing.T) {
+func TestExecuteInteractiveSelectRunnerSearchErr(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -119,4 +100,204 @@ func TestExecuteInteractiveSelectRunnerErr(t *testing.T) {
 
 	opts.SetZeroValues()
 	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+}
+
+func TestExecuteInteractiveSelectRunnerCleanSuccess(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	selectRunner = selectMock{msg: "clean", err: nil}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+
+	opts.SetZeroValues()
+	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+}
+
+func TestExecuteInteractiveSelectRunnerErr(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	selectRunner = selectMock{msg: "", err: errors.New("dummy error")}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+
+	opts.SetZeroValues()
+	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+}
+
+func TestExecuteInteractiveAccessPromptErr(t *testing.T) {
+	err := setAccessFlags(rootCmd, "", "thisissecretkey", "thisisbucketname", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	accessKeyRunnerOrg := accessKeyRunner
+	accessKeyRunner = promptMock{
+		msg: "",
+		err: errors.New("new dummy error"),
+	}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+	assert.Equal(t, opts.AccessKey, "")
+
+	opts.SetZeroValues()
+	accessKeyRunner = accessKeyRunnerOrg
+}
+
+func TestExecuteInteractiveAccessPromptSuccess(t *testing.T) {
+	err := setAccessFlags(rootCmd, "", "thisissecretkey", "thisisbucketname", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	accessKeyRunnerOrg := accessKeyRunner
+	accessKeyRunner = promptMock{
+		msg: "thisisaccesskey",
+		err: nil,
+	}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+	assert.Equal(t, opts.AccessKey, "thisisaccesskey")
+
+	opts.SetZeroValues()
+	accessKeyRunner = accessKeyRunnerOrg
+}
+
+func TestExecuteInteractiveSecretPromptErr(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "", "thisisbucketname", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	secretKeyRunnerOrg := secretKeyRunner
+	secretKeyRunner = promptMock{
+		msg: "",
+		err: errors.New("new dummy error"),
+	}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+	assert.Equal(t, opts.SecretKey, "")
+
+	opts.SetZeroValues()
+	secretKeyRunner = secretKeyRunnerOrg
+}
+
+func TestExecuteInteractiveSecretPromptSuccess(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "", "thisisbucketname", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	secretKeyRunnerOrg := secretKeyRunner
+	secretKeyRunner = promptMock{
+		msg: "thisissecretkey",
+		err: nil,
+	}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+	assert.Equal(t, opts.SecretKey, "thisissecretkey")
+
+	opts.SetZeroValues()
+	secretKeyRunner = secretKeyRunnerOrg
+}
+
+func TestExecuteInteractiveBucketPromptErr(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	bucketRunnerOrg := bucketRunner
+	bucketRunner = promptMock{
+		msg: "",
+		err: errors.New("new dummy error"),
+	}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+	assert.Equal(t, opts.BucketName, "")
+
+	opts.SetZeroValues()
+	bucketRunner = bucketRunnerOrg
+}
+
+func TestExecuteInteractiveBucketPromptSuccess(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "", "thisisregion")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	bucketRunnerOrg := bucketRunner
+	bucketRunner = promptMock{
+		msg: "thisisbucketname",
+		err: nil,
+	}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+	assert.Equal(t, opts.BucketName, "thisisbucketname")
+
+	opts.SetZeroValues()
+	bucketRunner = bucketRunnerOrg
+}
+
+func TestExecuteInteractiveRegionPromptErr(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	regionRunnerOrg := regionRunner
+	regionRunner = promptMock{
+		msg: "",
+		err: errors.New("new dummy error"),
+	}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+	assert.Equal(t, opts.Region, "")
+
+	opts.SetZeroValues()
+	regionRunner = regionRunnerOrg
+}
+
+func TestExecuteInteractiveRegionPromptSuccess(t *testing.T) {
+	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "")
+	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)
+
+	regionRunnerOrg := regionRunner
+	regionRunner = promptMock{
+		msg: "thisisregion",
+		err: nil,
+	}
+
+	err = rootCmd.Execute()
+	assert.NotNil(t, err)
+	assert.Equal(t, opts.Region, "thisisregion")
+
+	opts.SetZeroValues()
+	regionRunner = regionRunnerOrg
 }
