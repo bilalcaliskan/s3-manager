@@ -2,6 +2,7 @@ package clean
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
@@ -13,9 +14,13 @@ func TestExecuteMissingRegion(t *testing.T) {
 	//assert.Nil(t, err)
 
 	rootOpts := options.GetRootOptions()
+	fmt.Println(rootOpts)
 	CleanCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
 	err := CleanCmd.Execute()
 	assert.NotNil(t, err)
+
+	rootOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 }
 
 func TestExecuteInvalidSortByOption(t *testing.T) {
@@ -23,10 +28,12 @@ func TestExecuteInvalidSortByOption(t *testing.T) {
 	assert.Nil(t, err)
 
 	rootOpts := options.GetRootOptions()
-	t.Log(rootOpts.Region)
 	CleanCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
 	err = CleanCmd.Execute()
 	assert.NotNil(t, err)
+
+	rootOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 }
 
 func TestExecuteInvalidMinMaxValues(t *testing.T) {
@@ -40,6 +47,9 @@ func TestExecuteInvalidMinMaxValues(t *testing.T) {
 	CleanCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
 	err = CleanCmd.Execute()
 	assert.NotNil(t, err)
+
+	rootOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 }
 
 func TestExecute(t *testing.T) {
@@ -56,4 +66,5 @@ func TestExecute(t *testing.T) {
 	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()
+	cleanOpts.SetZeroValues()
 }
