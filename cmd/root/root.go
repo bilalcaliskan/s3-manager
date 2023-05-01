@@ -59,6 +59,9 @@ var (
 				opts.SetAccessFlagsRequired(cmd)
 			}
 
+			// TODO: create svc here instead of each subcommand
+			// TODO: fail if credentials are expired (meaning wrong credentials provided)
+
 			if _, err := os.Stat(opts.BannerFilePath); err == nil {
 				bannerBytes, _ := os.ReadFile(opts.BannerFilePath)
 				banner.Init(os.Stdout, true, false, strings.NewReader(string(bannerBytes)))
