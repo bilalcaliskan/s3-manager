@@ -59,6 +59,7 @@ var (
 				opts.SetAccessFlagsRequired(cmd)
 			}
 
+			// https://sonarcloud.io/component_measures?id=bilalcaliskan_s3-manager&metric=coverage&view=list
 			// TODO: create svc here instead of each subcommand
 			// TODO: fail if credentials are expired (meaning wrong credentials provided)
 
