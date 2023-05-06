@@ -2,20 +2,18 @@ package root
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"os"
-	"strings"
+	"time"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
-
 	"github.com/rs/zerolog"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/clean"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/search"
 
-	"github.com/dimiro1/banner"
-
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/bilalcaliskan/s3-manager/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -55,35 +53,47 @@ var (
 		Long:    ``,
 		Version: ver.GitVersion,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if !opts.Interactive {
-				opts.SetAccessFlagsRequired(cmd)
-			}
+			//if !opts.Interactive {
+			//	opts.SetAccessFlagsRequired(cmd)
+			//}
 
 			// https://sonarcloud.io/component_measures?id=bilalcaliskan_s3-manager&metric=coverage&view=list
 			// TODO: create svc here instead of each subcommand
 			// TODO: fail if credentials are expired (meaning wrong credentials provided)
 
-			if _, err := os.Stat(opts.BannerFilePath); err == nil {
-				bannerBytes, _ := os.ReadFile(opts.BannerFilePath)
-				banner.Init(os.Stdout, true, false, strings.NewReader(string(bannerBytes)))
-			}
+			//if _, err := os.Stat(opts.BannerFilePath); err == nil {
+			//	bannerBytes, _ := os.ReadFile(opts.BannerFilePath)
+			//	banner.Init(os.Stdout, true, false, strings.NewReader(string(bannerBytes)))
+			//}
+			//
+			//if opts.VerboseLog {
+			//	logging.EnableDebugLogging()
+			//}
+			//
+			//logger = logging.GetLogger(opts)
+			//logger.Info().Str("appVersion", ver.GitVersion).Str("goVersion", ver.GoVersion).Str("goOS", ver.GoOs).
+			//	Str("goArch", ver.GoArch).Str("gitCommit", ver.GitCommit).Str("buildDate", ver.BuildDate).
+			//	Msg("s3-manager is started!")
 
-			if opts.VerboseLog {
-				logging.EnableDebugLogging()
-			}
-
-			logger = logging.GetLogger(opts)
-			logger.Info().Str("appVersion", ver.GitVersion).Str("goVersion", ver.GoVersion).Str("goOS", ver.GoOs).
-				Str("goArch", ver.GoArch).Str("gitCommit", ver.GitCommit).Str("buildDate", ver.BuildDate).
-				Msg("s3-manager is started!")
-
-			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
-			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
+			//cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
+			//cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
+			//ctx, cancel := context.WithTimeout(cmd.Context(), 10*time.Second)
+			//
+			//cmd.SetContext(context.WithValue(ctx, options.OptsKey{}, cancel))
+			//cmd.SetContext(ctx)
 
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if !opts.Interactive {
+
+			for i := 0; i < 500; i++ {
+				log.Println("hello")
+				time.Sleep(1 * time.Second)
+			}
+
+			return nil
+
+			/*if !opts.Interactive {
 				return nil
 			}
 
@@ -153,7 +163,7 @@ var (
 				}
 			}
 
-			return nil
+			return nil*/
 		},
 	}
 )
@@ -161,7 +171,20 @@ var (
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		os.Exit(1)
+	fmt.Println(opts.Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(opts.Timeout)*time.Second)
+	defer cancel()
+
+	go func() {
+		if err := rootCmd.Execute(); err != nil {
+			os.Exit(1)
+		}
+	}()
+
+	select {
+	//case <-time.After(1 * time.Second):
+	//	fmt.Println("overslept")
+	case <-ctx.Done():
+		fmt.Println(ctx.Err()) // prints "context deadline exceeded"
 	}
 }

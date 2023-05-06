@@ -33,6 +33,7 @@ type RootOptions struct {
 	Interactive bool
 	// BannerFilePath is the relative path to the banner file
 	BannerFilePath string
+	Timeout        int64
 }
 
 func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
@@ -53,6 +54,8 @@ func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
 		"decision of that if you want to use interactive feature (default false)")
 	cmd.PersistentFlags().StringVarP(&opts.BannerFilePath, "bannerFilePath", "", "banner.txt",
 		"relative path of the banner file")
+	cmd.PersistentFlags().Int64VarP(&opts.Timeout, "timeout", "t", 10,
+		"")
 }
 
 func (opts *RootOptions) SetAccessFlagsRequired(cmd *cobra.Command) {
