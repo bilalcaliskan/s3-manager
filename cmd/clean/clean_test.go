@@ -24,11 +24,16 @@ func TestExecuteMissingRegion(t *testing.T) {
 }
 
 func TestExecuteInvalidSortByOption(t *testing.T) {
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+	CleanCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
+
 	err := CleanCmd.Flags().Set("sortBy", "nonexistedsortbyflag")
 	assert.Nil(t, err)
 
-	rootOpts := options.GetRootOptions()
-	CleanCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
 	err = CleanCmd.Execute()
 	assert.NotNil(t, err)
 
@@ -37,14 +42,19 @@ func TestExecuteInvalidSortByOption(t *testing.T) {
 }
 
 func TestExecuteInvalidMinMaxValues(t *testing.T) {
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+	CleanCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
+
 	err := CleanCmd.Flags().Set("minFileSizeInMb", "20")
 	assert.Nil(t, err)
 
 	err = CleanCmd.Flags().Set("maxFileSizeInMb", "10")
 	assert.Nil(t, err)
 
-	rootOpts := options.GetRootOptions()
-	CleanCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
 	err = CleanCmd.Execute()
 	assert.NotNil(t, err)
 

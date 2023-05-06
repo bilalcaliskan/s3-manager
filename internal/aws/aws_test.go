@@ -132,7 +132,13 @@ func TestDeleteFilesFailedDeleteObjectCall(t *testing.T) {
 }
 
 func TestCreateAwsService(t *testing.T) {
-	svc, err := CreateAwsService(options.GetRootOptions())
+	opts := options.GetRootOptions()
+	opts.AccessKey = "thisisaccesskey"
+	opts.SecretKey = "thisissecretkey"
+	opts.Region = "thisisregion"
+	opts.BucketName = "thisisbucketname"
+
+	svc, err := CreateAwsService(opts)
 	assert.Nil(t, err)
 	assert.NotNil(t, svc)
 }

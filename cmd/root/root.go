@@ -4,19 +4,19 @@ import (
 	"context"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/bilalcaliskan/s3-manager/internal/logging"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
-
 	"github.com/rs/zerolog"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/clean"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/search"
 
-	"github.com/dimiro1/banner"
-
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/bilalcaliskan/s3-manager/internal/version"
+	"github.com/dimiro1/banner"
 	"github.com/spf13/cobra"
 )
 
@@ -32,18 +32,12 @@ func init() {
 	rootCmd.AddCommand(search.SearchCmd)
 }
 
-/*
-- persistentprerun, prerun dan daha once calisiyor
-- required olan bir flagi gecmesen bile persistentprerun ve prerun calisiyor (root command icin)
-*/
-
 var (
 	selectRunner    prompt.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
 	accessKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Access Key", nil)
 	secretKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Secret Key", nil)
 	regionRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Region", nil)
 	bucketRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Bucket Name", nil)
-	//promptRunner prompt.PromptRunner
 
 	opts   *options.RootOptions
 	ver    = version.Get()
@@ -58,6 +52,10 @@ var (
 			if !opts.Interactive {
 				opts.SetAccessFlagsRequired(cmd)
 			}
+
+			// https://sonarcloud.io/component_measures?id=bilalcaliskan_s3-manager&metric=coverage&view=list
+			// TODO: create svc here instead of each subcommand
+			// TODO: fail if credentials are expired (meaning wrong credentials provided)
 
 			if _, err := os.Stat(opts.BannerFilePath); err == nil {
 				bannerBytes, _ := os.ReadFile(opts.BannerFilePath)
@@ -75,6 +73,10 @@ var (
 
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
+			ctx, cancel := context.WithTimeout(cmd.Context(), 10*time.Second)
+
+			cmd.SetContext(context.WithValue(ctx, options.OptsKey{}, cancel))
+			cmd.SetContext(ctx)
 
 			return nil
 		},
@@ -156,8 +158,6 @@ var (
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		os.Exit(1)
-	}
+func Execute() error {
+	return rootCmd.Execute()
 }

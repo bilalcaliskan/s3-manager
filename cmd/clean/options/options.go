@@ -51,6 +51,4 @@ func (opts *CleanOptions) SetZeroValues() {
 	opts.DryRun = false
 	opts.AutoApprove = false
 	opts.SortBy = "lastModificationDate"
-
-	opts.RootOptions.SetZeroValues()
 }

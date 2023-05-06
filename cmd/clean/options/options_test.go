@@ -10,10 +10,13 @@ import (
 func TestGetCleanOptions(t *testing.T) {
 	opts := GetCleanOptions()
 	assert.NotNil(t, opts)
+	opts.SetZeroValues()
 }
 
 func TestCleanOptions_InitFlags(t *testing.T) {
 	cmd := cobra.Command{}
+
 	opts := GetCleanOptions()
 	opts.InitFlags(&cmd)
+	opts.SetZeroValues()
 }

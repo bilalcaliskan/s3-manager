@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"errors"
 	"log"
 	"strings"
 	"sync"
@@ -29,6 +30,11 @@ func createSession(accessKey, secretKey, region string) (*session.Session, error
 
 func CreateAwsService(opts *options.RootOptions) (svc *s3.S3, err error) {
 	var sess *session.Session
+
+	if opts.AccessKey == "" || opts.SecretKey == "" || opts.Region == "" {
+		return svc, errors.New("missing required fields")
+	}
+
 	sess, err = createSession(opts.AccessKey, opts.SecretKey, opts.Region)
 	if err != nil {
 		return svc, err
