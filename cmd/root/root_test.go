@@ -34,6 +34,12 @@ func (p selectMock) Run() (int, string, error) {
 func TestOuterExecute(t *testing.T) {
 	err := setAccessFlags(rootCmd, "", "", "", "")
 	assert.Nil(t, err)
+
+	err = rootCmd.PersistentFlags().Set("interactive", "false")
+	assert.Nil(t, err)
+
+	err = Execute()
+	assert.Nil(t, err)
 }
 
 func TestExecute(t *testing.T) {
