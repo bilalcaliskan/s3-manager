@@ -23,8 +23,7 @@ var (
 	logger     zerolog.Logger
 	searchOpts *options.SearchOptions
 	svc        *s3.S3
-	// SearchCmd represents the search subcommand
-	SearchCmd = &cobra.Command{
+	SearchCmd  = &cobra.Command{
 		Use:          "search",
 		Short:        "search subcommand searches the files which has desired substrings in it",
 		SilenceUsage: true,

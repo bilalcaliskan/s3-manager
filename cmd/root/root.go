@@ -8,7 +8,6 @@ import (
 
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/rs/zerolog"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/clean"
@@ -33,16 +32,9 @@ func init() {
 }
 
 var (
-	selectRunner    prompt.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
-	accessKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Access Key", nil)
-	secretKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Secret Key", nil)
-	regionRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Region", nil)
-	bucketRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Bucket Name", nil)
-
-	opts   *options.RootOptions
-	ver    = version.Get()
-	logger zerolog.Logger
-	// rootCmd represents the base command when called without any subcommands
+	opts    *options.RootOptions
+	ver     = version.Get()
+	logger  zerolog.Logger
 	rootCmd = &cobra.Command{
 		Use:     "s3-manager",
 		Short:   "",
@@ -157,7 +149,6 @@ var (
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() error {
 	return rootCmd.Execute()
 }
