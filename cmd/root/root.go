@@ -48,8 +48,6 @@ var (
 				opts.SetAccessFlagsRequired(cmd)
 			}
 
-			cmd.Commands()[0].Hidden = true
-
 			// https://sonarcloud.io/component_measures?id=bilalcaliskan_s3-manager&metric=coverage&view=list
 			// TODO: create svc here instead of each subcommand
 			// TODO: fail if credentials are expired (meaning wrong credentials provided)

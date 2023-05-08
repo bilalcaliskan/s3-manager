@@ -43,14 +43,28 @@ var (
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			logger.Info().Msg(*svc.Client.Config.Region)
+			versioning, err := aws.GetBucketVersioning(svc, configureOpts)
+			if err != nil {
+				return err
+			}
 
-			if configureOpts.Interactive {
-				logger.Info().Msg("interactive")
+			if *versioning.Status == "Enabled" && configureOpts.Versioning || *versioning.Status == "Suspended" && !configureOpts.Versioning {
+				logger.Info().Msg("versioning is already at the desired state, skipping")
 				return nil
 			}
 
-			logger.Info().Msg("non-interactive")
+			logger.Info().Msgf("setting versioning as %v", configureOpts.Versioning)
+			_, err = aws.SetBucketVersioning(svc, configureOpts, configureOpts.Versioning)
+			if err != nil {
+				return err
+			}
+
+			versioning, err = aws.GetBucketVersioning(svc, configureOpts)
+			if err != nil {
+				return err
+			}
+			logger.Info().Msg(*versioning.Status)
+
 			return nil
 		},
 	}

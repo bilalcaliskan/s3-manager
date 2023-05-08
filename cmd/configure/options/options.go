@@ -13,18 +13,14 @@ var (
 
 // ConfigureOptions contains frequent command line and application options.
 type ConfigureOptions struct {
-	// Foo is foo
-	Foo string
-	// Bar is bar
-	Bar string
+	// Versioning is versioning
+	Versioning bool
 	*options.RootOptions
 }
 
 func (opts *ConfigureOptions) InitFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&opts.Foo, "foo", "", "bar",
-		"foo is foo")
-	cmd.Flags().StringVarP(&opts.Bar, "bar", "", "foo",
-		"bar is bar")
+	cmd.Flags().BoolVarP(&opts.Versioning, "versioning", "", false,
+		"Versioning is versioning")
 }
 
 // GetConfigureOptions returns the pointer of FindOptions
@@ -33,8 +29,7 @@ func GetConfigureOptions() *ConfigureOptions {
 }
 
 func (opts *ConfigureOptions) SetZeroValues() {
-	opts.Foo = "bar"
-	opts.Bar = "foo"
+	opts.Versioning = false
 }
 
 /*func (opts *ConfigureOptions) PromptInteractiveValues() error {

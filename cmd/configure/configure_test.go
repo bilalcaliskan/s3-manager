@@ -26,7 +26,7 @@ func TestExecuteMissingRegion(t *testing.T) {
 	configureOpts.SetZeroValues()
 }
 
-func TestExecuteNonInteractive(t *testing.T) {
+func TestExecute(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -36,13 +36,13 @@ func TestExecuteNonInteractive(t *testing.T) {
 	ConfigureCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
 
 	err := ConfigureCmd.Execute()
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()
 	configureOpts.SetZeroValues()
 }
 
-func TestExecuteInteractive(t *testing.T) {
+func TestExecuteFailingPutRequest(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -52,7 +52,7 @@ func TestExecuteInteractive(t *testing.T) {
 	ConfigureCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
 
 	err := ConfigureCmd.Execute()
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()
 	configureOpts.SetZeroValues()
