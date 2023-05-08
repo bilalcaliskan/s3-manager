@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bilalcaliskan/s3-manager/cmd/configure"
+
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 
 	"github.com/rs/zerolog"
@@ -29,6 +31,7 @@ func init() {
 
 	rootCmd.AddCommand(clean.CleanCmd)
 	rootCmd.AddCommand(search.SearchCmd)
+	rootCmd.AddCommand(configure.ConfigureCmd)
 }
 
 var (
@@ -44,6 +47,8 @@ var (
 			if !opts.Interactive {
 				opts.SetAccessFlagsRequired(cmd)
 			}
+
+			cmd.Commands()[0].Hidden = true
 
 			// https://sonarcloud.io/component_measures?id=bilalcaliskan_s3-manager&metric=coverage&view=list
 			// TODO: create svc here instead of each subcommand

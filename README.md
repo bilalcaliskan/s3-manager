@@ -31,6 +31,7 @@ Available Commands:
   clean       clean subcommand cleans the app, finds and clears desired files
   completion  Generate the autocompletion script for the specified shell
   search      search subcommand searches the files which has desired substrings in it
+  configure   configure subcommand configures the bucket level settings
   help        Help about any command
 
 Flags:
