@@ -1,12 +1,23 @@
 package options
 
 import (
+	"errors"
 	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
+
+type promptMock struct {
+	msg string
+	err error
+}
+
+func (p promptMock) Run() (string, error) {
+	// return expected result
+	return p.msg, p.err
+}
 
 func TestGetRootOptions(t *testing.T) {
 	opts := GetRootOptions()
@@ -31,6 +42,191 @@ func TestRootOptions_SetAccessFlagsRequired(t *testing.T) {
 	opts.SetZeroValues()
 
 	opts.SetAccessFlagsRequired(cmd)
+}
+
+func TestRootOptions_PromptAccessCredentials_AllSuccess(t *testing.T) {
+	accessKeyRunnerOrg := AccessKeyRunner
+	AccessKeyRunner = promptMock{
+		msg: "adlskfjasldkf",
+		err: nil,
+	}
+
+	secretKeyRunnerOrg := SecretKeyRunner
+	SecretKeyRunner = promptMock{
+		msg: "adlskfjasldkf",
+		err: nil,
+	}
+
+	bucketRunnerOrg := BucketRunner
+	BucketRunner = promptMock{
+		msg: "adlskfjasldkf",
+		err: nil,
+	}
+
+	regionRunnerOrg := RegionRunner
+	RegionRunner = promptMock{
+		msg: "adlskfjasldkf",
+		err: nil,
+	}
+
+	opts := GetRootOptions()
+
+	err := opts.PromptAccessCredentials(AccessKeyRunner, SecretKeyRunner, BucketRunner, RegionRunner)
+	assert.Nil(t, err)
+
+	opts.SetZeroValues()
+	AccessKeyRunner = accessKeyRunnerOrg
+	SecretKeyRunner = secretKeyRunnerOrg
+	RegionRunner = regionRunnerOrg
+	BucketRunner = bucketRunnerOrg
+}
+
+func TestRootOptions_PromptAccessCredentials_AccessKeyFailure(t *testing.T) {
+	accessKeyRunnerOrg := AccessKeyRunner
+	AccessKeyRunner = promptMock{
+		msg: "",
+		err: errors.New("asdlfkjasdf"),
+	}
+
+	secretKeyRunnerOrg := SecretKeyRunner
+	SecretKeyRunner = promptMock{
+		msg: "adlskfjasldkf",
+		err: nil,
+	}
+
+	bucketRunnerOrg := BucketRunner
+	BucketRunner = promptMock{
+		msg: "adlskfjasldkf",
+		err: nil,
+	}
+
+	regionRunnerOrg := RegionRunner
+	RegionRunner = promptMock{
+		msg: "adlskfjasldkf",
+		err: nil,
+	}
+
+	opts := GetRootOptions()
+
+	err := opts.PromptAccessCredentials(AccessKeyRunner, SecretKeyRunner, BucketRunner, RegionRunner)
+	assert.NotNil(t, err)
+
+	opts.SetZeroValues()
+	AccessKeyRunner = accessKeyRunnerOrg
+	SecretKeyRunner = secretKeyRunnerOrg
+	RegionRunner = regionRunnerOrg
+	BucketRunner = bucketRunnerOrg
+}
+
+func TestRootOptions_PromptAccessCredentials_SecretKeyFailure(t *testing.T) {
+	accessKeyRunnerOrg := AccessKeyRunner
+	AccessKeyRunner = promptMock{
+		msg: "dsafasdfdfs",
+		err: nil,
+	}
+
+	secretKeyRunnerOrg := SecretKeyRunner
+	SecretKeyRunner = promptMock{
+		msg: "",
+		err: errors.New("adlskfjasldkf"),
+	}
+
+	bucketRunnerOrg := BucketRunner
+	BucketRunner = promptMock{
+		msg: "adlskfjasldkf",
+		err: nil,
+	}
+
+	regionRunnerOrg := RegionRunner
+	RegionRunner = promptMock{
+		msg: "adlskfjasldkf",
+		err: nil,
+	}
+
+	opts := GetRootOptions()
+
+	err := opts.PromptAccessCredentials(AccessKeyRunner, SecretKeyRunner, BucketRunner, RegionRunner)
+	assert.NotNil(t, err)
+
+	opts.SetZeroValues()
+	AccessKeyRunner = accessKeyRunnerOrg
+	SecretKeyRunner = secretKeyRunnerOrg
+	RegionRunner = regionRunnerOrg
+	BucketRunner = bucketRunnerOrg
+}
+
+func TestRootOptions_PromptAccessCredentials_BucketFailure(t *testing.T) {
+	accessKeyRunnerOrg := AccessKeyRunner
+	AccessKeyRunner = promptMock{
+		msg: "dsafasdfdfs",
+		err: nil,
+	}
+
+	secretKeyRunnerOrg := SecretKeyRunner
+	SecretKeyRunner = promptMock{
+		msg: "asdfasdf",
+		err: nil,
+	}
+
+	bucketRunnerOrg := BucketRunner
+	BucketRunner = promptMock{
+		msg: "",
+		err: errors.New("adlskfjasldkf"),
+	}
+
+	regionRunnerOrg := RegionRunner
+	RegionRunner = promptMock{
+		msg: "adlskfjasldkf",
+		err: nil,
+	}
+
+	opts := GetRootOptions()
+
+	err := opts.PromptAccessCredentials(AccessKeyRunner, SecretKeyRunner, BucketRunner, RegionRunner)
+	assert.NotNil(t, err)
+
+	opts.SetZeroValues()
+	AccessKeyRunner = accessKeyRunnerOrg
+	SecretKeyRunner = secretKeyRunnerOrg
+	RegionRunner = regionRunnerOrg
+	BucketRunner = bucketRunnerOrg
+}
+
+func TestRootOptions_PromptAccessCredentials_RegionFailure(t *testing.T) {
+	accessKeyRunnerOrg := AccessKeyRunner
+	AccessKeyRunner = promptMock{
+		msg: "dsafasdfdfs",
+		err: nil,
+	}
+
+	secretKeyRunnerOrg := SecretKeyRunner
+	SecretKeyRunner = promptMock{
+		msg: "asdfasdf",
+		err: nil,
+	}
+
+	bucketRunnerOrg := BucketRunner
+	BucketRunner = promptMock{
+		msg: "asdfasdfasfd",
+		err: nil,
+	}
+
+	regionRunnerOrg := RegionRunner
+	RegionRunner = promptMock{
+		msg: "",
+		err: errors.New("adlskfjasldkf"),
+	}
+
+	opts := GetRootOptions()
+
+	err := opts.PromptAccessCredentials(AccessKeyRunner, SecretKeyRunner, BucketRunner, RegionRunner)
+	assert.NotNil(t, err)
+
+	opts.SetZeroValues()
+	AccessKeyRunner = accessKeyRunnerOrg
+	SecretKeyRunner = secretKeyRunnerOrg
+	RegionRunner = regionRunnerOrg
+	BucketRunner = bucketRunnerOrg
 }
 
 func TestRootOptions_SetAccessCredentialsFromEnv_Filled(t *testing.T) {

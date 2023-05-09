@@ -10,7 +10,12 @@ import (
 )
 
 var (
-	rootOptions = &RootOptions{}
+	rootOptions                         = &RootOptions{}
+	SelectRunner    prompt.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+	AccessKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Access Key", nil)
+	SecretKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Secret Key", nil)
+	RegionRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Region", nil)
+	BucketRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Bucket Name", nil)
 )
 
 type (

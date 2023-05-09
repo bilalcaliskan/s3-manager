@@ -52,7 +52,8 @@ var (
 			// TODO: fail if credentials are expired (meaning wrong credentials provided)
 
 			if opts.Interactive {
-				if err := opts.PromptAccessCredentials(accessKeyRunner, secretKeyRunner, bucketRunner, regionRunner); err != nil {
+				if err := opts.PromptAccessCredentials(options.AccessKeyRunner, options.SecretKeyRunner,
+					options.BucketRunner, options.RegionRunner); err != nil {
 					logger.Error().
 						Str("error", err.Error()).
 						Msg("an error occurred while creating aws service")
@@ -96,7 +97,7 @@ var (
 
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 
-			_, result, err := selectRunner.Run()
+			_, result, err := options.SelectRunner.Run()
 			if err != nil {
 				logger.Error().Str("error", err.Error()).Msg("unknown error occurred while prompting user")
 				return err

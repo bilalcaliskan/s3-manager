@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
+
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/spf13/cobra"
@@ -91,13 +93,13 @@ func TestExecuteInteractiveSelectRunnerSearchSuccess(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	selectRunner = selectMock{msg: "search", err: nil}
+	options.SelectRunner = selectMock{msg: "search", err: nil}
 
 	err = rootCmd.Execute()
 	assert.NotNil(t, err)
 
 	opts.SetZeroValues()
-	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+	options.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
 }
 
 func TestExecuteInteractiveSelectRunnerSearchErr(t *testing.T) {
@@ -107,13 +109,13 @@ func TestExecuteInteractiveSelectRunnerSearchErr(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	selectRunner = selectMock{msg: "search", err: errors.New("dummy error")}
+	options.SelectRunner = selectMock{msg: "search", err: errors.New("dummy error")}
 
 	err = rootCmd.Execute()
 	assert.NotNil(t, err)
 
 	opts.SetZeroValues()
-	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+	options.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
 }
 
 func TestExecuteInteractiveSelectRunnerCleanSuccess(t *testing.T) {
@@ -123,13 +125,13 @@ func TestExecuteInteractiveSelectRunnerCleanSuccess(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	selectRunner = selectMock{msg: "clean", err: nil}
+	options.SelectRunner = selectMock{msg: "clean", err: nil}
 
 	err = rootCmd.Execute()
 	assert.NotNil(t, err)
 
 	opts.SetZeroValues()
-	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+	options.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
 }
 
 func TestExecuteInteractiveSelectRunnerErr(t *testing.T) {
@@ -139,13 +141,13 @@ func TestExecuteInteractiveSelectRunnerErr(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	selectRunner = selectMock{msg: "", err: errors.New("dummy error")}
+	options.SelectRunner = selectMock{msg: "", err: errors.New("dummy error")}
 
 	err = rootCmd.Execute()
 	assert.NotNil(t, err)
 
 	opts.SetZeroValues()
-	selectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+	options.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
 }
 
 func TestExecuteInteractiveAccessPromptErr(t *testing.T) {
@@ -155,8 +157,8 @@ func TestExecuteInteractiveAccessPromptErr(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	accessKeyRunnerOrg := accessKeyRunner
-	accessKeyRunner = promptMock{
+	accessKeyRunnerOrg := options.AccessKeyRunner
+	options.AccessKeyRunner = promptMock{
 		msg: "",
 		err: errors.New("new dummy error"),
 	}
@@ -166,7 +168,7 @@ func TestExecuteInteractiveAccessPromptErr(t *testing.T) {
 	assert.Equal(t, opts.AccessKey, "")
 
 	opts.SetZeroValues()
-	accessKeyRunner = accessKeyRunnerOrg
+	options.AccessKeyRunner = accessKeyRunnerOrg
 }
 
 func TestExecuteInteractiveAccessPromptSuccess(t *testing.T) {
@@ -176,8 +178,8 @@ func TestExecuteInteractiveAccessPromptSuccess(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	accessKeyRunnerOrg := accessKeyRunner
-	accessKeyRunner = promptMock{
+	accessKeyRunnerOrg := options.AccessKeyRunner
+	options.AccessKeyRunner = promptMock{
 		msg: "thisisaccesskey",
 		err: nil,
 	}
@@ -188,7 +190,7 @@ func TestExecuteInteractiveAccessPromptSuccess(t *testing.T) {
 	assert.Equal(t, opts.AccessKey, "thisisaccesskey")
 
 	opts.SetZeroValues()
-	accessKeyRunner = accessKeyRunnerOrg
+	options.AccessKeyRunner = accessKeyRunnerOrg
 }
 
 func TestExecuteInteractiveSecretPromptErr(t *testing.T) {
@@ -198,8 +200,8 @@ func TestExecuteInteractiveSecretPromptErr(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	secretKeyRunnerOrg := secretKeyRunner
-	secretKeyRunner = promptMock{
+	secretKeyRunnerOrg := options.SecretKeyRunner
+	options.SecretKeyRunner = promptMock{
 		msg: "",
 		err: errors.New("new dummy error"),
 	}
@@ -209,7 +211,7 @@ func TestExecuteInteractiveSecretPromptErr(t *testing.T) {
 	assert.Equal(t, opts.SecretKey, "")
 
 	opts.SetZeroValues()
-	secretKeyRunner = secretKeyRunnerOrg
+	options.SecretKeyRunner = secretKeyRunnerOrg
 }
 
 func TestExecuteInteractiveSecretPromptSuccess(t *testing.T) {
@@ -219,8 +221,8 @@ func TestExecuteInteractiveSecretPromptSuccess(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	secretKeyRunnerOrg := secretKeyRunner
-	secretKeyRunner = promptMock{
+	secretKeyRunnerOrg := options.SecretKeyRunner
+	options.SecretKeyRunner = promptMock{
 		msg: "thisissecretkey",
 		err: nil,
 	}
@@ -230,7 +232,7 @@ func TestExecuteInteractiveSecretPromptSuccess(t *testing.T) {
 	assert.Equal(t, opts.SecretKey, "thisissecretkey")
 
 	opts.SetZeroValues()
-	secretKeyRunner = secretKeyRunnerOrg
+	options.SecretKeyRunner = secretKeyRunnerOrg
 }
 
 func TestExecuteInteractiveBucketPromptErr(t *testing.T) {
@@ -240,8 +242,8 @@ func TestExecuteInteractiveBucketPromptErr(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	bucketRunnerOrg := bucketRunner
-	bucketRunner = promptMock{
+	bucketRunnerOrg := options.BucketRunner
+	options.BucketRunner = promptMock{
 		msg: "",
 		err: errors.New("new dummy error"),
 	}
@@ -251,7 +253,7 @@ func TestExecuteInteractiveBucketPromptErr(t *testing.T) {
 	assert.Equal(t, opts.BucketName, "")
 
 	opts.SetZeroValues()
-	bucketRunner = bucketRunnerOrg
+	options.BucketRunner = bucketRunnerOrg
 }
 
 func TestExecuteInteractiveBucketPromptSuccess(t *testing.T) {
@@ -261,8 +263,8 @@ func TestExecuteInteractiveBucketPromptSuccess(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	bucketRunnerOrg := bucketRunner
-	bucketRunner = promptMock{
+	bucketRunnerOrg := options.BucketRunner
+	options.BucketRunner = promptMock{
 		msg: "thisisbucketname",
 		err: nil,
 	}
@@ -272,7 +274,7 @@ func TestExecuteInteractiveBucketPromptSuccess(t *testing.T) {
 	assert.Equal(t, opts.BucketName, "thisisbucketname")
 
 	opts.SetZeroValues()
-	bucketRunner = bucketRunnerOrg
+	options.BucketRunner = bucketRunnerOrg
 }
 
 func TestExecuteInteractiveRegionPromptErr(t *testing.T) {
@@ -282,8 +284,8 @@ func TestExecuteInteractiveRegionPromptErr(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	regionRunnerOrg := regionRunner
-	regionRunner = promptMock{
+	regionRunnerOrg := options.RegionRunner
+	options.RegionRunner = promptMock{
 		msg: "",
 		err: errors.New("new dummy error"),
 	}
@@ -293,7 +295,7 @@ func TestExecuteInteractiveRegionPromptErr(t *testing.T) {
 	assert.Equal(t, opts.Region, "")
 
 	opts.SetZeroValues()
-	regionRunner = regionRunnerOrg
+	options.RegionRunner = regionRunnerOrg
 }
 
 func TestExecuteInteractiveRegionPromptSuccess(t *testing.T) {
@@ -303,8 +305,8 @@ func TestExecuteInteractiveRegionPromptSuccess(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	regionRunnerOrg := regionRunner
-	regionRunner = promptMock{
+	regionRunnerOrg := options.RegionRunner
+	options.RegionRunner = promptMock{
 		msg: "thisisregion",
 		err: nil,
 	}
@@ -314,5 +316,5 @@ func TestExecuteInteractiveRegionPromptSuccess(t *testing.T) {
 	//assert.Equal(t, opts.Region, "thisisregion")
 
 	opts.SetZeroValues()
-	regionRunner = regionRunnerOrg
+	options.RegionRunner = regionRunnerOrg
 }
