@@ -79,11 +79,7 @@ func setAccessFlags(cmd *cobra.Command, accessKey, secretKey, bucketName, region
 		return err
 	}
 
-	if err := cmd.PersistentFlags().Set("region", region); err != nil {
-		return err
-	}
-
-	return nil
+	return cmd.PersistentFlags().Set("region", region)
 }
 
 func TestExecuteInteractiveSelectRunnerSearchSuccess(t *testing.T) {
