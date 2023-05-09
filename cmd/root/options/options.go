@@ -3,6 +3,8 @@ package options
 import (
 	"fmt"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -112,4 +114,44 @@ func (opts *RootOptions) SetZeroValues() {
 	opts.VerboseLog = false
 	opts.Interactive = false
 	opts.BannerFilePath = "banner.txt"
+}
+
+func (opts *RootOptions) PromptAccessCredentials(accessKeyRunner, secretKeyRunner, bucketRunner, regionRunner prompt.PromptRunner) error {
+	if opts.AccessKey == "" {
+		res, err := accessKeyRunner.Run()
+		if err != nil {
+			return err
+		}
+
+		opts.AccessKey = res
+	}
+
+	if opts.SecretKey == "" {
+		res, err := secretKeyRunner.Run()
+		if err != nil {
+			return err
+		}
+
+		opts.SecretKey = res
+	}
+
+	if opts.Region == "" {
+		res, err := regionRunner.Run()
+		if err != nil {
+			return err
+		}
+
+		opts.Region = res
+	}
+
+	if opts.BucketName == "" {
+		res, err := bucketRunner.Run()
+		if err != nil {
+			return err
+		}
+
+		opts.BucketName = res
+	}
+
+	return nil
 }

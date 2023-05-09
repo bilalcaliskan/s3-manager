@@ -303,16 +303,16 @@ func TestExecuteInteractiveRegionPromptSuccess(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("interactive", "true")
 	assert.Nil(t, err)
 
-	//regionRunnerOrg := regionRunner
-	//regionRunner = promptMock{
-	//	msg: "thisisregion",
-	//	err: nil,
-	//}
+	regionRunnerOrg := regionRunner
+	regionRunner = promptMock{
+		msg: "thisisregion",
+		err: nil,
+	}
 
 	err = rootCmd.Execute()
 	assert.NotNil(t, err)
 	//assert.Equal(t, opts.Region, "thisisregion")
 
 	opts.SetZeroValues()
-	//regionRunner = regionRunnerOrg
+	regionRunner = regionRunnerOrg
 }

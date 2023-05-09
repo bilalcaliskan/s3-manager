@@ -45,50 +45,18 @@ var (
 		Long:    ``,
 		Version: ver.GitVersion,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("hello")
 			if !opts.Interactive {
 				opts.SetAccessFlagsRequired(cmd)
 			}
 
-			// https://sonarcloud.io/component_measures?id=bilalcaliskan_s3-manager&metric=coverage&view=list
-			// TODO: create svc here instead of each subcommand
 			// TODO: fail if credentials are expired (meaning wrong credentials provided)
 
 			if opts.Interactive {
-				if opts.AccessKey == "" {
-					res, err := accessKeyRunner.Run()
-					if err != nil {
-						return err
-					}
-
-					opts.AccessKey = res
-				}
-
-				if opts.SecretKey == "" {
-					res, err := secretKeyRunner.Run()
-					if err != nil {
-						return err
-					}
-
-					opts.SecretKey = res
-				}
-
-				if opts.Region == "" {
-					res, err := regionRunner.Run()
-					if err != nil {
-						return err
-					}
-
-					opts.Region = res
-				}
-
-				if opts.BucketName == "" {
-					res, err := bucketRunner.Run()
-					if err != nil {
-						return err
-					}
-
-					opts.BucketName = res
+				if err := opts.PromptAccessCredentials(accessKeyRunner, secretKeyRunner, bucketRunner, regionRunner); err != nil {
+					logger.Error().
+						Str("error", err.Error()).
+						Msg("an error occurred while creating aws service")
+					return err
 				}
 			}
 
@@ -122,7 +90,6 @@ var (
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("error")
 			if !opts.Interactive {
 				return nil
 			}
