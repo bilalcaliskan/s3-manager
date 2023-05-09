@@ -110,5 +110,6 @@ func (opts *RootOptions) SetZeroValues() {
 	opts.SecretKey = ""
 	opts.Region = ""
 	opts.VerboseLog = false
+	opts.Interactive = false
 	opts.BannerFilePath = "banner.txt"
 }

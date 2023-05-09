@@ -27,16 +27,18 @@ var (
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
+			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(*s3.S3)
+
 			configureOpts.RootOptions = rootOpts
 			logger = logging.GetLogger(rootOpts)
 
-			svc, err = aws.CreateAwsService(rootOpts)
+			/*svc, err = aws.CreateAwsService(rootOpts)
 			if err != nil {
 				logger.Error().
 					Str("error", err.Error()).
 					Msg("an error occurred while creating aws service")
 				return err
-			}
+			}*/
 
 			logger.Info().Msg("aws service successfully created with provided AWS credentials")
 
@@ -49,7 +51,9 @@ var (
 			}
 
 			if *versioning.Status == "Enabled" && configureOpts.Versioning || *versioning.Status == "Suspended" && !configureOpts.Versioning {
-				logger.Info().Msg("versioning is already at the desired state, skipping")
+				logger.Info().
+					Str("state", *versioning.Status).
+					Msg("versioning is already at the desired state, skipping")
 				return nil
 			}
 
@@ -58,12 +62,6 @@ var (
 			if err != nil {
 				return err
 			}
-
-			versioning, err = aws.GetBucketVersioning(svc, configureOpts)
-			if err != nil {
-				return err
-			}
-			logger.Info().Msg(*versioning.Status)
 
 			return nil
 		},

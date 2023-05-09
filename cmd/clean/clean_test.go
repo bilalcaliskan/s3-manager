@@ -2,21 +2,26 @@ package clean
 
 import (
 	"context"
-	"fmt"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExecuteMissingRegion(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
+func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
+	return aws.CreateAwsService(rootOpts)
+}
 
+func TestExecuteMissingRegion(t *testing.T) {
 	rootOpts := options.GetRootOptions()
-	fmt.Println(rootOpts)
-	CleanCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
-	err := CleanCmd.Execute()
+
+	ctx := context.Background()
+	CleanCmd.SetContext(ctx)
+	svc, err := createSvc(rootOpts)
+	assert.Nil(t, svc)
 	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()
@@ -29,9 +34,17 @@ func TestExecuteInvalidSortByOption(t *testing.T) {
 	rootOpts.SecretKey = "thisissecretkey"
 	rootOpts.Region = "thisisregion"
 	rootOpts.BucketName = "thisisbucketname"
-	CleanCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
 
-	err := CleanCmd.Flags().Set("sortBy", "nonexistedsortbyflag")
+	ctx := context.Background()
+	CleanCmd.SetContext(ctx)
+	svc, err := createSvc(rootOpts)
+	assert.NotNil(t, svc)
+	assert.Nil(t, err)
+
+	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
+	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
+
+	err = CleanCmd.Flags().Set("sortBy", "nonexistedsortbyflag")
 	assert.Nil(t, err)
 
 	err = CleanCmd.Execute()
@@ -47,9 +60,17 @@ func TestExecuteInvalidMinMaxValues(t *testing.T) {
 	rootOpts.SecretKey = "thisissecretkey"
 	rootOpts.Region = "thisisregion"
 	rootOpts.BucketName = "thisisbucketname"
-	CleanCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
 
-	err := CleanCmd.Flags().Set("minFileSizeInMb", "20")
+	ctx := context.Background()
+	CleanCmd.SetContext(ctx)
+	svc, err := createSvc(rootOpts)
+	assert.NotNil(t, svc)
+	assert.Nil(t, err)
+
+	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
+	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
+
+	err = CleanCmd.Flags().Set("minFileSizeInMb", "20")
 	assert.Nil(t, err)
 
 	err = CleanCmd.Flags().Set("maxFileSizeInMb", "10")
@@ -71,8 +92,17 @@ func TestExecute(t *testing.T) {
 	rootOpts.SecretKey = "thisissecretkey"
 	rootOpts.Region = "thisisregion"
 	rootOpts.BucketName = "thisisbucketname"
-	CleanCmd.SetContext(context.WithValue(context.Background(), options.OptsKey{}, rootOpts))
-	err := CleanCmd.Execute()
+
+	ctx := context.Background()
+	CleanCmd.SetContext(ctx)
+	svc, err := createSvc(rootOpts)
+	assert.NotNil(t, svc)
+	assert.Nil(t, err)
+
+	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
+	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
+
+	err = CleanCmd.Execute()
 	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()

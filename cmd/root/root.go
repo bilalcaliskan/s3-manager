@@ -2,11 +2,12 @@ package root
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/configure"
+	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 
@@ -40,10 +41,11 @@ var (
 	logger  zerolog.Logger
 	rootCmd = &cobra.Command{
 		Use:     "s3-manager",
-		Short:   "",
+		Short:   "configure subcommand configures the bucket level settings",
 		Long:    ``,
 		Version: ver.GitVersion,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("hello")
 			if !opts.Interactive {
 				opts.SetAccessFlagsRequired(cmd)
 			}
@@ -51,6 +53,52 @@ var (
 			// https://sonarcloud.io/component_measures?id=bilalcaliskan_s3-manager&metric=coverage&view=list
 			// TODO: create svc here instead of each subcommand
 			// TODO: fail if credentials are expired (meaning wrong credentials provided)
+
+			if opts.Interactive {
+				if opts.AccessKey == "" {
+					res, err := accessKeyRunner.Run()
+					if err != nil {
+						return err
+					}
+
+					opts.AccessKey = res
+				}
+
+				if opts.SecretKey == "" {
+					res, err := secretKeyRunner.Run()
+					if err != nil {
+						return err
+					}
+
+					opts.SecretKey = res
+				}
+
+				if opts.Region == "" {
+					res, err := regionRunner.Run()
+					if err != nil {
+						return err
+					}
+
+					opts.Region = res
+				}
+
+				if opts.BucketName == "" {
+					res, err := bucketRunner.Run()
+					if err != nil {
+						return err
+					}
+
+					opts.BucketName = res
+				}
+			}
+
+			svc, err := aws.CreateAwsService(opts)
+			if err != nil {
+				logger.Error().
+					Str("error", err.Error()).
+					Msg("an error occurred while creating aws service")
+				return err
+			}
 
 			if _, err := os.Stat(opts.BannerFilePath); err == nil {
 				bannerBytes, _ := os.ReadFile(opts.BannerFilePath)
@@ -67,56 +115,20 @@ var (
 				Msg("s3-manager is started!")
 
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
+			fmt.Printf("opts in persistentprerune %v\n", opts)
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
-			ctx, cancel := context.WithTimeout(cmd.Context(), 10*time.Second)
-
-			cmd.SetContext(context.WithValue(ctx, options.OptsKey{}, cancel))
-			cmd.SetContext(ctx)
+			cmd.SetContext(context.WithValue(cmd.Context(), options.S3SvcKey{}, svc))
 
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("error")
 			if !opts.Interactive {
 				return nil
 			}
 
-			if opts.AccessKey == "" {
-				res, err := accessKeyRunner.Run()
-				if err != nil {
-					return err
-				}
-
-				opts.AccessKey = res
-			}
-
-			if opts.SecretKey == "" {
-				res, err := secretKeyRunner.Run()
-				if err != nil {
-					return err
-				}
-
-				opts.SecretKey = res
-			}
-
-			if opts.Region == "" {
-				res, err := regionRunner.Run()
-				if err != nil {
-					return err
-				}
-
-				opts.Region = res
-			}
-
-			if opts.BucketName == "" {
-				res, err := bucketRunner.Run()
-				if err != nil {
-					return err
-				}
-
-				opts.BucketName = res
-			}
-
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
+
 			_, result, err := selectRunner.Run()
 			if err != nil {
 				logger.Error().Str("error", err.Error()).Msg("unknown error occurred while prompting user")

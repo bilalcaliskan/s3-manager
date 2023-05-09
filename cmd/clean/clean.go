@@ -3,7 +3,6 @@ package clean
 import (
 	"fmt"
 
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -33,17 +32,18 @@ var (
 		Short:        "clean subcommand cleans the app, finds and clears desired files",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
+			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(*s3.S3)
 			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
 			cleanOpts.RootOptions = rootOpts
 			logger = logging.GetLogger(rootOpts)
 
-			svc, err = aws.CreateAwsService(rootOpts)
+			/*svc, err = aws.CreateAwsService(rootOpts)
 			if err != nil {
 				logger.Error().
 					Str("error", err.Error()).
 					Msg("an error occurred while creating aws service")
 				return err
-			}
+			}*/
 
 			logger.Info().Msg("aws service successfully created with provided AWS credentials")
 
