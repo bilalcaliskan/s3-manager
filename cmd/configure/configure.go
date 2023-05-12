@@ -32,16 +32,6 @@ var (
 			configureOpts.RootOptions = rootOpts
 			logger = logging.GetLogger(rootOpts)
 
-			/*svc, err = aws.CreateAwsService(rootOpts)
-			if err != nil {
-				logger.Error().
-					Str("error", err.Error()).
-					Msg("an error occurred while creating aws service")
-				return err
-			}*/
-
-			logger.Info().Msg("aws service successfully created with provided AWS credentials")
-
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

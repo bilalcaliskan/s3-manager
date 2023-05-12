@@ -122,7 +122,7 @@ func DeleteFiles(svc s3iface.S3API, bucketName string, slice []*s3.Object, dryRu
 
 // Find does the heavy lifting, communicates with the S3 and finds the files
 func Find(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolog.Logger) ([]string, []error) {
-	var errors []error
+	var errs []error
 	var matchedFiles []string
 	mu := &sync.Mutex{}
 
@@ -131,8 +131,8 @@ func Find(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolog.Logger
 		Bucket: aws.String(opts.BucketName),
 	})
 	if err != nil {
-		errors = append(errors, err)
-		return matchedFiles, errors
+		errs = append(errs, err)
+		return matchedFiles, errs
 	}
 
 	var resultArr []*s3.Object
@@ -161,13 +161,13 @@ func Find(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolog.Logger
 			})
 
 			if err != nil {
-				errors = append(errors, err)
+				errs = append(errs, err)
 				return
 			}
 
 			buf := new(bytes.Buffer)
 			if _, err := buf.ReadFrom(getResult.Body); err != nil {
-				errors = append(errors, err)
+				errs = append(errs, err)
 				return
 			}
 
@@ -189,5 +189,5 @@ func Find(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolog.Logger
 	// wait for all the goroutines to complete
 	wg.Wait()
 
-	return matchedFiles, errors
+	return matchedFiles, errs
 }

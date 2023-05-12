@@ -2,7 +2,6 @@ package root
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -84,7 +83,6 @@ var (
 				Msg("s3-manager is started!")
 
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
-			fmt.Printf("opts in persistentprerune %v\n", opts)
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.S3SvcKey{}, svc))
 

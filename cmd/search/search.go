@@ -1,9 +1,10 @@
 package search
 
 import (
-	"errors"
+	"fmt"
 
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+
 	"github.com/bilalcaliskan/s3-manager/cmd/search/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
@@ -22,26 +23,17 @@ func init() {
 var (
 	logger     zerolog.Logger
 	searchOpts *options.SearchOptions
-	svc        *s3.S3
+	svc        s3iface.S3API
 	SearchCmd  = &cobra.Command{
 		Use:          "search",
 		Short:        "search subcommand searches the files which has desired substrings in it",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(*s3.S3)
+			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)
 			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
 			searchOpts.RootOptions = rootOpts
+
 			logger = logging.GetLogger(rootOpts)
-
-			/*svc, err = aws.CreateAwsService(rootOpts)
-			if err != nil {
-				logger.Error().
-					Str("error", err.Error()).
-					Msg("an error occurred while creating aws service")
-				return err
-			}*/
-
-			logger.Info().Msg("aws service successfully created with provided AWS credentials")
 
 			return nil
 		},
@@ -63,7 +55,7 @@ var (
 
 			matchedFiles, errs := aws.Find(svc, searchOpts, logger)
 			if len(errs) != 0 {
-				err := errors.New("multiple errors occurred while searching files, try to target individual files")
+				err := fmt.Errorf("multiple errors occurred while searching files, try to target individual files %s", errs)
 				logger.Error().Str("error", err.Error())
 				return err
 			}
