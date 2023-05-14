@@ -1,7 +1,7 @@
 package configure
 
 import (
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/configure/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
@@ -20,14 +20,14 @@ func init() {
 var (
 	logger        zerolog.Logger
 	configureOpts *options.ConfigureOptions
-	svc           *s3.S3
+	svc           s3iface.S3API
 	ConfigureCmd  = &cobra.Command{
 		Use:          "configure",
 		Short:        "configure subcommand configures the bucket level settings",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
-			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(*s3.S3)
+			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)
 
 			configureOpts.RootOptions = rootOpts
 			logger = logging.GetLogger(rootOpts)
