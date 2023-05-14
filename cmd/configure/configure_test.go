@@ -20,8 +20,8 @@ var (
 		MFADelete: aws.String("True"),
 		Status:    aws.String("Enabled"),
 	}
-	defaultGetBucketVersioningErr error = nil
-	defaultPutBucketVersioningErr error = nil
+	defaultGetBucketVersioningErr error
+	defaultPutBucketVersioningErr error
 )
 
 // Define a mock struct to be used in your unit tests
