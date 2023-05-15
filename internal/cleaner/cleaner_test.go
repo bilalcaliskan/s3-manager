@@ -147,6 +147,170 @@ func TestStartCleaningDryRunEqualMinMaxValues(t *testing.T) {
 	cleanOpts.SetZeroValues()
 }
 
+func TestStartCleaningDirectorySuffix(t *testing.T) {
+	m := &mockS3Client{}
+
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = true
+	cleanOpts.AutoApprove = true
+	cleanOpts.MinFileSizeInMb = 0
+	cleanOpts.MaxFileSizeInMb = 0
+	cleanOpts.FileExtensions = "txt"
+	defaultListObjectsOutput = &s3.ListObjectsOutput{
+		Name:        aws.String(""),
+		Marker:      aws.String(""),
+		MaxKeys:     aws.Int64(1000),
+		Prefix:      aws.String(""),
+		IsTruncated: aws.Bool(false),
+		Contents: []*s3.Object{
+			{
+				ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+				Key:          aws.String("file1/"),
+				StorageClass: aws.String("STANDARD"),
+				Size:         aws.Int64(1000),
+				LastModified: aws.Time(time.Now()),
+			},
+		},
+	}
+	err := StartCleaning(m, cleanOpts, mockLogger)
+	assert.Nil(t, err)
+
+	cleanOpts.SetZeroValues()
+	setZeroValuesForVars()
+}
+
+func TestStartCleaningSkippedExtensions(t *testing.T) {
+	m := &mockS3Client{}
+
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = true
+	cleanOpts.AutoApprove = true
+	cleanOpts.MinFileSizeInMb = 0
+	cleanOpts.MaxFileSizeInMb = 0
+	cleanOpts.FileExtensions = "txt"
+	defaultListObjectsOutput = &s3.ListObjectsOutput{
+		Name:        aws.String(""),
+		Marker:      aws.String(""),
+		MaxKeys:     aws.Int64(1000),
+		Prefix:      aws.String(""),
+		IsTruncated: aws.Bool(false),
+		Contents: []*s3.Object{
+			{
+				ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+				Key:          aws.String("file1.csv"),
+				StorageClass: aws.String("STANDARD"),
+				Size:         aws.Int64(1000),
+				LastModified: aws.Time(time.Now()),
+			},
+		},
+	}
+	err := StartCleaning(m, cleanOpts, mockLogger)
+	assert.Nil(t, err)
+
+	cleanOpts.SetZeroValues()
+	setZeroValuesForVars()
+}
+
+func TestStartCleaningCase1(t *testing.T) {
+	m := &mockS3Client{}
+
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = true
+	cleanOpts.AutoApprove = true
+	cleanOpts.MinFileSizeInMb = 10
+	cleanOpts.MaxFileSizeInMb = 20
+	cleanOpts.FileExtensions = "txt"
+	defaultListObjectsOutput = &s3.ListObjectsOutput{
+		Name:        aws.String(""),
+		Marker:      aws.String(""),
+		MaxKeys:     aws.Int64(1000),
+		Prefix:      aws.String(""),
+		IsTruncated: aws.Bool(false),
+		Contents: []*s3.Object{
+			{
+				ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+				Key:          aws.String("file1.txt"),
+				StorageClass: aws.String("STANDARD"),
+				Size:         aws.Int64(15000000),
+				LastModified: aws.Time(time.Now()),
+			},
+		},
+	}
+	err := StartCleaning(m, cleanOpts, mockLogger)
+	assert.Nil(t, err)
+
+	cleanOpts.SetZeroValues()
+	setZeroValuesForVars()
+}
+
+func TestStartCleaningCase2(t *testing.T) {
+	m := &mockS3Client{}
+
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = true
+	cleanOpts.AutoApprove = true
+	cleanOpts.MinFileSizeInMb = 10
+	cleanOpts.MaxFileSizeInMb = 0
+	cleanOpts.FileExtensions = "txt"
+	defaultListObjectsOutput = &s3.ListObjectsOutput{
+		Name:        aws.String(""),
+		Marker:      aws.String(""),
+		MaxKeys:     aws.Int64(1000),
+		Prefix:      aws.String(""),
+		IsTruncated: aws.Bool(false),
+		Contents: []*s3.Object{
+			{
+				ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+				Key:          aws.String("file1.txt"),
+				StorageClass: aws.String("STANDARD"),
+				Size:         aws.Int64(15000000),
+				LastModified: aws.Time(time.Now()),
+			},
+		},
+	}
+	err := StartCleaning(m, cleanOpts, mockLogger)
+	assert.Nil(t, err)
+
+	cleanOpts.SetZeroValues()
+	setZeroValuesForVars()
+}
+
+func TestStartCleaningCase3(t *testing.T) {
+	m := &mockS3Client{}
+
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = true
+	cleanOpts.AutoApprove = true
+	cleanOpts.KeepLastNFiles = 500
+	cleanOpts.FileExtensions = "txt"
+	defaultListObjectsOutput = &s3.ListObjectsOutput{
+		Name:        aws.String(""),
+		Marker:      aws.String(""),
+		MaxKeys:     aws.Int64(1000),
+		Prefix:      aws.String(""),
+		IsTruncated: aws.Bool(false),
+		Contents: []*s3.Object{
+			{
+				ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+				Key:          aws.String("file1.txt"),
+				StorageClass: aws.String("STANDARD"),
+				Size:         aws.Int64(15000000),
+				LastModified: aws.Time(time.Now()),
+			},
+		},
+	}
+	err := StartCleaning(m, cleanOpts, mockLogger)
+	assert.Nil(t, err)
+
+	cleanOpts.SetZeroValues()
+	setZeroValuesForVars()
+}
+
 func TestStartCleaningSpecificFileExtensions(t *testing.T) {
 	m := &mockS3Client{}
 
