@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	options3 "github.com/bilalcaliskan/s3-manager/cmd/configure/versioning/options"
+
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -34,7 +36,13 @@ var (
 		RequestCharged: nil,
 		VersionId:      nil,
 	}
-	mockLogger = logging.GetLogger(options.GetRootOptions())
+	mockLogger                       = logging.GetLogger(options.GetRootOptions())
+	defaultGetBucketVersioningOutput = &s3.GetBucketVersioningOutput{
+		Status: aws.String("Enabled"),
+	}
+	defaultGetBucketVersioningErr    error
+	defaultPutBucketVersioningOutput = &s3.PutBucketVersioningOutput{}
+	defaultPutBucketVersioningErr    error
 )
 
 type mockS3Client struct {
@@ -64,6 +72,14 @@ func (m *mockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput,
 
 func (m *mockS3Client) DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
 	return defaultDeleteObjectOutput, deleteObjectsErr
+}
+
+func (m *mockS3Client) GetBucketVersioning(input *s3.GetBucketVersioningInput) (*s3.GetBucketVersioningOutput, error) {
+	return defaultGetBucketVersioningOutput, defaultGetBucketVersioningErr
+}
+
+func (m *mockS3Client) PutBucketVersioning(input *s3.PutBucketVersioningInput) (*s3.PutBucketVersioningOutput, error) {
+	return defaultPutBucketVersioningOutput, defaultPutBucketVersioningErr
 }
 
 func TestGetAllFilesHappyPath(t *testing.T) {
@@ -189,4 +205,60 @@ func TestFindWrongFilePath(t *testing.T) {
 	res, err := Find(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
 	assert.Nil(t, res)
 	assert.NotEmpty(t, err)
+}
+
+func TestSetBucketVersioningSuccess(t *testing.T) {
+	mockSvc := &mockS3Client{}
+	defaultPutBucketVersioningErr = nil
+	versioningOpts := &options3.VersioningOptions{
+		State: "enabled",
+		RootOptions: &options.RootOptions{
+			BucketName: "demo-bucket",
+		},
+	}
+
+	_, err := SetBucketVersioning(mockSvc, versioningOpts)
+	assert.Nil(t, err)
+}
+
+func TestSetBucketVersioningError(t *testing.T) {
+	mockSvc := &mockS3Client{}
+	defaultPutBucketVersioningErr = errors.New("asdflkjasdf")
+	versioningOpts := &options3.VersioningOptions{
+		State: "enabled",
+		RootOptions: &options.RootOptions{
+			BucketName: "demo-bucket",
+		},
+	}
+
+	_, err := SetBucketVersioning(mockSvc, versioningOpts)
+	assert.NotNil(t, err)
+}
+
+func TestGetBucketVersioningSuccess(t *testing.T) {
+	mockSvc := &mockS3Client{}
+	defaultGetBucketVersioningErr = nil
+	versioningOpts := &options3.VersioningOptions{
+		State: "enabled",
+		RootOptions: &options.RootOptions{
+			BucketName: "demo-bucket",
+		},
+	}
+
+	_, err := GetBucketVersioning(mockSvc, versioningOpts)
+	assert.Nil(t, err)
+}
+
+func TestGetBucketVersioningFailure(t *testing.T) {
+	mockSvc := &mockS3Client{}
+	defaultGetBucketVersioningErr = errors.New("adsfafdsadsf")
+	versioningOpts := &options3.VersioningOptions{
+		State: "enabled",
+		RootOptions: &options.RootOptions{
+			BucketName: "demo-bucket",
+		},
+	}
+
+	_, err := GetBucketVersioning(mockSvc, versioningOpts)
+	assert.NotNil(t, err)
 }
