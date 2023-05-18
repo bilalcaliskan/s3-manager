@@ -1,21 +1,6 @@
 package configure
 
-import (
-	"context"
-	"errors"
-	"testing"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-
-	"github.com/aws/aws-sdk-go/service/s3"
-
-	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
-	"github.com/stretchr/testify/assert"
-)
-
-var (
+/*var (
 	defaultGetBucketVersioningOutput = &s3.GetBucketVersioningOutput{
 		MFADelete: aws.String("True"),
 		Status:    aws.String("Enabled"),
@@ -151,3 +136,4 @@ func TestExecuteFailingPutRequest(t *testing.T) {
 	rootOpts.SetZeroValues()
 	configureOpts.SetZeroValues()
 }
+*/

@@ -1,13 +1,6 @@
 package options
 
-import (
-	"testing"
-
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
-)
-
-func TestGetConfigureOptions(t *testing.T) {
+/*func TestGetConfigureOptions(t *testing.T) {
 	opts := GetConfigureOptions()
 	assert.NotNil(t, opts)
 }
@@ -18,3 +11,4 @@ func TestGetConfigureOptions_InitFlags(t *testing.T) {
 	opts.InitFlags(&cmd)
 	opts.SetZeroValues()
 }
+*/

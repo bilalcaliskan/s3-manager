@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	options3 "github.com/bilalcaliskan/s3-manager/cmd/configure/options"
+	options4 "github.com/bilalcaliskan/s3-manager/cmd/configure/versioning/options"
 
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 
@@ -60,7 +60,7 @@ func GetAllFiles(svc s3iface.S3API, opts *options.RootOptions, prefix string) (r
 }
 
 // GetBucketVersioning gets the target bucket
-func GetBucketVersioning(svc s3iface.S3API, opts *options3.ConfigureOptions) (res *s3.GetBucketVersioningOutput, err error) {
+func GetBucketVersioning(svc s3iface.S3API, opts *options4.VersioningOptions) (res *s3.GetBucketVersioningOutput, err error) {
 	// fetch all the objects in target bucket
 	res, err = svc.GetBucketVersioning(&s3.GetBucketVersioningInput{
 		Bucket: aws.String(opts.BucketName),
@@ -74,11 +74,11 @@ func GetBucketVersioning(svc s3iface.S3API, opts *options3.ConfigureOptions) (re
 }
 
 // SetBucketVersioning sets the target bucket
-func SetBucketVersioning(svc s3iface.S3API, opts *options3.ConfigureOptions, status bool) (res *s3.PutBucketVersioningOutput, err error) {
+func SetBucketVersioning(svc s3iface.S3API, opts *options4.VersioningOptions) (res *s3.PutBucketVersioningOutput, err error) {
 	var str string
-	if status {
+	if opts.State == "enabled" {
 		str = "Enabled"
-	} else {
+	} else if opts.State == "disabled" {
 		str = "Suspended"
 	}
 
