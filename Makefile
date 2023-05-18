@@ -100,6 +100,7 @@ test: tidy
 .PHONY: test-with-coverage
 test-with-coverage: tidy
 	CGO_ENABLED=1 go test ./... -race -coverprofile=coverage.txt -covermode=atomic
+	go tool cover -html=coverage.txt -o cover.html
 
 .PHONY: update
 update: tidy

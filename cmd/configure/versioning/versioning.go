@@ -35,14 +35,14 @@ var (
 			logger = logging.GetLogger(rootOpts)
 
 			if len(args) == 0 {
-				err = errors.New("you must pass versioning state as enabled or disabled")
+				err = errors.New(ErrNoArgument)
 				logger.Error().
 					Msg(err.Error())
 				return err
 			}
 
 			if len(args) > 1 {
-				err = errors.New("too many arguments")
+				err = errors.New(ErrTooManyArguments)
 				logger.Error().
 					Msg(err.Error())
 				return err
@@ -50,7 +50,7 @@ var (
 
 			ver := strings.ToLower(args[0])
 			if ver != "enabled" && ver != "disabled" {
-				err = errors.New("versioning state must be enabled or disabled")
+				err = errors.New(ErrWrongArgumentProvided)
 				logger.Error().
 					Msg(err.Error())
 				return err
@@ -69,7 +69,7 @@ var (
 			if *versioning.Status == "Enabled" && versioningOpts.State == "enabled" || *versioning.Status == "Suspended" && versioningOpts.State == "disabled" {
 				logger.Warn().
 					Str("state", *versioning.Status).
-					Msg("versioning is already at the desired state, skipping configuration")
+					Msg(WarnDesiredState)
 				return nil
 			}
 
@@ -79,7 +79,7 @@ var (
 				return err
 			}
 
-			logger.Info().Msgf("successfully configured versioning as %v", versioningOpts.State)
+			logger.Info().Msgf(InfSuccess, versioningOpts.State)
 
 			return nil
 		},

@@ -2,7 +2,11 @@ package versioning
 
 import (
 	"context"
+	"errors"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
@@ -11,18 +15,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
-	return internalaws.CreateAwsService(rootOpts)
-}
-
-/*var (
-	defaultListObjectsOutput = &s3.ListObjectsOutput{
-		Name:        aws.String(""),
-		Marker:      aws.String(""),
-		MaxKeys:     aws.Int64(1000),
-		Prefix:      aws.String(""),
-		IsTruncated: aws.Bool(false),
+var (
+	defaultGetBucketVersioningOutput = &s3.GetBucketVersioningOutput{
+		Status: aws.String("Enabled"),
 	}
+	defaultGetBucketVersioningErr    error
+	defaultPutBucketVersioningOutput = &s3.PutBucketVersioningOutput{}
+	defaultPutBucketVersioningErr    error
 )
 
 func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
@@ -34,44 +33,15 @@ type mockS3Client struct {
 	s3iface.S3API
 }
 
-// ListObjects mocks the S3API ListObjects method
-func (m *mockS3Client) ListObjects(obj *s3.ListObjectsInput) (*s3.ListObjectsOutput, error) {
-	return defaultListObjectsOutput, nil
+func (m *mockS3Client) GetBucketVersioning(input *s3.GetBucketVersioningInput) (*s3.GetBucketVersioningOutput, error) {
+	return defaultGetBucketVersioningOutput, defaultGetBucketVersioningErr
 }
 
-// GetObject mocks the S3API GetObject method
-func (m *mockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
-	bytes, err := os.Open(*input.Key)
-	if err != nil {
-		return nil, err
-	}
-
-	return &s3.GetObjectOutput{
-		AcceptRanges:  aws.String("bytes"),
-		Body:          bytes,
-		ContentLength: aws.Int64(1000),
-		ContentType:   aws.String("text/plain"),
-		ETag:          aws.String("d73a503d212d9279e6b2ed8ac6bb81f3"),
-	}, nil
-}*/
-
-func TestExecuteMissingRegion(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
-	rootOpts := options.GetRootOptions()
-
-	ctx := context.Background()
-	VersioningCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.Nil(t, svc)
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	versioningOpts.SetZeroValues()
+func (m *mockS3Client) PutBucketVersioning(input *s3.PutBucketVersioningInput) (*s3.PutBucketVersioningOutput, error) {
+	return defaultPutBucketVersioningOutput, defaultPutBucketVersioningErr
 }
 
-func TestExecuteFailure(t *testing.T) {
+func TestExecuteTooManyArguments(t *testing.T) {
 	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
 	//assert.Nil(t, err)
 
@@ -90,7 +60,190 @@ func TestExecuteFailure(t *testing.T) {
 	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
 	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
 
+	args := []string{"enabled", "foo"}
+	VersioningCmd.SetArgs(args)
+
 	err = VersioningCmd.Execute()
+	assert.NotNil(t, err)
+	assert.Equal(t, ErrTooManyArguments, err.Error())
+
+	rootOpts.SetZeroValues()
+	versioningOpts.SetZeroValues()
+}
+
+func TestExecuteWrongArguments(t *testing.T) {
+	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
+	//assert.Nil(t, err)
+
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+
+	ctx := context.Background()
+	VersioningCmd.SetContext(ctx)
+	svc, err := createSvc(rootOpts)
+	assert.NotNil(t, svc)
+	assert.Nil(t, err)
+
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+
+	args := []string{"eeenabled"}
+	VersioningCmd.SetArgs(args)
+
+	err = VersioningCmd.Execute()
+	assert.NotNil(t, err)
+	assert.Equal(t, ErrWrongArgumentProvided, err.Error())
+
+	rootOpts.SetZeroValues()
+	versioningOpts.SetZeroValues()
+}
+
+func TestExecuteNoArgument(t *testing.T) {
+	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
+	//assert.Nil(t, err)
+
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+
+	ctx := context.Background()
+	VersioningCmd.SetContext(ctx)
+	svc, err := createSvc(rootOpts)
+	assert.NotNil(t, svc)
+	assert.Nil(t, err)
+
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+
+	VersioningCmd.SetArgs([]string{})
+	err = VersioningCmd.Execute()
+	assert.NotNil(t, err)
+	assert.Equal(t, ErrNoArgument, err.Error())
+
+	rootOpts.SetZeroValues()
+	versioningOpts.SetZeroValues()
+}
+
+func TestExecuteSuccessEnabled(t *testing.T) {
+	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
+	//assert.Nil(t, err)
+
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+
+	ctx := context.Background()
+	VersioningCmd.SetContext(ctx)
+
+	mockSvc := &mockS3Client{}
+	svc = mockSvc
+
+	defaultGetBucketVersioningErr = nil
+	defaultGetBucketVersioningOutput.Status = aws.String("Suspended")
+	defaultPutBucketVersioningErr = nil
+
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+
+	VersioningCmd.SetArgs([]string{"enabled"})
+	err := VersioningCmd.Execute()
+	assert.Nil(t, err)
+
+	rootOpts.SetZeroValues()
+	versioningOpts.SetZeroValues()
+}
+
+func TestExecuteSuccessAlreadyEnabled(t *testing.T) {
+	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
+	//assert.Nil(t, err)
+
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+
+	ctx := context.Background()
+	VersioningCmd.SetContext(ctx)
+
+	mockSvc := &mockS3Client{}
+	svc = mockSvc
+
+	defaultGetBucketVersioningErr = nil
+	defaultGetBucketVersioningOutput.Status = aws.String("Enabled")
+	defaultPutBucketVersioningErr = nil
+
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+
+	VersioningCmd.SetArgs([]string{"enabled"})
+	err := VersioningCmd.Execute()
+	assert.Nil(t, err)
+
+	rootOpts.SetZeroValues()
+	versioningOpts.SetZeroValues()
+}
+
+func TestExecuteGetBucketVersioningErr(t *testing.T) {
+	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
+	//assert.Nil(t, err)
+
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+
+	ctx := context.Background()
+	VersioningCmd.SetContext(ctx)
+
+	mockSvc := &mockS3Client{}
+	svc = mockSvc
+
+	defaultGetBucketVersioningErr = errors.New("dummy error")
+
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+
+	VersioningCmd.SetArgs([]string{"enabled"})
+	err := VersioningCmd.Execute()
+	assert.NotNil(t, err)
+
+	rootOpts.SetZeroValues()
+	versioningOpts.SetZeroValues()
+}
+
+func TestExecuteSetBucketVersioningErr(t *testing.T) {
+	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
+	//assert.Nil(t, err)
+
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+
+	ctx := context.Background()
+	VersioningCmd.SetContext(ctx)
+
+	mockSvc := &mockS3Client{}
+	svc = mockSvc
+
+	defaultGetBucketVersioningErr = nil
+	defaultPutBucketVersioningErr = errors.New("new dummy error")
+
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+
+	VersioningCmd.SetArgs([]string{"disabled"})
+	err := VersioningCmd.Execute()
 	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()
