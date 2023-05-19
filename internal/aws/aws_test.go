@@ -262,3 +262,16 @@ func TestGetBucketVersioningFailure(t *testing.T) {
 	_, err := GetBucketVersioning(mockSvc, versioningOpts)
 	assert.NotNil(t, err)
 }
+
+func TestCreateAwsServiceErr(t *testing.T) {
+	opts := &options.RootOptions{
+		AccessKey:  "asdfadsf",
+		SecretKey:  "asdfsadf",
+		BucketName: "asdfasdf",
+		Region:     "",
+	}
+
+	svc, err := CreateAwsService(opts)
+	assert.Nil(t, svc)
+	assert.NotNil(t, err)
+}

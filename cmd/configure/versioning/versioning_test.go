@@ -160,6 +160,37 @@ func TestExecuteSuccessEnabled(t *testing.T) {
 	versioningOpts.SetZeroValues()
 }
 
+func TestExecuteSuccessDisabled(t *testing.T) {
+	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
+	//assert.Nil(t, err)
+
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+
+	ctx := context.Background()
+	VersioningCmd.SetContext(ctx)
+
+	mockSvc := &mockS3Client{}
+	svc = mockSvc
+
+	defaultGetBucketVersioningErr = nil
+	defaultGetBucketVersioningOutput.Status = aws.String("Enabled")
+	defaultPutBucketVersioningErr = nil
+
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
+	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+
+	VersioningCmd.SetArgs([]string{"disabled"})
+	err := VersioningCmd.Execute()
+	assert.Nil(t, err)
+
+	rootOpts.SetZeroValues()
+	versioningOpts.SetZeroValues()
+}
+
 func TestExecuteSuccessAlreadyEnabled(t *testing.T) {
 	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
 	//assert.Nil(t, err)
