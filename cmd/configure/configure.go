@@ -1,12 +1,14 @@
 package configure
 
 import (
+	"github.com/bilalcaliskan/s3-manager/cmd/configure/tags"
 	"github.com/bilalcaliskan/s3-manager/cmd/configure/versioning"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	ConfigureCmd.AddCommand(versioning.VersioningCmd)
+	ConfigureCmd.AddCommand(tags.TagsCmd)
 }
 
 var (
