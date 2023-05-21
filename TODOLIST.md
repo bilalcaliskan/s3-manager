@@ -1,0 +1,5 @@
+- [ ] search/file
+- [ ] search/text (all files, single file etc.)
+- [ ] configure/tags
+- [ ] configure/encryption
+- [ ] configure/objectlock
