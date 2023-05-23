@@ -4,6 +4,8 @@ import (
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 )
 
+type VersioningOptsKey struct{}
+
 var (
 	//substringRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide substring to search", nil)
 	//extensionRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide target file extensions (comma seperated)", nil)
@@ -12,8 +14,10 @@ var (
 
 // VersioningOptions contains frequent command line and application options.
 type VersioningOptions struct {
-	// State is state
-	State string
+	// ActualState is state
+	ActualState string
+	// DesiredState is state
+	DesiredState string
 	*options.RootOptions
 }
 
@@ -23,7 +27,8 @@ func GetVersioningOptions() *VersioningOptions {
 }
 
 func (opts *VersioningOptions) SetZeroValues() {
-	opts.State = "enabled"
+	opts.ActualState = "Enabled"
+	opts.DesiredState = "enabled"
 }
 
 /*func (opts *ConfigureOptions) PromptInteractiveValues() error {

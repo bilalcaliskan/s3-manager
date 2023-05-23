@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	options3 "github.com/bilalcaliskan/s3-manager/cmd/configure/versioning/options"
+	options3 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 
@@ -211,7 +211,7 @@ func TestSetBucketVersioningSuccess(t *testing.T) {
 	mockSvc := &mockS3Client{}
 	defaultPutBucketVersioningErr = nil
 	versioningOpts := &options3.VersioningOptions{
-		State: "enabled",
+		DesiredState: "enabled",
 		RootOptions: &options.RootOptions{
 			BucketName: "demo-bucket",
 		},
@@ -225,7 +225,7 @@ func TestSetBucketVersioningError(t *testing.T) {
 	mockSvc := &mockS3Client{}
 	defaultPutBucketVersioningErr = errors.New("asdflkjasdf")
 	versioningOpts := &options3.VersioningOptions{
-		State: "enabled",
+		DesiredState: "enabled",
 		RootOptions: &options.RootOptions{
 			BucketName: "demo-bucket",
 		},
@@ -239,13 +239,13 @@ func TestGetBucketVersioningSuccess(t *testing.T) {
 	mockSvc := &mockS3Client{}
 	defaultGetBucketVersioningErr = nil
 	versioningOpts := &options3.VersioningOptions{
-		State: "enabled",
+		DesiredState: "enabled",
 		RootOptions: &options.RootOptions{
 			BucketName: "demo-bucket",
 		},
 	}
 
-	_, err := GetBucketVersioning(mockSvc, versioningOpts)
+	_, err := GetBucketVersioning(mockSvc, versioningOpts.RootOptions)
 	assert.Nil(t, err)
 }
 
@@ -253,13 +253,13 @@ func TestGetBucketVersioningFailure(t *testing.T) {
 	mockSvc := &mockS3Client{}
 	defaultGetBucketVersioningErr = errors.New("adsfafdsadsf")
 	versioningOpts := &options3.VersioningOptions{
-		State: "enabled",
+		DesiredState: "enabled",
 		RootOptions: &options.RootOptions{
 			BucketName: "demo-bucket",
 		},
 	}
 
-	_, err := GetBucketVersioning(mockSvc, versioningOpts)
+	_, err := GetBucketVersioning(mockSvc, versioningOpts.RootOptions)
 	assert.NotNil(t, err)
 }
 

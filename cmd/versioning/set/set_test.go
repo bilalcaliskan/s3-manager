@@ -1,4 +1,4 @@
-package versioning
+package set
 
 import (
 	"context"
@@ -6,12 +6,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-
 	"github.com/aws/aws-sdk-go/service/s3"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
-
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -52,18 +50,18 @@ func TestExecuteTooManyArguments(t *testing.T) {
 	rootOpts.BucketName = "thisisbucketname"
 
 	ctx := context.Background()
-	VersioningCmd.SetContext(ctx)
+	SetCmd.SetContext(ctx)
 	svc, err := createSvc(rootOpts)
 	assert.NotNil(t, svc)
 	assert.Nil(t, err)
 
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.S3SvcKey{}, svc))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.OptsKey{}, rootOpts))
 
 	args := []string{"enabled", "foo"}
-	VersioningCmd.SetArgs(args)
+	SetCmd.SetArgs(args)
 
-	err = VersioningCmd.Execute()
+	err = SetCmd.Execute()
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrTooManyArguments, err.Error())
 
@@ -82,18 +80,18 @@ func TestExecuteWrongArguments(t *testing.T) {
 	rootOpts.BucketName = "thisisbucketname"
 
 	ctx := context.Background()
-	VersioningCmd.SetContext(ctx)
+	SetCmd.SetContext(ctx)
 	svc, err := createSvc(rootOpts)
 	assert.NotNil(t, svc)
 	assert.Nil(t, err)
 
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.S3SvcKey{}, svc))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.OptsKey{}, rootOpts))
 
 	args := []string{"eeenabled"}
-	VersioningCmd.SetArgs(args)
+	SetCmd.SetArgs(args)
 
-	err = VersioningCmd.Execute()
+	err = SetCmd.Execute()
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrWrongArgumentProvided, err.Error())
 
@@ -112,16 +110,16 @@ func TestExecuteNoArgument(t *testing.T) {
 	rootOpts.BucketName = "thisisbucketname"
 
 	ctx := context.Background()
-	VersioningCmd.SetContext(ctx)
+	SetCmd.SetContext(ctx)
 	svc, err := createSvc(rootOpts)
 	assert.NotNil(t, svc)
 	assert.Nil(t, err)
 
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.S3SvcKey{}, svc))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.OptsKey{}, rootOpts))
 
-	VersioningCmd.SetArgs([]string{})
-	err = VersioningCmd.Execute()
+	SetCmd.SetArgs([]string{})
+	err = SetCmd.Execute()
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrNoArgument, err.Error())
 
@@ -140,7 +138,7 @@ func TestExecuteSuccessEnabled(t *testing.T) {
 	rootOpts.BucketName = "thisisbucketname"
 
 	ctx := context.Background()
-	VersioningCmd.SetContext(ctx)
+	SetCmd.SetContext(ctx)
 
 	mockSvc := &mockS3Client{}
 	svc = mockSvc
@@ -149,11 +147,11 @@ func TestExecuteSuccessEnabled(t *testing.T) {
 	defaultGetBucketVersioningOutput.Status = aws.String("Suspended")
 	defaultPutBucketVersioningErr = nil
 
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.S3SvcKey{}, svc))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.OptsKey{}, rootOpts))
 
-	VersioningCmd.SetArgs([]string{"enabled"})
-	err := VersioningCmd.Execute()
+	SetCmd.SetArgs([]string{"enabled"})
+	err := SetCmd.Execute()
 	assert.Nil(t, err)
 
 	rootOpts.SetZeroValues()
@@ -171,7 +169,7 @@ func TestExecuteSuccessDisabled(t *testing.T) {
 	rootOpts.BucketName = "thisisbucketname"
 
 	ctx := context.Background()
-	VersioningCmd.SetContext(ctx)
+	SetCmd.SetContext(ctx)
 
 	mockSvc := &mockS3Client{}
 	svc = mockSvc
@@ -180,11 +178,11 @@ func TestExecuteSuccessDisabled(t *testing.T) {
 	defaultGetBucketVersioningOutput.Status = aws.String("Enabled")
 	defaultPutBucketVersioningErr = nil
 
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.S3SvcKey{}, svc))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.OptsKey{}, rootOpts))
 
-	VersioningCmd.SetArgs([]string{"disabled"})
-	err := VersioningCmd.Execute()
+	SetCmd.SetArgs([]string{"disabled"})
+	err := SetCmd.Execute()
 	assert.Nil(t, err)
 
 	rootOpts.SetZeroValues()
@@ -202,7 +200,7 @@ func TestExecuteSuccessAlreadyEnabled(t *testing.T) {
 	rootOpts.BucketName = "thisisbucketname"
 
 	ctx := context.Background()
-	VersioningCmd.SetContext(ctx)
+	SetCmd.SetContext(ctx)
 
 	mockSvc := &mockS3Client{}
 	svc = mockSvc
@@ -211,11 +209,11 @@ func TestExecuteSuccessAlreadyEnabled(t *testing.T) {
 	defaultGetBucketVersioningOutput.Status = aws.String("Enabled")
 	defaultPutBucketVersioningErr = nil
 
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.S3SvcKey{}, svc))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.OptsKey{}, rootOpts))
 
-	VersioningCmd.SetArgs([]string{"enabled"})
-	err := VersioningCmd.Execute()
+	SetCmd.SetArgs([]string{"enabled"})
+	err := SetCmd.Execute()
 	assert.Nil(t, err)
 
 	rootOpts.SetZeroValues()
@@ -233,18 +231,18 @@ func TestExecuteGetBucketVersioningErr(t *testing.T) {
 	rootOpts.BucketName = "thisisbucketname"
 
 	ctx := context.Background()
-	VersioningCmd.SetContext(ctx)
+	SetCmd.SetContext(ctx)
 
 	mockSvc := &mockS3Client{}
 	svc = mockSvc
 
 	defaultGetBucketVersioningErr = errors.New("dummy error")
 
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.S3SvcKey{}, svc))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.OptsKey{}, rootOpts))
 
-	VersioningCmd.SetArgs([]string{"enabled"})
-	err := VersioningCmd.Execute()
+	SetCmd.SetArgs([]string{"enabled"})
+	err := SetCmd.Execute()
 	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()
@@ -262,7 +260,7 @@ func TestExecuteSetBucketVersioningErr(t *testing.T) {
 	rootOpts.BucketName = "thisisbucketname"
 
 	ctx := context.Background()
-	VersioningCmd.SetContext(ctx)
+	SetCmd.SetContext(ctx)
 
 	mockSvc := &mockS3Client{}
 	svc = mockSvc
@@ -270,11 +268,11 @@ func TestExecuteSetBucketVersioningErr(t *testing.T) {
 	defaultGetBucketVersioningErr = nil
 	defaultPutBucketVersioningErr = errors.New("new dummy error")
 
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.S3SvcKey{}, svc))
-	VersioningCmd.SetContext(context.WithValue(VersioningCmd.Context(), options.OptsKey{}, rootOpts))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.S3SvcKey{}, svc))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.OptsKey{}, rootOpts))
 
-	VersioningCmd.SetArgs([]string{"disabled"})
-	err := VersioningCmd.Execute()
+	SetCmd.SetArgs([]string{"disabled"})
+	err := SetCmd.Execute()
 	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()
@@ -292,7 +290,7 @@ func TestExecuteSetBucketVersioningErr(t *testing.T) {
 	rootOpts.BucketName = "thisisbucketname"
 
 	ctx := context.Background()
-	VersioningCmd.SetContext(ctx)
+	SetCmd.SetContext(ctx)
 
 	mockSvc := &mockS3Client{}
 	svc = mockSvc

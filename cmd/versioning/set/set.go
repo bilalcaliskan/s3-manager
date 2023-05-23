@@ -1,12 +1,12 @@
-package versioning
+package set
 
 import (
 	"errors"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"github.com/bilalcaliskan/s3-manager/cmd/configure/versioning/options"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	"github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"
@@ -15,19 +15,18 @@ import (
 
 func init() {
 	versioningOpts = options.GetVersioningOptions()
-	//versioningOpts.InitFlags(VersioningCmd)
 }
 
 var (
 	svc            s3iface.S3API
 	logger         zerolog.Logger
 	versioningOpts *options.VersioningOptions
-	VersioningCmd  = &cobra.Command{
-		Use:           "versioning",
+	SetCmd         = &cobra.Command{
+		Use:           "set",
 		Short:         "",
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
 			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)
 
@@ -56,30 +55,36 @@ var (
 				return err
 			}
 
-			versioningOpts.State = strings.ToLower(args[0])
-
-			return nil
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			versioning, err := aws.GetBucketVersioning(svc, versioningOpts)
+			versioningOpts.DesiredState = strings.ToLower(args[0])
+			versioning, err := aws.GetBucketVersioning(svc, versioningOpts.RootOptions)
 			if err != nil {
 				return err
 			}
 
-			if *versioning.Status == "Enabled" && versioningOpts.State == "enabled" || *versioning.Status == "Suspended" && versioningOpts.State == "disabled" {
+			switch *versioning.Status {
+			case "Enabled":
+				versioningOpts.ActualState = "enabled"
+			case "Suspended":
+				versioningOpts.ActualState = "disabled"
+			default:
+				logger.Error().Msgf("unknown versioning status %s returned from S3 SDK", *versioning.Status)
+			}
+
+			logger.Info().Msgf("current versioning configuration is %s", versioningOpts.ActualState)
+			if versioningOpts.ActualState == "enabled" && versioningOpts.DesiredState == "enabled" || versioningOpts.ActualState == "disabled" && versioningOpts.DesiredState == "disabled" {
 				logger.Warn().
-					Str("state", *versioning.Status).
+					Str("state", versioningOpts.ActualState).
 					Msg(WarnDesiredState)
 				return nil
 			}
 
-			logger.Info().Msgf("setting versioning as %v", versioningOpts.State)
+			logger.Info().Msgf("setting versioning as %v", versioningOpts.DesiredState)
 			_, err = aws.SetBucketVersioning(svc, versioningOpts)
 			if err != nil {
 				return err
 			}
 
-			logger.Info().Msgf(InfSuccess, versioningOpts.State)
+			logger.Info().Msgf(InfSuccess, versioningOpts.DesiredState)
 
 			return nil
 		},

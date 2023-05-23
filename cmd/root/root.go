@@ -2,14 +2,15 @@ package root
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/configure"
+	"github.com/bilalcaliskan/s3-manager/cmd/versioning"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
-
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
-
+	"github.com/dimiro1/banner"
 	"github.com/rs/zerolog"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/clean"
@@ -17,7 +18,6 @@ import (
 	"github.com/bilalcaliskan/s3-manager/cmd/search"
 
 	"github.com/bilalcaliskan/s3-manager/internal/version"
-	"github.com/dimiro1/banner"
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +32,7 @@ func init() {
 	rootCmd.AddCommand(clean.CleanCmd)
 	rootCmd.AddCommand(search.SearchCmd)
 	rootCmd.AddCommand(configure.ConfigureCmd)
+	rootCmd.AddCommand(versioning.VersioningCmd)
 }
 
 var (
@@ -47,7 +48,7 @@ var (
 			if !opts.Interactive {
 				opts.SetAccessFlagsRequired(cmd)
 			}
-
+			fmt.Println("hello")
 			// TODO: fail if credentials are expired (meaning wrong credentials provided)
 
 			if opts.Interactive {
