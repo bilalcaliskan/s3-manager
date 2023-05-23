@@ -3,15 +3,12 @@ package clean
 import (
 	"fmt"
 
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
-
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/clean/options"
-	"github.com/bilalcaliskan/s3-manager/internal/cleaner"
-	"github.com/bilalcaliskan/s3-manager/internal/utils"
-
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
-
+	"github.com/bilalcaliskan/s3-manager/internal/cleaner"
+	"github.com/bilalcaliskan/s3-manager/internal/logging"
+	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -31,7 +28,7 @@ var (
 		Use:          "clean",
 		Short:        "clean subcommand cleans the app, finds and clears desired files",
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(*s3.S3)
 			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
 			cleanOpts.RootOptions = rootOpts
@@ -50,9 +47,6 @@ var (
 				return err
 			}
 
-			return nil
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
 			logger.Info().Msg("trying to search files on target bucket")
 
 			return cleaner.StartCleaning(svc, cleanOpts, logger)

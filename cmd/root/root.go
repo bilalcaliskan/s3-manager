@@ -2,7 +2,6 @@ package root
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -48,7 +47,7 @@ var (
 			if !opts.Interactive {
 				opts.SetAccessFlagsRequired(cmd)
 			}
-			fmt.Println("hello")
+
 			// TODO: fail if credentials are expired (meaning wrong credentials provided)
 
 			if opts.Interactive {
@@ -104,21 +103,11 @@ var (
 
 			switch result {
 			case "search":
-				if err := search.SearchCmd.PreRunE(cmd, args); err != nil {
-					logger.Error().Str("error", err.Error()).Msg("an error occurred while running search subcommand")
-					return err
-				}
-
 				if err := search.SearchCmd.RunE(cmd, args); err != nil {
 					logger.Error().Str("error", err.Error()).Msg("an error occurred while running search subcommand")
 					return err
 				}
 			case "clean":
-				if err := clean.CleanCmd.PreRunE(cmd, args); err != nil {
-					logger.Error().Str("error", err.Error()).Msg("an error occurred while running clean subcommand")
-					return err
-				}
-
 				if err := clean.CleanCmd.RunE(cmd, args); err != nil {
 					logger.Error().Str("error", err.Error()).Msg("an error occurred while running clean subcommand")
 					return err

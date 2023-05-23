@@ -67,7 +67,7 @@ var (
 			case "Suspended":
 				versioningOpts.ActualState = "disabled"
 			default:
-				logger.Error().Msgf("unknown versioning status %s returned from S3 SDK", *versioning.Status)
+				logger.Error().Msgf(ErrUnknownStatus, *versioning.Status)
 			}
 
 			logger.Info().Msgf("current versioning configuration is %s", versioningOpts.ActualState)
