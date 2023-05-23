@@ -40,9 +40,6 @@ func (m *mockS3Client) PutBucketVersioning(input *s3.PutBucketVersioningInput) (
 }
 
 func TestExecuteTooManyArguments(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -70,9 +67,6 @@ func TestExecuteTooManyArguments(t *testing.T) {
 }
 
 func TestExecuteWrongArguments(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -100,9 +94,6 @@ func TestExecuteWrongArguments(t *testing.T) {
 }
 
 func TestExecuteNoArgument(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -128,9 +119,6 @@ func TestExecuteNoArgument(t *testing.T) {
 }
 
 func TestExecuteSuccessEnabled(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -159,9 +147,6 @@ func TestExecuteSuccessEnabled(t *testing.T) {
 }
 
 func TestExecuteSuccessDisabled(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -190,9 +175,6 @@ func TestExecuteSuccessDisabled(t *testing.T) {
 }
 
 func TestExecuteSuccessAlreadyEnabled(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -221,9 +203,6 @@ func TestExecuteSuccessAlreadyEnabled(t *testing.T) {
 }
 
 func TestExecuteGetBucketVersioningErr(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -250,9 +229,6 @@ func TestExecuteGetBucketVersioningErr(t *testing.T) {
 }
 
 func TestExecuteSetBucketVersioningErr(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -278,78 +254,3 @@ func TestExecuteSetBucketVersioningErr(t *testing.T) {
 	rootOpts.SetZeroValues()
 	versioningOpts.SetZeroValues()
 }
-
-/*func TestExecuteSuccess(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	SetCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultListObjectsOutput.Contents = []*s3.Object{
-		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../mock/file1.txt"),
-			StorageClass: aws.String("STANDARD"),
-		},
-		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../mock/file2.txt"),
-			StorageClass: aws.String("STANDARD"),
-		},
-		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../mock/file3.txt"),
-			StorageClass: aws.String("STANDARD"),
-		},
-	}
-
-	SearchCmd.SetContext(context.WithValue(SearchCmd.Context(), options.S3SvcKey{}, mockSvc))
-	SearchCmd.SetContext(context.WithValue(SearchCmd.Context(), options.OptsKey{}, rootOpts))
-
-	searchOpts.Substring = "akqASmLLlK"
-	err := SearchCmd.Execute()
-	assert.Nil(t, err)
-
-	rootOpts.SetZeroValues()
-	searchOpts.SetZeroValues()
-}
-
-func TestExecuteEmptyList(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	SearchCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultListObjectsOutput.Contents = []*s3.Object{}
-
-	SearchCmd.SetContext(context.WithValue(SearchCmd.Context(), options.S3SvcKey{}, mockSvc))
-	SearchCmd.SetContext(context.WithValue(SearchCmd.Context(), options.OptsKey{}, rootOpts))
-
-	searchOpts.Substring = "akqASmLLlK"
-	err := SearchCmd.Execute()
-	assert.Nil(t, err)
-
-	rootOpts.SetZeroValues()
-	searchOpts.SetZeroValues()
-}
-*/

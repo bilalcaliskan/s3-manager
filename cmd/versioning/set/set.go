@@ -2,6 +2,7 @@ package set
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -11,6 +12,17 @@ import (
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+)
+
+const (
+	ErrTooManyArguments      = "too many arguments. please provide just 'enabled' or 'disabled'"
+	ErrWrongArgumentProvided = "wrong argument provided. versioning state must be 'enabled' or 'disabled'"
+	ErrNoArgument            = "no argument provided. versioning subcommand takes 'enabled' or 'disabled' argument, please provide one of them"
+	ErrUnknownStatus         = "unknown status '%s' returned from AWS SDK"
+
+	WarnDesiredState = "versioning is already at the desired state, skipping configuration"
+
+	InfSuccess = "successfully configured versioning as %v"
 )
 
 func init() {
@@ -67,7 +79,9 @@ var (
 			case "Suspended":
 				versioningOpts.ActualState = "disabled"
 			default:
-				logger.Error().Msgf(ErrUnknownStatus, *versioning.Status)
+				err := fmt.Errorf("unknown versioning status %s returned from S3 SDK", *versioning.Status)
+				logger.Error().Msg(err.Error())
+				return err
 			}
 
 			logger.Info().Msgf("current versioning configuration is %s", versioningOpts.ActualState)

@@ -2,6 +2,7 @@ package show
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
@@ -36,7 +37,6 @@ var (
 				err = errors.New("too many arguments provided")
 				logger.Error().
 					Msg(err.Error())
-				_ = cmd.Usage()
 				return err
 			}
 
@@ -51,7 +51,9 @@ var (
 			case "Suspended":
 				versioningOpts.ActualState = "disabled"
 			default:
-				logger.Error().Msgf("unknown versioning status %s returned from S3 SDK", *versioning.Status)
+				err := fmt.Errorf("unknown versioning status %s returned from S3 SDK", *versioning.Status)
+				logger.Error().Msg(err.Error())
+				return err
 			}
 
 			logger.Info().Msgf("current versioning configuration is %s", versioningOpts.ActualState)
