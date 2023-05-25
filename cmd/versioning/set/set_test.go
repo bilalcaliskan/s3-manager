@@ -146,6 +146,34 @@ func TestExecuteSuccessEnabled(t *testing.T) {
 	versioningOpts.SetZeroValues()
 }
 
+func TestExecuteSuccessEnabledWrongVersioning(t *testing.T) {
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+
+	ctx := context.Background()
+	SetCmd.SetContext(ctx)
+
+	mockSvc := &mockS3Client{}
+	svc = mockSvc
+
+	defaultGetBucketVersioningErr = nil
+	defaultGetBucketVersioningOutput.Status = aws.String("Suspendeddd")
+	defaultPutBucketVersioningErr = nil
+
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.S3SvcKey{}, svc))
+	SetCmd.SetContext(context.WithValue(SetCmd.Context(), options.OptsKey{}, rootOpts))
+
+	SetCmd.SetArgs([]string{"enabled"})
+	err := SetCmd.Execute()
+	assert.NotNil(t, err)
+
+	rootOpts.SetZeroValues()
+	versioningOpts.SetZeroValues()
+}
+
 func TestExecuteSuccessDisabled(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"

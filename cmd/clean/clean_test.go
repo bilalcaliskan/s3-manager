@@ -84,9 +84,6 @@ func TestExecuteInvalidMinMaxValues(t *testing.T) {
 }
 
 func TestExecute(t *testing.T) {
-	//err = CleanCmd.PersistentFlags().Set("verbose", "true")
-	//assert.Nil(t, err)
-
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -107,4 +104,8 @@ func TestExecute(t *testing.T) {
 
 	rootOpts.SetZeroValues()
 	cleanOpts.SetZeroValues()
+}
+
+func TestExecuteSuccess(t *testing.T) {
+	// TODO: implement
 }

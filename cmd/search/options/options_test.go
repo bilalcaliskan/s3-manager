@@ -1,14 +1,14 @@
 package options
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
-type promptMock struct {
+// TODO: uncomment when interactivity enabled again
+/*type promptMock struct {
 	msg string
 	err error
 }
@@ -16,7 +16,7 @@ type promptMock struct {
 func (p promptMock) Run() (string, error) {
 	// return expected result
 	return p.msg, p.err
-}
+}*/
 
 func TestGetSearchOptions(t *testing.T) {
 	opts := GetSearchOptions()
@@ -27,9 +27,11 @@ func TestSearchOptions_InitFlags(t *testing.T) {
 	cmd := cobra.Command{}
 	opts := GetSearchOptions()
 	opts.InitFlags(&cmd)
+	opts.SetZeroValues()
 }
 
-func TestSearchOptions_PromptInteractiveValuesSubstringErr(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestSearchOptions_PromptInteractiveValuesSubstringErr(t *testing.T) {
 	opts := GetSearchOptions()
 
 	substringRunnerOrg := substringRunner
@@ -43,9 +45,10 @@ func TestSearchOptions_PromptInteractiveValuesSubstringErr(t *testing.T) {
 
 	substringRunner = substringRunnerOrg
 	opts.SetZeroValues()
-}
+}*/
 
-func TestSearchOptions_PromptInteractiveValuesSubstringSuccess(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestSearchOptions_PromptInteractiveValuesSubstringSuccess(t *testing.T) {
 	opts := GetSearchOptions()
 
 	substringRunnerOrg := substringRunner
@@ -59,9 +62,10 @@ func TestSearchOptions_PromptInteractiveValuesSubstringSuccess(t *testing.T) {
 
 	substringRunner = substringRunnerOrg
 	opts.SetZeroValues()
-}
+}*/
 
-func TestSearchOptions_PromptInteractiveValuesExtensionsErr(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestSearchOptions_PromptInteractiveValuesExtensionsErr(t *testing.T) {
 	opts := GetSearchOptions()
 
 	substringRunnerOrg := substringRunner
@@ -84,9 +88,10 @@ func TestSearchOptions_PromptInteractiveValuesExtensionsErr(t *testing.T) {
 	substringRunner = substringRunnerOrg
 	extensionRunner = extensionRunnerOrg
 	opts.SetZeroValues()
-}
+}*/
 
-func TestSearchOptions_PromptInteractiveValuesExtensionsSuccess(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestSearchOptions_PromptInteractiveValuesExtensionsSuccess(t *testing.T) {
 	opts := GetSearchOptions()
 
 	substringRunnerOrg := substringRunner
@@ -110,4 +115,4 @@ func TestSearchOptions_PromptInteractiveValuesExtensionsSuccess(t *testing.T) {
 	substringRunner = substringRunnerOrg
 	extensionRunner = extensionRunnerOrg
 	opts.SetZeroValues()
-}
+}*/

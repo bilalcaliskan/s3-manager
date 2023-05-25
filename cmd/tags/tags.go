@@ -4,10 +4,11 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/bilalcaliskan/s3-manager/cmd/tags/options"
+
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"github.com/bilalcaliskan/s3-manager/cmd/configure/tags/options"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"

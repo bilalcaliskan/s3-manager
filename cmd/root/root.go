@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bilalcaliskan/s3-manager/cmd/configure"
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
@@ -30,7 +29,6 @@ func init() {
 
 	rootCmd.AddCommand(clean.CleanCmd)
 	rootCmd.AddCommand(search.SearchCmd)
-	rootCmd.AddCommand(configure.ConfigureCmd)
 	rootCmd.AddCommand(versioning.VersioningCmd)
 }
 
@@ -44,13 +42,17 @@ var (
 		Long:    ``,
 		Version: ver.GitVersion,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if !opts.Interactive {
+			// TODO: uncomment when interactivity enabled again
+			/*if !opts.Interactive {
 				opts.SetAccessFlagsRequired(cmd)
-			}
+			}*/
+			// TODO: remove when interactivity enabled again
+			opts.SetAccessFlagsRequired(cmd)
 
 			// TODO: fail if credentials are expired (meaning wrong credentials provided)
 
-			if opts.Interactive {
+			// TODO: uncomment when interactivity enabled again
+			/*if opts.Interactive {
 				if err := opts.PromptAccessCredentials(options.AccessKeyRunner, options.SecretKeyRunner,
 					options.BucketRunner, options.RegionRunner); err != nil {
 					logger.Error().
@@ -58,7 +60,7 @@ var (
 						Msg("an error occurred while creating aws service")
 					return err
 				}
-			}
+			}*/
 
 			svc, err := aws.CreateAwsService(opts)
 			if err != nil {
@@ -89,6 +91,10 @@ var (
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			return nil
+		},
+		// TODO: uncomment when interactivity enabled again
+		/*RunE: func(cmd *cobra.Command, args []string) error {
 			if !opts.Interactive {
 				return nil
 			}
@@ -115,7 +121,7 @@ var (
 			}
 
 			return nil
-		},
+		},*/
 	}
 )
 

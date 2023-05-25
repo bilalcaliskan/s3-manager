@@ -1,7 +1,10 @@
 package clean
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/clean/options"
@@ -23,6 +26,13 @@ var (
 	ValidSortByOpts = []string{"size", "lastModificationDate"}
 	cleanOpts       *options.CleanOptions
 	svc             *s3.S3
+	promptRunner    prompt.PromptRunner = prompt.GetPromptRunner("Delete Files? (y/N)", true, func(s string) error {
+		if len(s) == 1 {
+			return nil
+		}
+
+		return errors.New("invalid input")
+	})
 	// CleanCmd represents the clean command
 	CleanCmd = &cobra.Command{
 		Use:          "clean",
@@ -49,7 +59,7 @@ var (
 
 			logger.Info().Msg("trying to search files on target bucket")
 
-			return cleaner.StartCleaning(svc, cleanOpts, logger)
+			return cleaner.StartCleaning(svc, promptRunner, cleanOpts, logger)
 		},
 	}
 )

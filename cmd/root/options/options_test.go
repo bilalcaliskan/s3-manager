@@ -1,7 +1,6 @@
 package options
 
 import (
-	"errors"
 	"os"
 	"testing"
 
@@ -9,7 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type promptMock struct {
+// TODO: uncomment when interactivity enabled again
+/*type promptMock struct {
 	msg string
 	err error
 }
@@ -17,7 +17,7 @@ type promptMock struct {
 func (p promptMock) Run() (string, error) {
 	// return expected result
 	return p.msg, p.err
-}
+}*/
 
 func TestGetRootOptions(t *testing.T) {
 	opts := GetRootOptions()
@@ -44,7 +44,8 @@ func TestRootOptions_SetAccessFlagsRequired(t *testing.T) {
 	opts.SetAccessFlagsRequired(cmd)
 }
 
-func TestRootOptions_PromptAccessCredentials_AllSuccess(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestRootOptions_PromptAccessCredentials_AllSuccess(t *testing.T) {
 	accessKeyRunnerOrg := AccessKeyRunner
 	AccessKeyRunner = promptMock{
 		msg: "adlskfjasldkf",
@@ -79,9 +80,10 @@ func TestRootOptions_PromptAccessCredentials_AllSuccess(t *testing.T) {
 	SecretKeyRunner = secretKeyRunnerOrg
 	RegionRunner = regionRunnerOrg
 	BucketRunner = bucketRunnerOrg
-}
+}*/
 
-func TestRootOptions_PromptAccessCredentials_AccessKeyFailure(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestRootOptions_PromptAccessCredentials_AccessKeyFailure(t *testing.T) {
 	accessKeyRunnerOrg := AccessKeyRunner
 	AccessKeyRunner = promptMock{
 		msg: "",
@@ -116,9 +118,10 @@ func TestRootOptions_PromptAccessCredentials_AccessKeyFailure(t *testing.T) {
 	SecretKeyRunner = secretKeyRunnerOrg
 	RegionRunner = regionRunnerOrg
 	BucketRunner = bucketRunnerOrg
-}
+}*/
 
-func TestRootOptions_PromptAccessCredentials_SecretKeyFailure(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestRootOptions_PromptAccessCredentials_SecretKeyFailure(t *testing.T) {
 	accessKeyRunnerOrg := AccessKeyRunner
 	AccessKeyRunner = promptMock{
 		msg: "dsafasdfdfs",
@@ -153,9 +156,10 @@ func TestRootOptions_PromptAccessCredentials_SecretKeyFailure(t *testing.T) {
 	SecretKeyRunner = secretKeyRunnerOrg
 	RegionRunner = regionRunnerOrg
 	BucketRunner = bucketRunnerOrg
-}
+}*/
 
-func TestRootOptions_PromptAccessCredentials_BucketFailure(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestRootOptions_PromptAccessCredentials_BucketFailure(t *testing.T) {
 	accessKeyRunnerOrg := AccessKeyRunner
 	AccessKeyRunner = promptMock{
 		msg: "dsafasdfdfs",
@@ -190,9 +194,10 @@ func TestRootOptions_PromptAccessCredentials_BucketFailure(t *testing.T) {
 	SecretKeyRunner = secretKeyRunnerOrg
 	RegionRunner = regionRunnerOrg
 	BucketRunner = bucketRunnerOrg
-}
+}*/
 
-func TestRootOptions_PromptAccessCredentials_RegionFailure(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestRootOptions_PromptAccessCredentials_RegionFailure(t *testing.T) {
 	accessKeyRunnerOrg := AccessKeyRunner
 	AccessKeyRunner = promptMock{
 		msg: "dsafasdfdfs",
@@ -227,7 +232,7 @@ func TestRootOptions_PromptAccessCredentials_RegionFailure(t *testing.T) {
 	SecretKeyRunner = secretKeyRunnerOrg
 	RegionRunner = regionRunnerOrg
 	BucketRunner = bucketRunnerOrg
-}
+}*/
 
 func TestRootOptions_SetAccessCredentialsFromEnv_Filled(t *testing.T) {
 	opts := GetRootOptions()

@@ -2,6 +2,10 @@ package cleaner
 
 import (
 	"bytes"
+	"errors"
+	"strings"
+
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 
@@ -11,7 +15,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func StartCleaning(svc s3iface.S3API, cleanOpts *start.CleanOptions, logger zerolog.Logger) error {
+func StartCleaning(svc s3iface.S3API, runner prompt.PromptRunner, cleanOpts *start.CleanOptions, logger zerolog.Logger) error {
 	allFiles, err := aws.GetAllFiles(svc, cleanOpts.RootOptions, cleanOpts.FileNamePrefix)
 	if err != nil {
 		return err
@@ -47,10 +51,22 @@ func StartCleaning(svc s3iface.S3API, cleanOpts *start.CleanOptions, logger zero
 		return nil
 	}
 
-	if err := promptDeletion(cleanOpts, logger, keys); err != nil {
+	if !cleanOpts.AutoApprove {
+		logger.Info().Any("files", keys).Msg("these files will be removed if you approve:")
+
+		if res, err := runner.Run(); err != nil {
+			if strings.ToLower(res) == "n" {
+				return errors.New("user terminated the process")
+			}
+
+			return errors.New("invalid input")
+		}
+	}
+
+	/*if err := promptDeletion(cleanOpts, logger, keys); err != nil {
 		logger.Warn().Str("error", err.Error()).Msg("an error occurred while prompting file deletion")
 		return err
-	}
+	}*/
 
 	if err := aws.DeleteFiles(svc, cleanOpts.RootOptions.BucketName, targetObjects, cleanOpts.DryRun, logger); err != nil {
 		logger.Error().Str("error", err.Error()).Msg("an error occurred while deleting target files")

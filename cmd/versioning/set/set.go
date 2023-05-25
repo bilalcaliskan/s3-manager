@@ -1,7 +1,6 @@
 package set
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -22,7 +21,9 @@ const (
 
 	WarnDesiredState = "versioning is already at the desired state, skipping configuration"
 
-	InfSuccess = "successfully configured versioning as %v"
+	InfSuccess           = "successfully configured versioning as %v"
+	InfCurrentState      = "current versioning configuration is %s"
+	InfSettingVersioning = "setting versioning as %v"
 )
 
 func init() {
@@ -45,25 +46,7 @@ var (
 			versioningOpts.RootOptions = rootOpts
 			logger = logging.GetLogger(rootOpts)
 
-			if len(args) == 0 {
-				err = errors.New(ErrNoArgument)
-				logger.Error().
-					Msg(err.Error())
-				return err
-			}
-
-			if len(args) > 1 {
-				err = errors.New(ErrTooManyArguments)
-				logger.Error().
-					Msg(err.Error())
-				return err
-			}
-
-			ver := strings.ToLower(args[0])
-			if ver != "enabled" && ver != "disabled" {
-				err = errors.New(ErrWrongArgumentProvided)
-				logger.Error().
-					Msg(err.Error())
+			if err = checkFlags(logger, args); err != nil {
 				return err
 			}
 
@@ -79,12 +62,12 @@ var (
 			case "Suspended":
 				versioningOpts.ActualState = "disabled"
 			default:
-				err := fmt.Errorf("unknown versioning status %s returned from S3 SDK", *versioning.Status)
+				err := fmt.Errorf(ErrUnknownStatus, *versioning.Status)
 				logger.Error().Msg(err.Error())
 				return err
 			}
 
-			logger.Info().Msgf("current versioning configuration is %s", versioningOpts.ActualState)
+			logger.Info().Msgf(InfCurrentState, versioningOpts.ActualState)
 			if versioningOpts.ActualState == "enabled" && versioningOpts.DesiredState == "enabled" || versioningOpts.ActualState == "disabled" && versioningOpts.DesiredState == "disabled" {
 				logger.Warn().
 					Str("state", versioningOpts.ActualState).
@@ -92,7 +75,7 @@ var (
 				return nil
 			}
 
-			logger.Info().Msgf("setting versioning as %v", versioningOpts.DesiredState)
+			logger.Info().Msgf(InfSettingVersioning, versioningOpts.DesiredState)
 			_, err = aws.SetBucketVersioning(svc, versioningOpts)
 			if err != nil {
 				return err

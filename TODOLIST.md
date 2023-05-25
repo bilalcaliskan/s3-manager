@@ -3,3 +3,4 @@
 - [ ] configure/tags
 - [ ] configure/encryption
 - [ ] configure/objectlock
+- [ ] re-enable prompt/select logic

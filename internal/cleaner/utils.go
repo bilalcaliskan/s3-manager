@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	start "github.com/bilalcaliskan/s3-manager/cmd/clean/options"
-	"github.com/manifoldco/promptui"
 	"github.com/rs/zerolog"
 )
 
@@ -60,34 +59,6 @@ func sortObjects(slice []*s3.Object, startOpts *start.CleanOptions) {
 func checkLength(targetObjects []*s3.Object) error {
 	if len(targetObjects) == 0 {
 		return errors.New("no deletable file found on the target bucket")
-	}
-
-	return nil
-}
-
-func promptDeletion(startOpts *start.CleanOptions, logger zerolog.Logger, keys []string) error {
-	if !startOpts.AutoApprove {
-		logger.Info().Any("files", keys).Msg("these files will be removed if you approve:")
-
-		prompt := promptui.Prompt{
-			Label:     "Delete Files? (y/N)",
-			IsConfirm: true,
-			Validate: func(s string) error {
-				if len(s) == 1 {
-					return nil
-				}
-
-				return errors.New("invalid input")
-			},
-		}
-
-		if res, err := prompt.Run(); err != nil {
-			if strings.ToLower(res) == "n" {
-				return errors.New("user terminated the process")
-			}
-
-			return errors.New("invalid input")
-		}
 	}
 
 	return nil

@@ -3,19 +3,17 @@ package options
 import (
 	"fmt"
 
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	rootOptions                         = &RootOptions{}
-	SelectRunner    prompt.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
+	rootOptions = &RootOptions{}
+	/*SelectRunner    prompt.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
 	AccessKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Access Key", nil)
 	SecretKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Secret Key", nil)
 	RegionRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Region", nil)
-	BucketRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Bucket Name", nil)
+	BucketRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Bucket Name", nil)*/
 )
 
 type (
@@ -37,7 +35,8 @@ type RootOptions struct {
 	// VerboseLog is the verbosity of the logging library
 	VerboseLog bool
 	// Interactive is the decision of that if you want to use interactive feature
-	Interactive bool
+	// TODO: uncomment when interactivity enabled again
+	//Interactive bool
 	// BannerFilePath is the relative path to the banner file
 	BannerFilePath string
 }
@@ -56,8 +55,9 @@ func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
 			"variable (default \"\")")
 	cmd.PersistentFlags().BoolVarP(&opts.VerboseLog, "verbose", "", false,
 		"verbose output of the logging library (default false)")
-	cmd.PersistentFlags().BoolVarP(&opts.Interactive, "interactive", "i", false,
-		"decision of that if you want to use interactive feature (default false)")
+	// TODO: uncomment when interactivity enabled again
+	/*cmd.PersistentFlags().BoolVarP(&opts.Interactive, "interactive", "i", false,
+	"decision of that if you want to use interactive feature (default false)")*/
 	cmd.PersistentFlags().StringVarP(&opts.BannerFilePath, "bannerFilePath", "", "banner.txt",
 		"relative path of the banner file")
 }
@@ -117,11 +117,13 @@ func (opts *RootOptions) SetZeroValues() {
 	opts.SecretKey = ""
 	opts.Region = ""
 	opts.VerboseLog = false
-	opts.Interactive = false
+	// TODO: uncomment when interactivity enabled again
+	//opts.Interactive = false
 	opts.BannerFilePath = "banner.txt"
 }
 
-func (opts *RootOptions) PromptAccessCredentials(accessKeyRunner, secretKeyRunner, bucketRunner, regionRunner prompt.PromptRunner) error {
+// TODO: uncomment when interactivity enabled again
+/*func (opts *RootOptions) PromptAccessCredentials(accessKeyRunner, secretKeyRunner, bucketRunner, regionRunner prompt.PromptRunner) error {
 	if opts.AccessKey == "" {
 		res, err := accessKeyRunner.Run()
 		if err != nil {
@@ -159,4 +161,4 @@ func (opts *RootOptions) PromptAccessCredentials(accessKeyRunner, secretKeyRunne
 	}
 
 	return nil
-}
+}*/

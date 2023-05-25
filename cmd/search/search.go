@@ -35,12 +35,13 @@ var (
 
 			logger = logging.GetLogger(rootOpts)
 
-			if searchOpts.Interactive {
+			// TODO: uncomment when interactivity enabled again
+			/*if searchOpts.Interactive {
 				if err := searchOpts.PromptInteractiveValues(); err != nil {
 					logger.Error().Str("error", err.Error()).Msg("an error occurred while prompting values")
 					return err
 				}
-			}
+			}*/
 
 			if searchOpts.Substring == "" {
 				logger.Warn().Msg("will list all files in specified file extensions since substring flag is empty")

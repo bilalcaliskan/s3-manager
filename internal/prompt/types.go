@@ -2,7 +2,8 @@ package prompt
 
 import "github.com/manifoldco/promptui"
 
-type SelectRunner interface {
+// TODO: uncomment when interactivity enabled again
+/*type SelectRunner interface {
 	Run() (int, string, error)
 }
 
@@ -21,5 +22,19 @@ func GetPromptRunner(label string, valFunc func(s string) error) *promptui.Promp
 	return &promptui.Prompt{
 		Label:    label,
 		Validate: valFunc,
+	}
+}*/
+
+// TODO: remove when interactivity enabled again
+
+type PromptRunner interface {
+	Run() (string, error)
+}
+
+func GetPromptRunner(label string, isConfirm bool, valFunc func(s string) error) *promptui.Prompt {
+	return &promptui.Prompt{
+		Label:     label,
+		IsConfirm: isConfirm,
+		Validate:  valFunc,
 	}
 }

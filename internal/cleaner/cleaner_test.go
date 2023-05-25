@@ -59,6 +59,16 @@ var (
 	mockLogger = logging.GetLogger(options.GetRootOptions())
 )
 
+type promptMock struct {
+	msg string
+	err error
+}
+
+func (p promptMock) Run() (string, error) {
+	// return expected result
+	return p.msg, p.err
+}
+
 type mockS3Client struct {
 	s3iface.S3API
 }
@@ -95,8 +105,63 @@ func TestStartCleaning(t *testing.T) {
 	cleanOpts.RootOptions = options.GetRootOptions()
 	cleanOpts.DryRun = false
 	cleanOpts.AutoApprove = true
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.Nil(t, err)
+
+	cleanOpts.SetZeroValues()
+}
+
+func TestStartCleaningNotAutoApprovedSuccess(t *testing.T) {
+	m := &mockS3Client{}
+
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = false
+	cleanOpts.AutoApprove = false
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
+	assert.Nil(t, err)
+
+	cleanOpts.SetZeroValues()
+}
+
+func TestStartCleaningNotAutoApprovedFailure(t *testing.T) {
+	m := &mockS3Client{}
+
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = false
+	cleanOpts.AutoApprove = false
+	promptMock := promptMock{
+		msg: "y",
+		err: errors.New("dummy error"),
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
+	assert.NotNil(t, err)
+
+	cleanOpts.SetZeroValues()
+}
+
+func TestStartCleaningNotAutoApprovedExit(t *testing.T) {
+	m := &mockS3Client{}
+
+	cleanOpts := options2.GetCleanOptions()
+	cleanOpts.RootOptions = options.GetRootOptions()
+	cleanOpts.DryRun = false
+	cleanOpts.AutoApprove = false
+	promptMock := promptMock{
+		msg: "n",
+		err: errors.New("dummy error"),
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
+	assert.NotNil(t, err)
 
 	cleanOpts.SetZeroValues()
 }
@@ -109,7 +174,11 @@ func TestStartCleaningSortBySize(t *testing.T) {
 	cleanOpts.DryRun = false
 	cleanOpts.AutoApprove = true
 	cleanOpts.SortBy = "size"
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
 	cleanOpts.SetZeroValues()
@@ -125,7 +194,11 @@ func TestStartCleaningWrongBorder(t *testing.T) {
 	cleanOpts.MinFileSizeInMb = 0
 	cleanOpts.MaxFileSizeInMb = 0
 	cleanOpts.KeepLastNFiles = 300
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	// normally we would expect err not to be nil but we are ignoring the error in that case
 	assert.Nil(t, err)
 
@@ -141,7 +214,11 @@ func TestStartCleaningDryRunEqualMinMaxValues(t *testing.T) {
 	cleanOpts.AutoApprove = true
 	cleanOpts.MinFileSizeInMb = 0
 	cleanOpts.MaxFileSizeInMb = 0
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
 	cleanOpts.SetZeroValues()
@@ -173,7 +250,11 @@ func TestStartCleaningDirectorySuffix(t *testing.T) {
 			},
 		},
 	}
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
 	cleanOpts.SetZeroValues()
@@ -206,7 +287,11 @@ func TestStartCleaningSkippedExtensions(t *testing.T) {
 			},
 		},
 	}
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
 	cleanOpts.SetZeroValues()
@@ -239,7 +324,11 @@ func TestStartCleaningCase1(t *testing.T) {
 			},
 		},
 	}
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
 	cleanOpts.SetZeroValues()
@@ -272,7 +361,11 @@ func TestStartCleaningCase2(t *testing.T) {
 			},
 		},
 	}
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
 	cleanOpts.SetZeroValues()
@@ -304,7 +397,11 @@ func TestStartCleaningCase3(t *testing.T) {
 			},
 		},
 	}
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
 	cleanOpts.SetZeroValues()
@@ -365,7 +462,11 @@ func TestStartCleaningSpecificFileExtensions(t *testing.T) {
 			},
 		},
 	}
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
 	cleanOpts.SetZeroValues()
@@ -381,7 +482,11 @@ func TestStartCleaningDryRunNotEqualMinMaxValues(t *testing.T) {
 	cleanOpts.AutoApprove = true
 	cleanOpts.MinFileSizeInMb = 0
 	cleanOpts.MaxFileSizeInMb = 10
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.Nil(t, err)
 
 	cleanOpts.SetZeroValues()
@@ -395,7 +500,11 @@ func TestStartCleaningListError(t *testing.T) {
 	cleanOpts.RootOptions = options.GetRootOptions()
 	cleanOpts.DryRun = false
 	cleanOpts.AutoApprove = true
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.NotNil(t, err)
 
 	cleanOpts.SetZeroValues()
@@ -410,7 +519,11 @@ func TestStartCleaningDeleteError(t *testing.T) {
 	cleanOpts.RootOptions = options.GetRootOptions()
 	cleanOpts.DryRun = false
 	cleanOpts.AutoApprove = true
-	err := StartCleaning(m, cleanOpts, mockLogger)
+	promptMock := promptMock{
+		msg: "y",
+		err: nil,
+	}
+	err := StartCleaning(m, promptMock, cleanOpts, mockLogger)
 	assert.NotNil(t, err)
 
 	cleanOpts.SetZeroValues()

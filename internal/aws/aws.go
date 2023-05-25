@@ -7,9 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	options4 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
+	options3 "github.com/bilalcaliskan/s3-manager/cmd/tags/options"
 
-	options3 "github.com/bilalcaliskan/s3-manager/cmd/configure/tags/options"
+	options4 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 

@@ -1,20 +1,15 @@
 package root
 
 import (
-	"errors"
-	"fmt"
 	"testing"
-
-	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/spf13/cobra"
 
 	"github.com/stretchr/testify/assert"
 )
 
-type promptMock struct {
+// TODO: uncomment when interactivity enabled again
+/*type promptMock struct {
 	msg string
 	err error
 }
@@ -32,14 +27,15 @@ type selectMock struct {
 func (p selectMock) Run() (int, string, error) {
 	// return expected result
 	return 1, p.msg, p.err
-}
+}*/
 
 func TestOuterExecute(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
-	err = rootCmd.PersistentFlags().Set("interactive", "false")
-	assert.Nil(t, err)
+	// TODO: uncomment when interactivity enabled again
+	/*err = rootCmd.PersistentFlags().Set("interactive", "false")
+	assert.Nil(t, err)*/
 
 	err = Execute()
 	assert.Nil(t, err)
@@ -51,8 +47,9 @@ func TestExecuteCreateSvcFailure(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "")
 	assert.Nil(t, err)
 
-	err = rootCmd.PersistentFlags().Set("interactive", "false")
-	assert.Nil(t, err)
+	// TODO: uncomment when interactivity enabled again
+	/*err = rootCmd.PersistentFlags().Set("interactive", "false")
+	assert.Nil(t, err)*/
 
 	err = rootCmd.Execute()
 	assert.NotNil(t, err)
@@ -70,11 +67,15 @@ func TestExecute(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("bannerFilePath", "./../../build/ci/banner.txt")
 	assert.Nil(t, err)
 
-	err = rootCmd.PersistentFlags().Set("interactive", "true")
-	assert.Nil(t, err)
+	// TODO: uncomment when interactivity enabled again
+	/*err = rootCmd.PersistentFlags().Set("interactive", "true")
+	assert.Nil(t, err)*/
 
 	err = rootCmd.Execute()
-	assert.NotNil(t, err)
+	// TODO: uncomment when interactivity enabled again
+	//assert.NotNil(t, err)
+	// TODO: remove when interactivity enabled again
+	assert.Nil(t, err)
 
 	opts.SetZeroValues()
 }
@@ -95,7 +96,8 @@ func setAccessFlags(cmd *cobra.Command, accessKey, secretKey, bucketName, region
 	return cmd.PersistentFlags().Set("region", region)
 }
 
-func TestExecuteInteractiveSelectRunnerSearchSuccess(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveSelectRunnerSearchSuccess(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -109,9 +111,10 @@ func TestExecuteInteractiveSelectRunnerSearchSuccess(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
-}
+}*/
 
-func TestExecuteInteractiveSelectRunnerSearchErr(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveSelectRunnerSearchErr(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -125,9 +128,10 @@ func TestExecuteInteractiveSelectRunnerSearchErr(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
-}
+}*/
 
-func TestExecuteInteractiveSelectRunnerCleanSuccess(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveSelectRunnerCleanSuccess(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -141,9 +145,10 @@ func TestExecuteInteractiveSelectRunnerCleanSuccess(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
-}
+}*/
 
-func TestExecuteInteractiveSelectRunnerErr(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveSelectRunnerErr(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -157,9 +162,10 @@ func TestExecuteInteractiveSelectRunnerErr(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
-}
+}*/
 
-func TestExecuteInteractiveAccessPromptErr(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveAccessPromptErr(t *testing.T) {
 	err := setAccessFlags(rootCmd, "", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -178,9 +184,10 @@ func TestExecuteInteractiveAccessPromptErr(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.AccessKeyRunner = accessKeyRunnerOrg
-}
+}*/
 
-func TestExecuteInteractiveAccessPromptSuccess(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveAccessPromptSuccess(t *testing.T) {
 	err := setAccessFlags(rootCmd, "", "thisissecretkey", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -200,9 +207,10 @@ func TestExecuteInteractiveAccessPromptSuccess(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.AccessKeyRunner = accessKeyRunnerOrg
-}
+}*/
 
-func TestExecuteInteractiveSecretPromptErr(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveSecretPromptErr(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -221,9 +229,10 @@ func TestExecuteInteractiveSecretPromptErr(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.SecretKeyRunner = secretKeyRunnerOrg
-}
+}*/
 
-func TestExecuteInteractiveSecretPromptSuccess(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveSecretPromptSuccess(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "", "thisisbucketname", "thisisregion")
 	assert.Nil(t, err)
 
@@ -242,9 +251,10 @@ func TestExecuteInteractiveSecretPromptSuccess(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.SecretKeyRunner = secretKeyRunnerOrg
-}
+}*/
 
-func TestExecuteInteractiveBucketPromptErr(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveBucketPromptErr(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "", "thisisregion")
 	assert.Nil(t, err)
 
@@ -263,9 +273,10 @@ func TestExecuteInteractiveBucketPromptErr(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.BucketRunner = bucketRunnerOrg
-}
+}*/
 
-func TestExecuteInteractiveBucketPromptSuccess(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveBucketPromptSuccess(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "", "thisisregion")
 	assert.Nil(t, err)
 
@@ -284,9 +295,10 @@ func TestExecuteInteractiveBucketPromptSuccess(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.BucketRunner = bucketRunnerOrg
-}
+}*/
 
-func TestExecuteInteractiveRegionPromptErr(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveRegionPromptErr(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "")
 	assert.Nil(t, err)
 
@@ -305,9 +317,10 @@ func TestExecuteInteractiveRegionPromptErr(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.RegionRunner = regionRunnerOrg
-}
+}*/
 
-func TestExecuteInteractiveRegionPromptSuccess(t *testing.T) {
+// TODO: uncomment when interactivity enabled again
+/*func TestExecuteInteractiveRegionPromptSuccess(t *testing.T) {
 	err := setAccessFlags(rootCmd, "thisisaccesskey", "thisissecretkey", "thisisbucketname", "")
 	assert.Nil(t, err)
 
@@ -326,4 +339,4 @@ func TestExecuteInteractiveRegionPromptSuccess(t *testing.T) {
 
 	opts.SetZeroValues()
 	options.RegionRunner = regionRunnerOrg
-}
+}*/
