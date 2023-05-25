@@ -1,6 +1,6 @@
 - [ ] search/file
 - [ ] search/text (all files, single file etc.)
-- [ ] configure/tags
-- [ ] configure/encryption
-- [ ] configure/objectlock
+- [ ] tags
+- [ ] encryption
+- [ ] objectlock
 - [ ] re-enable prompt/select logic

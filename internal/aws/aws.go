@@ -3,13 +3,12 @@ package aws
 import (
 	"bytes"
 	"errors"
+	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 	"log"
 	"strings"
 	"sync"
 
 	options4 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
-
-	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
