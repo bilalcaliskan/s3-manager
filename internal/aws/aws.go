@@ -7,8 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	options3 "github.com/bilalcaliskan/s3-manager/cmd/tags/options"
-
 	options4 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
@@ -62,18 +60,18 @@ func GetAllFiles(svc s3iface.S3API, opts *options.RootOptions, prefix string) (r
 }
 
 // GetBucketTags gets the target bucket
-func GetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.GetBucketTaggingOutput, err error) {
-	// fetch all the objects in target bucket
-	res, err = svc.GetBucketTagging(&s3.GetBucketTaggingInput{
-		Bucket: aws.String(opts.BucketName),
-	})
-
-	if err != nil {
-		return res, err
-	}
-
-	return res, nil
-}
+//func GetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.GetBucketTaggingOutput, err error) {
+//	// fetch all the objects in target bucket
+//	res, err = svc.GetBucketTagging(&s3.GetBucketTaggingInput{
+//		Bucket: aws.String(opts.BucketName),
+//	})
+//
+//	if err != nil {
+//		return res, err
+//	}
+//
+//	return res, nil
+//}
 
 // GetBucketVersioning gets the target bucket
 func GetBucketVersioning(svc s3iface.S3API, opts *options.RootOptions) (res *s3.GetBucketVersioningOutput, err error) {
