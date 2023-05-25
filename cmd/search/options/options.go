@@ -22,8 +22,6 @@ type SearchOptions struct {
 }
 
 func (opts *SearchOptions) InitFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&opts.Substring, "substring", "", "",
-		"substring to search on txt files on target bucket (default \"\")")
 	cmd.Flags().StringVarP(&opts.FileExtensions, "fileExtensions", "", "txt",
 		"comma separated list of file extensions to search on S3 bucket")
 }
@@ -34,8 +32,8 @@ func GetSearchOptions() *SearchOptions {
 }
 
 func (opts *SearchOptions) SetZeroValues() {
-	opts.Substring = ""
 	opts.FileExtensions = "txt"
+	opts.RootOptions.SetZeroValues()
 }
 
 // TODO: uncomment when interactivity enabled again

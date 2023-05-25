@@ -1,6 +1,7 @@
 package options
 
 import (
+	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -26,6 +27,8 @@ func TestGetSearchOptions(t *testing.T) {
 func TestSearchOptions_InitFlags(t *testing.T) {
 	cmd := cobra.Command{}
 	opts := GetSearchOptions()
+	rootOpts := options.GetRootOptions()
+	opts.RootOptions = rootOpts
 	opts.InitFlags(&cmd)
 	opts.SetZeroValues()
 }
