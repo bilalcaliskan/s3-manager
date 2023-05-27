@@ -2,6 +2,7 @@ package substring
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
@@ -52,7 +53,7 @@ var (
 				Str("fileExtensions", searchOpts.FileExtensions).
 				Msg("trying to search files on target bucket")
 
-			matchedFiles, errs := aws.Find(svc, searchOpts, logger)
+			matchedFiles, errs := aws.SearchString(svc, searchOpts, logger)
 			if len(errs) != 0 {
 				err := fmt.Errorf("multiple errors occurred while searching files, try to target individual files %s", errs)
 				logger.Error().Str("error", err.Error())

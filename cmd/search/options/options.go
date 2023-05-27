@@ -18,6 +18,8 @@ type SearchOptions struct {
 	Substring string
 	// FileExtensions is a comma separated list of file extensions to search on S3 bucket (txt, json etc)
 	FileExtensions string
+
+	FileName string
 	*options.RootOptions
 }
 
@@ -33,6 +35,7 @@ func GetSearchOptions() *SearchOptions {
 
 func (opts *SearchOptions) SetZeroValues() {
 	opts.FileExtensions = "txt"
+	opts.FileName = ""
 	opts.RootOptions.SetZeroValues()
 }
 

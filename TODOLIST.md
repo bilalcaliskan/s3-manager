@@ -1,3 +1,5 @@
+- [x] versioning/show
+- [x] versioning/set
 - [ ] search/file
 - [ ] search/text (all files, single file etc.)
 - [ ] tags

@@ -3,10 +3,12 @@ package aws
 import (
 	"bytes"
 	"errors"
-	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
+
+	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 
 	options4 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 
@@ -133,8 +135,27 @@ func DeleteFiles(svc s3iface.S3API, bucketName string, slice []*s3.Object, dryRu
 	return nil
 }
 
-// Find does the heavy lifting, communicates with the S3 and finds the files
-func Find(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolog.Logger) ([]string, []error) {
+func GetDesiredFiles(svc s3iface.S3API, opts *options2.SearchOptions) (matchedFiles []string, err error) {
+	// fetch all the objects in target bucket
+	listResult, err := svc.ListObjects(&s3.ListObjectsInput{
+		Bucket: aws.String(opts.BucketName),
+	})
+	if err != nil {
+		return matchedFiles, err
+	}
+
+	pattern := regexp.MustCompile(opts.FileName)
+	for _, v := range listResult.Contents {
+		if match := pattern.FindStringSubmatch(*v.Key); len(match) > 0 {
+			matchedFiles = append(matchedFiles, *v.Key)
+		}
+	}
+
+	return matchedFiles, err
+}
+
+// SearchString does the heavy lifting, communicates with the S3 and finds the files
+func SearchString(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolog.Logger) ([]string, []error) {
 	var errs []error
 	var matchedFiles []string
 	mu := &sync.Mutex{}
@@ -174,7 +195,9 @@ func Find(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolog.Logger
 			})
 
 			if err != nil {
+				mu.Lock()
 				errs = append(errs, err)
+				mu.Unlock()
 				return
 			}
 
