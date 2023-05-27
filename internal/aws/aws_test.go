@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	listObjectsErr           error
-	getObjectsErr            error
-	deleteObjectsErr         error
+	defaultListObjectsErr    error
+	defaultGetObjectErr      error
+	defaultDeleteObjectErr   error
 	fileNamePrefix           string
 	defaultListObjectsOutput = &s3.ListObjectsOutput{
 		Name:        aws.String(""),
@@ -51,7 +51,7 @@ type mockS3Client struct {
 
 // ListObjects mocks the S3API ListObjects method
 func (m *mockS3Client) ListObjects(obj *s3.ListObjectsInput) (*s3.ListObjectsOutput, error) {
-	return defaultListObjectsOutput, listObjectsErr
+	return defaultListObjectsOutput, defaultListObjectsErr
 }
 
 // GetObject mocks the S3API GetObject method
@@ -67,11 +67,11 @@ func (m *mockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput,
 		ContentLength: aws.Int64(1000),
 		ContentType:   aws.String("substring/plain"),
 		ETag:          aws.String("d73a503d212d9279e6b2ed8ac6bb81f3"),
-	}, getObjectsErr
+	}, defaultGetObjectErr
 }
 
 func (m *mockS3Client) DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
-	return defaultDeleteObjectOutput, deleteObjectsErr
+	return defaultDeleteObjectOutput, defaultDeleteObjectErr
 }
 
 func (m *mockS3Client) GetBucketVersioning(input *s3.GetBucketVersioningInput) (*s3.GetBucketVersioningOutput, error) {
@@ -109,16 +109,15 @@ func TestGetAllFilesHappyPath(t *testing.T) {
 
 func TestGetAllFilesFailedListObjectsCall(t *testing.T) {
 	m := &mockS3Client{}
-	listObjectsErr = errors.New("dummy error thrown")
+	defaultListObjectsErr = errors.New("dummy error thrown")
 	_, err := GetAllFiles(m, options.GetRootOptions(), fileNamePrefix)
 	assert.NotNil(t, err)
-	listObjectsErr = nil
 }
 
 func TestDeleteFilesHappyPath(t *testing.T) {
 	var input []*s3.Object
 	m := &mockS3Client{}
-	deleteObjectsErr = nil
+	defaultDeleteObjectErr = nil
 
 	err := DeleteFiles(m, "dummy bucket", input, false, mockLogger)
 	assert.Nil(t, err)
@@ -127,7 +126,7 @@ func TestDeleteFilesHappyPath(t *testing.T) {
 func TestDeleteFilesHappyPathDryRun(t *testing.T) {
 	var input []*s3.Object
 	m := &mockS3Client{}
-	deleteObjectsErr = nil
+	defaultDeleteObjectErr = nil
 
 	err := DeleteFiles(m, "dummy bucket", input, true, mockLogger)
 	assert.Nil(t, err)
@@ -141,10 +140,9 @@ func TestDeleteFilesFailedDeleteObjectCall(t *testing.T) {
 	}
 
 	m := &mockS3Client{}
-	deleteObjectsErr = errors.New("dummy error")
+	defaultDeleteObjectErr = errors.New("dummy error")
 	err := DeleteFiles(m, "dummy bucket", input, false, mockLogger)
 	assert.NotNil(t, err)
-	deleteObjectsErr = nil
 }
 
 func TestCreateAwsService(t *testing.T) {
@@ -159,8 +157,9 @@ func TestCreateAwsService(t *testing.T) {
 	assert.NotNil(t, svc)
 }
 
-func TestFind(t *testing.T) {
+func TestSearchStringSuccess(t *testing.T) {
 	mockSvc := &mockS3Client{}
+	defaultListObjectsErr = nil
 	defaultListObjectsOutput.Contents = []*s3.Object{
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
@@ -184,12 +183,75 @@ func TestFind(t *testing.T) {
 
 	searchOpts.Substring = "akqASmLLlK"
 
-	result, errs := Find(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
+	result, errs := SearchString(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
 	assert.NotNil(t, result)
 	assert.Empty(t, errs)
 }
 
-func TestFindWrongFilePath(t *testing.T) {
+func TestSearchStringFailure(t *testing.T) {
+	mockSvc := &mockS3Client{}
+	defaultListObjectsErr = errors.New("dummy error")
+	defaultListObjectsOutput.Contents = []*s3.Object{
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+			Key:          aws.String("../../mock/file1.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+			Key:          aws.String("../../mock/file2.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+			Key:          aws.String("../../mock/file3.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+	}
+	searchOpts := options2.GetSearchOptions()
+	rootOpts := options.GetRootOptions()
+	searchOpts.RootOptions = rootOpts
+
+	searchOpts.Substring = "akqASmLLlK"
+
+	result, errs := SearchString(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
+	assert.Nil(t, result)
+	assert.NotEmpty(t, errs)
+}
+
+func TestSearchStringGetObjectFailure(t *testing.T) {
+	mockSvc := &mockS3Client{}
+	defaultListObjectsErr = nil
+	defaultListObjectsOutput.Contents = []*s3.Object{
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+			Key:          aws.String("../../mock/file1.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+			Key:          aws.String("../../mock/file2.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+			Key:          aws.String("../../mock/file3.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+	}
+	defaultGetObjectErr = errors.New("dummy error")
+	searchOpts := options2.GetSearchOptions()
+	rootOpts := options.GetRootOptions()
+	searchOpts.RootOptions = rootOpts
+
+	searchOpts.Substring = "akqASmLLlK"
+
+	result, errs := SearchString(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
+	assert.Nil(t, result)
+	assert.NotEmpty(t, errs)
+}
+
+func TestSearchStringWrongFilePath(t *testing.T) {
 	mockSvc := &mockS3Client{}
 	defaultListObjectsOutput.Contents = []*s3.Object{
 		{
@@ -202,16 +264,70 @@ func TestFindWrongFilePath(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	searchOpts.RootOptions = rootOpts
 
-	res, err := Find(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
-	assert.Nil(t, res)
-	assert.NotEmpty(t, err)
+	res, err := SearchString(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
+	assert.NotNil(t, err)
+	assert.Empty(t, res)
 }
 
-func TestSetBucketVersioningSuccess(t *testing.T) {
+func TestGetDesiredFilesSuccess(t *testing.T) {
+	mockSvc := &mockS3Client{}
+	defaultListObjectsErr = nil
+	defaultListObjectsOutput.Contents = []*s3.Object{
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+			Key:          aws.String("file1asdfasdf.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+	}
+	searchOpts := options2.GetSearchOptions()
+	rootOpts := options.GetRootOptions()
+	searchOpts.RootOptions = rootOpts
+	searchOpts.FileName = "file1.*"
+
+	res, err := GetDesiredFiles(mockSvc, searchOpts)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, res)
+}
+
+func TestGetDesiredFilesFailure(t *testing.T) {
+	mockSvc := &mockS3Client{}
+	defaultListObjectsErr = errors.New("dummy error")
+	defaultListObjectsOutput.Contents = []*s3.Object{
+		{
+			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+			Key:          aws.String("file1asdfasdf.txt"),
+			StorageClass: aws.String("STANDARD"),
+		},
+	}
+	searchOpts := options2.GetSearchOptions()
+	rootOpts := options.GetRootOptions()
+	searchOpts.RootOptions = rootOpts
+	searchOpts.FileName = "file1.*"
+
+	res, err := GetDesiredFiles(mockSvc, searchOpts)
+	assert.NotNil(t, err)
+	assert.Empty(t, res)
+}
+
+func TestSetBucketVersioningSuccessEnabled(t *testing.T) {
 	mockSvc := &mockS3Client{}
 	defaultPutBucketVersioningErr = nil
 	versioningOpts := &options3.VersioningOptions{
 		DesiredState: "enabled",
+		RootOptions: &options.RootOptions{
+			BucketName: "demo-bucket",
+		},
+	}
+
+	_, err := SetBucketVersioning(mockSvc, versioningOpts)
+	assert.Nil(t, err)
+}
+
+func TestSetBucketVersioningSuccessDisabled(t *testing.T) {
+	mockSvc := &mockS3Client{}
+	defaultPutBucketVersioningErr = nil
+	versioningOpts := &options3.VersioningOptions{
+		DesiredState: "disabled",
 		RootOptions: &options.RootOptions{
 			BucketName: "demo-bucket",
 		},
