@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	options3 "github.com/bilalcaliskan/s3-manager/cmd/tags/options"
+
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 
 	options4 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
@@ -60,19 +62,41 @@ func GetAllFiles(svc s3iface.S3API, opts *options.RootOptions, prefix string) (r
 	return res, nil
 }
 
-// GetBucketTags gets the target bucket
-//func GetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.GetBucketTaggingOutput, err error) {
-//	// fetch all the objects in target bucket
-//	res, err = svc.GetBucketTagging(&s3.GetBucketTaggingInput{
-//		Bucket: aws.String(opts.BucketName),
-//	})
-//
-//	if err != nil {
-//		return res, err
-//	}
-//
-//	return res, nil
-//}
+func GetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.GetBucketTaggingOutput, err error) {
+	// fetch all the objects in target bucket
+	res, err = svc.GetBucketTagging(&s3.GetBucketTaggingInput{
+		Bucket: aws.String(opts.BucketName),
+	})
+
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.PutBucketTaggingOutput, err error) {
+	// fetch all the objects in target bucket
+	var tagsSet []*s3.Tag
+	for i, v := range opts.TagsToAdd {
+		tag := &s3.Tag{
+			Key:   aws.String(i),
+			Value: aws.String(v),
+		}
+		tagsSet = append(tagsSet, tag)
+	}
+
+	res, err = svc.PutBucketTagging(&s3.PutBucketTaggingInput{
+		Bucket:  aws.String(opts.BucketName),
+		Tagging: &s3.Tagging{TagSet: tagsSet},
+	})
+
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
 
 // GetBucketVersioning gets the target bucket
 func GetBucketVersioning(svc s3iface.S3API, opts *options.RootOptions) (res *s3.GetBucketVersioningOutput, err error) {

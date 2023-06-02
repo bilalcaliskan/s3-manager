@@ -4,31 +4,34 @@ import (
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 )
 
-type VersioningOptsKey struct{}
+type TagOptsKey struct{}
 
 var (
 	//substringRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide substring to search", nil)
 	//extensionRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide target file extensions (comma seperated)", nil)
-	versioningOpts = &VersioningOptions{}
+	tagOpts = &TagOptions{}
 )
 
-// VersioningOptions contains frequent command line and application options.
-type VersioningOptions struct {
+// TagOptions contains frequent command line and application options.
+type TagOptions struct {
 	// ActualState is state
-	ActualState string
-	// DesiredState is state
-	DesiredState string
+	ActualTags map[string]string
+	// TagsToAdd is state
+	TagsToAdd map[string]string
+	// TagsToRemove is state
+	TagsToRemove map[string]string
 	*options.RootOptions
 }
 
-// GetVersioningOptions returns the pointer of FindOptions
-func GetVersioningOptions() *VersioningOptions {
-	return versioningOpts
+// GetTagOptions returns the pointer of TagOptions
+func GetTagOptions() *TagOptions {
+	return tagOpts
 }
 
-func (opts *VersioningOptions) SetZeroValues() {
-	opts.ActualState = "Enabled"
-	opts.DesiredState = "enabled"
+func (opts *TagOptions) SetZeroValues() {
+	opts.ActualTags = make(map[string]string)
+	opts.TagsToRemove = make(map[string]string)
+	opts.TagsToAdd = make(map[string]string)
 	opts.RootOptions.SetZeroValues()
 }
 
