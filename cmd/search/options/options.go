@@ -16,7 +16,7 @@ var (
 type SearchOptions struct {
 	// Substring is the target string to search in a bucket
 	Substring string
-	// FileExtensions is a comma separated list of file extensions to search on S3 bucket (txt, json etc)
+	// FileExtensions is a comma separated show of file extensions to search on S3 bucket (txt, json etc)
 	FileExtensions string
 
 	FileName string
@@ -25,7 +25,7 @@ type SearchOptions struct {
 
 func (opts *SearchOptions) InitFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&opts.FileExtensions, "fileExtensions", "", "txt",
-		"comma separated list of file extensions to search on S3 bucket")
+		"comma separated show of file extensions to search on S3 bucket")
 }
 
 // GetFindOptions returns the pointer of FindOptions

@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/bilalcaliskan/s3-manager/cmd/tags"
+
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
@@ -30,6 +32,7 @@ func init() {
 	rootCmd.AddCommand(clean.CleanCmd)
 	rootCmd.AddCommand(search.SearchCmd)
 	rootCmd.AddCommand(versioning.VersioningCmd)
+	rootCmd.AddCommand(tags.TagsCmd)
 }
 
 var (

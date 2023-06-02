@@ -4,20 +4,23 @@ import (
 	"testing"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetVersioningOptions(t *testing.T) {
-	opts := GetVersioningOptions()
+func TestGetTagOptions(t *testing.T) {
+	opts := GetTagOptions()
 	assert.NotNil(t, opts)
 }
 
-func TestVersioningOptions_SetZeroValues(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	opts := GetVersioningOptions()
-	opts.RootOptions = rootOpts
+func TestTagOptions_SetZeroValues(t *testing.T) {
+	cmd := cobra.Command{}
+	opts := GetTagOptions()
 	assert.NotNil(t, opts)
 
+	rootOpts := options.GetRootOptions()
+	opts.RootOptions = rootOpts
+
+	opts.InitFlags(&cmd)
 	opts.SetZeroValues()
 }

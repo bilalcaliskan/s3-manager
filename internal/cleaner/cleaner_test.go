@@ -495,7 +495,7 @@ func TestStartCleaningDryRunNotEqualMinMaxValues(t *testing.T) {
 func TestStartCleaningListError(t *testing.T) {
 	m := &mockS3Client{}
 
-	listObjectsErr = errors.New("dummy list error")
+	listObjectsErr = errors.New("dummy show error")
 	cleanOpts := options2.GetCleanOptions()
 	cleanOpts.RootOptions = options.GetRootOptions()
 	cleanOpts.DryRun = false

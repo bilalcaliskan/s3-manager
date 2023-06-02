@@ -17,14 +17,23 @@ func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
 
 func TestExecuteMissingRegion(t *testing.T) {
 	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = ""
 
 	ctx := context.Background()
 	CleanCmd.SetContext(ctx)
 	svc, err := createSvc(rootOpts)
-	assert.Nil(t, svc)
+	assert.NotNil(t, svc)
+	assert.Nil(t, err)
+
+	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
+	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
+
+	err = CleanCmd.Execute()
 	assert.NotNil(t, err)
 
-	rootOpts.SetZeroValues()
 	cleanOpts.SetZeroValues()
 }
 
@@ -50,7 +59,6 @@ func TestExecuteInvalidSortByOption(t *testing.T) {
 	err = CleanCmd.Execute()
 	assert.NotNil(t, err)
 
-	rootOpts.SetZeroValues()
 	cleanOpts.SetZeroValues()
 }
 
@@ -79,7 +87,6 @@ func TestExecuteInvalidMinMaxValues(t *testing.T) {
 	err = CleanCmd.Execute()
 	assert.NotNil(t, err)
 
-	rootOpts.SetZeroValues()
 	cleanOpts.SetZeroValues()
 }
 
@@ -102,7 +109,6 @@ func TestExecute(t *testing.T) {
 	err = CleanCmd.Execute()
 	assert.NotNil(t, err)
 
-	rootOpts.SetZeroValues()
 	cleanOpts.SetZeroValues()
 }
 
