@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	options4 "github.com/bilalcaliskan/s3-manager/cmd/tags/options"
+
 	options3 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
@@ -43,6 +45,10 @@ var (
 	defaultGetBucketVersioningErr    error
 	defaultPutBucketVersioningOutput = &s3.PutBucketVersioningOutput{}
 	defaultPutBucketVersioningErr    error
+	defaultGetBucketTaggingErr       error
+	defaultGetBucketTaggingOutput    = &s3.GetBucketTaggingOutput{}
+	defaultPutBucketTaggingErr       error
+	defaultPutBucketTaggingOutput    = &s3.PutBucketTaggingOutput{}
 )
 
 type mockS3Client struct {
@@ -80,6 +86,14 @@ func (m *mockS3Client) GetBucketVersioning(input *s3.GetBucketVersioningInput) (
 
 func (m *mockS3Client) PutBucketVersioning(input *s3.PutBucketVersioningInput) (*s3.PutBucketVersioningOutput, error) {
 	return defaultPutBucketVersioningOutput, defaultPutBucketVersioningErr
+}
+
+func (m *mockS3Client) GetBucketTagging(input *s3.GetBucketTaggingInput) (*s3.GetBucketTaggingOutput, error) {
+	return defaultGetBucketTaggingOutput, defaultGetBucketTaggingErr
+}
+
+func (m *mockS3Client) PutBucketTagging(input *s3.PutBucketTaggingInput) (*s3.PutBucketTaggingOutput, error) {
+	return defaultPutBucketTaggingOutput, defaultPutBucketTaggingErr
 }
 
 func TestGetAllFilesHappyPath(t *testing.T) {
@@ -389,5 +403,92 @@ func TestCreateAwsServiceErr(t *testing.T) {
 
 	svc, err := CreateAwsService(opts)
 	assert.Nil(t, svc)
+	assert.NotNil(t, err)
+}
+
+func TestGetBucketTaggingSuccess(t *testing.T) {
+	tagOpts := options4.GetTagOptions()
+	defer func() {
+		tagOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	tagOpts.RootOptions = rootOpts
+
+	mockSvc := &mockS3Client{}
+	var tags []*s3.Tag
+	tags = append(tags, &s3.Tag{Key: aws.String("foo"), Value: aws.String("bar")})
+	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
+	defaultGetBucketTaggingErr = nil
+
+	_, err := GetBucketTags(mockSvc, tagOpts)
+	assert.Nil(t, err)
+}
+
+func TestGetBucketTaggingFailure(t *testing.T) {
+	tagOpts := options4.GetTagOptions()
+	defer func() {
+		tagOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	tagOpts.RootOptions = rootOpts
+
+	mockSvc := &mockS3Client{}
+	var tags []*s3.Tag
+	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
+	defaultGetBucketTaggingErr = errors.New("dummy error")
+
+	_, err := GetBucketTags(mockSvc, tagOpts)
+	assert.NotNil(t, err)
+}
+
+func TestPutBucketTaggingSuccess(t *testing.T) {
+	tagOpts := options4.GetTagOptions()
+	defer func() {
+		tagOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	tagOpts.RootOptions = rootOpts
+
+	mockSvc := &mockS3Client{}
+	var tags []*s3.Tag
+	tags = append(tags, &s3.Tag{Key: aws.String("foo"), Value: aws.String("bar")})
+	for _, v := range tags {
+		tagOpts.TagsToAdd[*v.Key] = *v.Value
+	}
+
+	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
+	defaultGetBucketTaggingErr = nil
+
+	defaultPutBucketTaggingErr = nil
+
+	_, err := SetBucketTags(mockSvc, tagOpts)
+	assert.Nil(t, err)
+}
+
+func TestPutBucketTaggingFailure(t *testing.T) {
+	tagOpts := options4.GetTagOptions()
+	defer func() {
+		tagOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	tagOpts.RootOptions = rootOpts
+
+	mockSvc := &mockS3Client{}
+	var tags []*s3.Tag
+	tags = append(tags, &s3.Tag{Key: aws.String("foo"), Value: aws.String("bar")})
+	for _, v := range tags {
+		tagOpts.TagsToAdd[*v.Key] = *v.Value
+	}
+
+	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
+	defaultGetBucketTaggingErr = nil
+
+	defaultPutBucketTaggingErr = errors.New("dummy error")
+
+	_, err := SetBucketTags(mockSvc, tagOpts)
 	assert.NotNil(t, err)
 }
