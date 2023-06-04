@@ -55,8 +55,7 @@ func TestExecuteNoArgumentsProvided(t *testing.T) {
 	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
 	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
 
-	var args []string
-	AddCmd.SetArgs(args)
+	AddCmd.SetArgs([]string{})
 
 	err = AddCmd.Execute()
 	assert.NotNil(t, err)

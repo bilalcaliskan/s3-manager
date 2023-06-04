@@ -20,3 +20,14 @@ func GetKeysOnly(s []*s3.Object) []string {
 
 	return res
 }
+
+func RemoveMapElements(source, toRemove map[string]string) {
+	for key := range toRemove {
+		delete(source, key)
+	}
+}
+
+func HasKeyValuePair(m map[string]string, key, value string) bool {
+	v, ok := m[key]
+	return ok && v == value
+}

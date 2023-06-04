@@ -48,3 +48,19 @@ func TestGetKeysOnly(t *testing.T) {
 	keys := GetKeysOnly(mockObjects)
 	assert.NotEmpty(t, keys)
 }
+
+func TestHasKeyValuePair(t *testing.T) {
+	map1 := make(map[string]string)
+
+	ok := HasKeyValuePair(map1, "foo", "bar")
+	assert.False(t, ok)
+}
+
+func TestRemoveMapElements(t *testing.T) {
+	map1 := make(map[string]string)
+	map1["foo"] = "bar"
+	map2 := make(map[string]string)
+	map2["foo"] = "bar"
+
+	RemoveMapElements(map1, map2)
+}
