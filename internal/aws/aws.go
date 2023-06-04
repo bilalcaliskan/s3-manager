@@ -98,6 +98,12 @@ func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.PutBuc
 	return res, nil
 }
 
+func DeleteAllBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.DeleteBucketTaggingOutput, err error) {
+	return svc.DeleteBucketTagging(&s3.DeleteBucketTaggingInput{
+		Bucket: aws.String(opts.BucketName),
+	})
+}
+
 // GetBucketVersioning gets the target bucket
 func GetBucketVersioning(svc s3iface.S3API, opts *options.RootOptions) (res *s3.GetBucketVersioningOutput, err error) {
 	// fetch all the objects in target bucket
