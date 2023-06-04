@@ -49,6 +49,8 @@ var (
 	defaultGetBucketTaggingOutput    = &s3.GetBucketTaggingOutput{}
 	defaultPutBucketTaggingErr       error
 	defaultPutBucketTaggingOutput    = &s3.PutBucketTaggingOutput{}
+	defaultDeleteBucketTaggingErr    error
+	defaultDeleteBucketTaggingOutput = &s3.DeleteBucketTaggingOutput{}
 )
 
 type mockS3Client struct {
@@ -94,6 +96,10 @@ func (m *mockS3Client) GetBucketTagging(input *s3.GetBucketTaggingInput) (*s3.Ge
 
 func (m *mockS3Client) PutBucketTagging(input *s3.PutBucketTaggingInput) (*s3.PutBucketTaggingOutput, error) {
 	return defaultPutBucketTaggingOutput, defaultPutBucketTaggingErr
+}
+
+func (m *mockS3Client) DeleteBucketTagging(input *s3.DeleteBucketTaggingInput) (*s3.DeleteBucketTaggingOutput, error) {
+	return defaultDeleteBucketTaggingOutput, defaultDeleteBucketTaggingErr
 }
 
 func TestGetAllFilesHappyPath(t *testing.T) {
@@ -491,4 +497,18 @@ func TestPutBucketTaggingFailure(t *testing.T) {
 
 	_, err := SetBucketTags(mockSvc, tagOpts)
 	assert.NotNil(t, err)
+}
+
+func TestDeleteBucketTaggingSuccess(t *testing.T) {
+	tagOpts := options4.GetTagOptions()
+	defer func() {
+		tagOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	tagOpts.RootOptions = rootOpts
+
+	defaultDeleteBucketTaggingErr = nil
+	_, err := DeleteAllBucketTags(&mockS3Client{}, tagOpts)
+	assert.Nil(t, err)
 }
