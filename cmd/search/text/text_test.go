@@ -1,7 +1,10 @@
-package substring
+package text
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -9,8 +12,6 @@ import (
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
 )
 
 var (
@@ -48,7 +49,7 @@ func (m *mockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput,
 		AcceptRanges:  aws.String("bytes"),
 		Body:          bytes,
 		ContentLength: aws.Int64(1000),
-		ContentType:   aws.String("substring/plain"),
+		ContentType:   aws.String("text/plain"),
 		ETag:          aws.String("d73a503d212d9279e6b2ed8ac6bb81f3"),
 	}, nil
 }
@@ -63,7 +64,7 @@ func TestExecuteMissingRegion(t *testing.T) {
 	searchOpts.RootOptions = rootOpts
 
 	ctx := context.Background()
-	SubstringCmd.SetContext(ctx)
+	TextCmd.SetContext(ctx)
 	svc, err := createSvc(rootOpts)
 	assert.Nil(t, svc)
 	assert.NotNil(t, err)
@@ -86,15 +87,15 @@ func TestExecuteFailure(t *testing.T) {
 	searchOpts.RootOptions = rootOpts
 
 	ctx := context.Background()
-	SubstringCmd.SetContext(ctx)
+	TextCmd.SetContext(ctx)
 	svc, err := createSvc(rootOpts)
 	assert.NotNil(t, svc)
 	assert.Nil(t, err)
 
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.S3SvcKey{}, svc))
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.OptsKey{}, rootOpts))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.S3SvcKey{}, svc))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.OptsKey{}, rootOpts))
 
-	err = SubstringCmd.Execute()
+	err = TextCmd.Execute()
 	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()
@@ -115,16 +116,16 @@ func TestExecuteFailure2(t *testing.T) {
 	searchOpts.RootOptions = rootOpts
 
 	ctx := context.Background()
-	SubstringCmd.SetContext(ctx)
+	TextCmd.SetContext(ctx)
 	svc, err := createSvc(rootOpts)
 	assert.NotNil(t, svc)
 	assert.Nil(t, err)
 
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.S3SvcKey{}, svc))
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.OptsKey{}, rootOpts))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.S3SvcKey{}, svc))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.OptsKey{}, rootOpts))
 
-	SubstringCmd.SetArgs([]string{"aslkdads", "asdadsadsfdafs"})
-	err = SubstringCmd.Execute()
+	TextCmd.SetArgs([]string{"aslkdads", "asdadsadsfdafs"})
+	err = TextCmd.Execute()
 	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()
@@ -145,7 +146,7 @@ func TestExecuteSuccess(t *testing.T) {
 	searchOpts.RootOptions = rootOpts
 
 	ctx := context.Background()
-	SubstringCmd.SetContext(ctx)
+	TextCmd.SetContext(ctx)
 
 	mockSvc := &mockS3Client{}
 	svc = mockSvc
@@ -168,11 +169,11 @@ func TestExecuteSuccess(t *testing.T) {
 		},
 	}
 
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.S3SvcKey{}, mockSvc))
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.OptsKey{}, rootOpts))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.S3SvcKey{}, mockSvc))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.OptsKey{}, rootOpts))
 
-	SubstringCmd.SetArgs([]string{"aslkdads"})
-	err := SubstringCmd.Execute()
+	TextCmd.SetArgs([]string{"aslkdads"})
+	err := TextCmd.Execute()
 	assert.Nil(t, err)
 
 	rootOpts.SetZeroValues()
@@ -193,7 +194,7 @@ func TestExecuteSuccess2(t *testing.T) {
 	searchOpts.RootOptions = rootOpts
 
 	ctx := context.Background()
-	SubstringCmd.SetContext(ctx)
+	TextCmd.SetContext(ctx)
 
 	mockSvc := &mockS3Client{}
 	svc = mockSvc
@@ -216,11 +217,11 @@ func TestExecuteSuccess2(t *testing.T) {
 		},
 	}
 
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.S3SvcKey{}, mockSvc))
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.OptsKey{}, rootOpts))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.S3SvcKey{}, mockSvc))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.OptsKey{}, rootOpts))
 
-	SubstringCmd.SetArgs([]string{"yILlXDYWyU"})
-	err := SubstringCmd.Execute()
+	TextCmd.SetArgs([]string{"yILlXDYWyU"})
+	err := TextCmd.Execute()
 	assert.Nil(t, err)
 
 	rootOpts.SetZeroValues()
@@ -241,7 +242,7 @@ func TestExecuteFailureMultipleErrors(t *testing.T) {
 	searchOpts.RootOptions = rootOpts
 
 	ctx := context.Background()
-	SubstringCmd.SetContext(ctx)
+	TextCmd.SetContext(ctx)
 
 	mockSvc := &mockS3Client{}
 	svc = mockSvc
@@ -264,11 +265,11 @@ func TestExecuteFailureMultipleErrors(t *testing.T) {
 		},
 	}
 
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.S3SvcKey{}, mockSvc))
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.OptsKey{}, rootOpts))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.S3SvcKey{}, mockSvc))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.OptsKey{}, rootOpts))
 
-	SubstringCmd.SetArgs([]string{"aslkdads"})
-	err := SubstringCmd.Execute()
+	TextCmd.SetArgs([]string{"aslkdads"})
+	err := TextCmd.Execute()
 	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()
@@ -289,18 +290,18 @@ func TestExecuteEmptyList(t *testing.T) {
 	searchOpts.RootOptions = rootOpts
 
 	ctx := context.Background()
-	SubstringCmd.SetContext(ctx)
+	TextCmd.SetContext(ctx)
 
 	mockSvc := &mockS3Client{}
 	svc = mockSvc
 
 	defaultListObjectsOutput.Contents = []*s3.Object{}
 
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.S3SvcKey{}, mockSvc))
-	SubstringCmd.SetContext(context.WithValue(SubstringCmd.Context(), options.OptsKey{}, rootOpts))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.S3SvcKey{}, mockSvc))
+	TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.OptsKey{}, rootOpts))
 
-	SubstringCmd.SetArgs([]string{"aslkdads"})
-	err := SubstringCmd.Execute()
+	TextCmd.SetArgs([]string{"aslkdads"})
+	err := TextCmd.Execute()
 	assert.Nil(t, err)
 
 	rootOpts.SetZeroValues()

@@ -2,13 +2,13 @@ package search
 
 import (
 	"github.com/bilalcaliskan/s3-manager/cmd/search/file"
-	"github.com/bilalcaliskan/s3-manager/cmd/search/substring"
+	"github.com/bilalcaliskan/s3-manager/cmd/search/text"
 
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	SearchCmd.AddCommand(substring.SubstringCmd)
+	SearchCmd.AddCommand(text.TextCmd)
 	SearchCmd.AddCommand(file.FileCmd)
 }
 

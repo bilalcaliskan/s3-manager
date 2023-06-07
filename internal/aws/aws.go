@@ -214,7 +214,7 @@ func SearchString(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolo
 		}
 	}
 
-	// check each txt file individually if it contains provided substring
+	// check each txt file individually if it contains provided text
 	for _, obj := range resultArr {
 		wg.Add(1)
 		go func(obj *s3.Object, wg *sync.WaitGroup) {
