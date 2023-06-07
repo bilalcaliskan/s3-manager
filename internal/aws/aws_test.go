@@ -339,8 +339,7 @@ func TestSetBucketVersioningSuccessEnabled(t *testing.T) {
 		},
 	}
 
-	_, err := SetBucketVersioning(mockSvc, versioningOpts)
-	assert.Nil(t, err)
+	assert.Nil(t, SetBucketVersioning(mockSvc, versioningOpts, logging.GetLogger(versioningOpts.RootOptions)))
 }
 
 func TestSetBucketVersioningSuccessDisabled(t *testing.T) {
@@ -353,12 +352,12 @@ func TestSetBucketVersioningSuccessDisabled(t *testing.T) {
 		},
 	}
 
-	_, err := SetBucketVersioning(mockSvc, versioningOpts)
-	assert.Nil(t, err)
+	assert.Nil(t, SetBucketVersioning(mockSvc, versioningOpts, logging.GetLogger(versioningOpts.RootOptions)))
 }
 
 func TestSetBucketVersioningError(t *testing.T) {
 	mockSvc := &mockS3Client{}
+	defaultGetBucketVersioningOutput = &s3.GetBucketVersioningOutput{Status: aws.String("disabledd")}
 	defaultPutBucketVersioningErr = errors.New("asdflkjasdf")
 	versioningOpts := &options3.VersioningOptions{
 		DesiredState: "enabled",
@@ -366,9 +365,9 @@ func TestSetBucketVersioningError(t *testing.T) {
 			BucketName: "demo-bucket",
 		},
 	}
+	versioningOpts.ActualState = "disableddd"
 
-	_, err := SetBucketVersioning(mockSvc, versioningOpts)
-	assert.NotNil(t, err)
+	assert.NotNil(t, SetBucketVersioning(mockSvc, versioningOpts, logging.GetLogger(versioningOpts.RootOptions)))
 }
 
 func TestGetBucketVersioningSuccess(t *testing.T) {
