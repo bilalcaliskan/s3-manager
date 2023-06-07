@@ -42,8 +42,7 @@ func DecideActualState(versioning *s3.GetBucketVersioningOutput, opts *options.V
 	default:
 		return fmt.Errorf(ErrUnknownStatus, *versioning.Status)
 	}
-	fmt.Println(opts.ActualState)
-
+  
 	return nil
 }
 
