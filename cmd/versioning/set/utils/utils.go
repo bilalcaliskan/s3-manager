@@ -4,6 +4,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	"github.com/bilalcaliskan/s3-manager/internal/logging"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 )
@@ -36,6 +42,16 @@ func DecideActualState(versioning *s3.GetBucketVersioningOutput, opts *options.V
 	default:
 		return fmt.Errorf(ErrUnknownStatus, *versioning.Status)
 	}
-
+  
 	return nil
+}
+
+func PrepareConstants(cmd *cobra.Command, versioningOpts *options.VersioningOptions) (s3iface.S3API, *options.VersioningOptions, zerolog.Logger) {
+	svc := cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)
+	rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
+	versioningOpts.RootOptions = rootOpts
+
+	logger := logging.GetLogger(versioningOpts.RootOptions)
+
+	return svc, versioningOpts, logger
 }

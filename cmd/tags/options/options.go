@@ -7,7 +7,7 @@ import (
 type TagOptsKey struct{}
 
 var (
-	//substringRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide substring to search", nil)
+	//substringRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide text to search", nil)
 	//extensionRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide target file extensions (comma seperated)", nil)
 	tagOpts = &TagOptions{}
 )
