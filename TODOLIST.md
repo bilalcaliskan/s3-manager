@@ -1,8 +1,10 @@
-- [x] versioning/show
-- [x] versioning/set
-- [ ] search/file
+- [x] versioning
+- [x] search/file
+- [x] tags
+- [NO] storageclass
+- [NO] encryption
 - [ ] search/text (all files, single file etc.)
-- [ ] tags
-- [ ] encryption
+- [ ] bucketpolicy
 - [ ] objectlock
 - [ ] re-enable prompt/select logic
+- [ ] fix code smells

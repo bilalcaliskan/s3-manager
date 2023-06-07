@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bilalcaliskan/s3-manager/cmd/tags/utils"
+
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/tags/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -28,21 +28,10 @@ var (
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
-			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)
+			svc, tagOpts, logger = utils.PrepareConstants(cmd, options.GetTagOptions())
 
-			tagOpts.RootOptions = rootOpts
-			logger = logging.GetLogger(rootOpts)
-
-			if len(args) == 0 {
-				err = errors.New("no argument provided")
-				logger.Error().
-					Msg(err.Error())
-				return err
-			} else if len(args) > 1 {
-				err = errors.New("too many argument provided")
-				logger.Error().
-					Msg(err.Error())
+			if err := utils.CheckArgs(cmd, args); err != nil {
+				logger.Error().Msg(err.Error())
 				return err
 			}
 

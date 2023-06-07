@@ -7,7 +7,7 @@ import (
 
 var (
 	// TODO: uncomment when interactivity enabled again
-	/*substringRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide substring to search", nil)
+	/*substringRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide text to search", nil)
 	extensionRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide target file extensions (comma seperated)", nil)*/
 	searchOptions = &SearchOptions{}
 )
@@ -28,7 +28,7 @@ func (opts *SearchOptions) InitFlags(cmd *cobra.Command) {
 		"comma separated show of file extensions to search on S3 bucket")
 }
 
-// GetFindOptions returns the pointer of FindOptions
+// GetSearchOptions returns the pointer of FindOptions
 func GetSearchOptions() *SearchOptions {
 	return searchOptions
 }

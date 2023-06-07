@@ -52,7 +52,7 @@ Binary can be downloaded from [Releases](https://github.com/bilalcaliskan/s3-man
 
 After then, you can simply run binary by providing required command line arguments:
 ```shell
-$ ./s3-manager search --accessKey asdasfasfasfasfasfas --secretKey asdasfasfasfasfasfas --bucketName demo-bucket --region us-east-2 --substring "catch me if you can"
+$ ./s3-manager search --accessKey asdasfasfasfasfasfas --secretKey asdasfasfasfasfasfas --bucketName demo-bucket --region us-east-2 --text "catch me if you can"
 ```
 
 ### Homebrew
@@ -64,7 +64,7 @@ $ brew install bilalcaliskan/tap/s3-manager
 
 Then similar to binary method, you can run it by calling below command:
 ```shell
-$ s3-manager search --accessKey asdasfasfasfasfasfas --secretKey asdasfasfasfasfasfas --bucketName demo-bucket --region us-east-2 --substring "catch me if you can"
+$ s3-manager search --accessKey asdasfasfasfasfasfas --secretKey asdasfasfasfasfasfas --bucketName demo-bucket --region us-east-2 --text "catch me if you can"
 ```
 
 ## Development

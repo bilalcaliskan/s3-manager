@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/cmd/versioning/set/utils"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -60,7 +62,7 @@ func TestExecuteTooManyArguments(t *testing.T) {
 
 	err = DisabledCmd.Execute()
 	assert.NotNil(t, err)
-	assert.Equal(t, ErrTooManyArguments, err.Error())
+	assert.Equal(t, utils.ErrTooManyArguments, err.Error())
 
 	rootOpts.SetZeroValues()
 	versioningOpts.SetZeroValues()

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bilalcaliskan/s3-manager/cmd/versioning/set/utils"
+
 	options3 "github.com/bilalcaliskan/s3-manager/cmd/tags/options"
 
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
@@ -119,26 +121,46 @@ func GetBucketVersioning(svc s3iface.S3API, opts *options.RootOptions) (res *s3.
 }
 
 // SetBucketVersioning sets the target bucket
-func SetBucketVersioning(svc s3iface.S3API, opts *options4.VersioningOptions) (res *s3.PutBucketVersioningOutput, err error) {
+func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningOptions, logger zerolog.Logger) error {
+	versioning, err := GetBucketVersioning(svc, versioningOpts.RootOptions)
+	if err != nil {
+		logger.Error().Msg(err.Error())
+		return err
+	}
+
+	if err := utils.DecideActualState(versioning, versioningOpts); err != nil {
+		logger.Error().Msg(err.Error())
+		return err
+	}
+
+	logger.Info().Msgf(utils.InfCurrentState, versioningOpts.ActualState)
+	if versioningOpts.ActualState == versioningOpts.DesiredState {
+		logger.Warn().
+			Str("state", versioningOpts.ActualState).
+			Msg(utils.WarnDesiredState)
+		return nil
+	}
+
+	logger.Info().Msgf(utils.InfSettingVersioning, versioningOpts.DesiredState)
+
 	var str string
-	if opts.DesiredState == "enabled" {
+	switch versioningOpts.DesiredState {
+	case "enabled":
 		str = "Enabled"
-	} else if opts.DesiredState == "disabled" {
+	case "disabled":
 		str = "Suspended"
 	}
 
-	res, err = svc.PutBucketVersioning(&s3.PutBucketVersioningInput{
-		Bucket: aws.String(opts.BucketName),
+	_, err = svc.PutBucketVersioning(&s3.PutBucketVersioningInput{
+		Bucket: aws.String(versioningOpts.BucketName),
 		VersioningConfiguration: &s3.VersioningConfiguration{
 			Status: aws.String(str),
 		},
 	})
 
-	if err != nil {
-		return res, err
-	}
+	logger.Info().Msgf(utils.InfSuccess, versioningOpts.DesiredState)
 
-	return res, nil
+	return err
 }
 
 // DeleteFiles deletes the slice of []*s3.Object objects in the target bucket
@@ -214,7 +236,7 @@ func SearchString(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolo
 		}
 	}
 
-	// check each txt file individually if it contains provided substring
+	// check each txt file individually if it contains provided text
 	for _, obj := range resultArr {
 		wg.Add(1)
 		go func(obj *s3.Object, wg *sync.WaitGroup) {
