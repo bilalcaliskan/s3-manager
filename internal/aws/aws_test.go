@@ -201,7 +201,7 @@ func TestSearchStringSuccess(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	searchOpts.RootOptions = rootOpts
 
-	searchOpts.Substring = "akqASmLLlK"
+	searchOpts.Text = "akqASmLLlK"
 
 	result, errs := SearchString(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
 	assert.NotNil(t, result)
@@ -232,7 +232,7 @@ func TestSearchStringFailure(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	searchOpts.RootOptions = rootOpts
 
-	searchOpts.Substring = "akqASmLLlK"
+	searchOpts.Text = "akqASmLLlK"
 
 	result, errs := SearchString(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
 	assert.Nil(t, result)
@@ -264,7 +264,7 @@ func TestSearchStringGetObjectFailure(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	searchOpts.RootOptions = rootOpts
 
-	searchOpts.Substring = "akqASmLLlK"
+	searchOpts.Text = "akqASmLLlK"
 
 	result, errs := SearchString(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
 	assert.Nil(t, result)
