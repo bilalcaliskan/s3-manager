@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	options5 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
+
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning/set/utils"
 
 	options3 "github.com/bilalcaliskan/s3-manager/cmd/tags/options"
@@ -102,6 +104,12 @@ func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.PutBuc
 
 func DeleteAllBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.DeleteBucketTaggingOutput, err error) {
 	return svc.DeleteBucketTagging(&s3.DeleteBucketTaggingInput{
+		Bucket: aws.String(opts.BucketName),
+	})
+}
+
+func GetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res *s3.GetBucketPolicyOutput, err error) {
+	return svc.GetBucketPolicy(&s3.GetBucketPolicyInput{
 		Bucket: aws.String(opts.BucketName),
 	})
 }

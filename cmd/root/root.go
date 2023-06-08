@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy"
+
 	"github.com/bilalcaliskan/s3-manager/cmd/tags"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning"
@@ -33,6 +35,7 @@ func init() {
 	rootCmd.AddCommand(search.SearchCmd)
 	rootCmd.AddCommand(versioning.VersioningCmd)
 	rootCmd.AddCommand(tags.TagsCmd)
+	rootCmd.AddCommand(bucketpolicy.BucketPolicyCmd)
 }
 
 var (
