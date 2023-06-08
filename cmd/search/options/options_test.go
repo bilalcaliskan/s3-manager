@@ -1,8 +1,9 @@
 package options
 
 import (
-	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"testing"
+
+	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -26,6 +27,8 @@ func TestGetSearchOptions(t *testing.T) {
 
 func TestSearchOptions_InitFlags(t *testing.T) {
 	cmd := cobra.Command{}
+	cmd.Use = "text"
+
 	opts := GetSearchOptions()
 	rootOpts := options.GetRootOptions()
 	opts.RootOptions = rootOpts
@@ -44,7 +47,7 @@ func TestSearchOptions_InitFlags(t *testing.T) {
 	}
 	err := opts.PromptInteractiveValues()
 	assert.NotNil(t, err)
-	assert.Equal(t, opts.Substring, "")
+	assert.Equal(t, opts.Text, "")
 
 	substringRunner = substringRunnerOrg
 	opts.SetZeroValues()
@@ -61,7 +64,7 @@ func TestSearchOptions_InitFlags(t *testing.T) {
 	}
 	err := opts.PromptInteractiveValues()
 	assert.NotNil(t, err)
-	assert.Equal(t, opts.Substring, "thisissubstring")
+	assert.Equal(t, opts.Text, "thisissubstring")
 
 	substringRunner = substringRunnerOrg
 	opts.SetZeroValues()
@@ -86,7 +89,7 @@ func TestSearchOptions_InitFlags(t *testing.T) {
 
 	err := opts.PromptInteractiveValues()
 	assert.NotNil(t, err)
-	assert.Equal(t, opts.Substring, "thisissubstring")
+	assert.Equal(t, opts.Text, "thisissubstring")
 
 	substringRunner = substringRunnerOrg
 	extensionRunner = extensionRunnerOrg
@@ -112,7 +115,7 @@ func TestSearchOptions_InitFlags(t *testing.T) {
 
 	err := opts.PromptInteractiveValues()
 	assert.Nil(t, err)
-	assert.Equal(t, opts.Substring, "thisissubstring")
+	assert.Equal(t, opts.Text, "thisissubstring")
 	assert.Equal(t, opts.FileExtensions, "thisisextensions")
 
 	substringRunner = substringRunnerOrg

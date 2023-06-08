@@ -33,7 +33,7 @@ var (
 				return err
 			}
 
-			searchOpts.Substring = args[0]
+			searchOpts.Text = args[0]
 
 			return nil
 		},
@@ -47,7 +47,7 @@ var (
 			}*/
 
 			logger.Info().
-				Str("fileExtensions", searchOpts.FileExtensions).
+				Str("fileName", searchOpts.FileName).
 				Msg("trying to search files on target bucket")
 
 			matchedFiles, errs := aws.SearchString(svc, searchOpts, logger)
@@ -60,15 +60,19 @@ var (
 			if len(matchedFiles) == 0 {
 				logger.Info().
 					Any("matchedFiles", matchedFiles).
-					Str("text", searchOpts.Substring).
+					Str("text", searchOpts.Text).
 					Msg("no matched files on the bucket")
 				return nil
 			}
 
 			logger.Info().
-				Any("matchedFiles", matchedFiles).
-				Str("text", searchOpts.Substring).
-				Msg("fetched matching files")
+				Str("text", searchOpts.Text).
+				Msg("fetched below matching files")
+
+			for _, v := range matchedFiles {
+				fmt.Println(v)
+			}
+
 			return nil
 		},
 	}

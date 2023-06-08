@@ -14,18 +14,19 @@ var (
 
 // SearchOptions contains frequent command line and application options.
 type SearchOptions struct {
-	// Substring is the target string to search in a bucket
-	Substring string
-	// FileExtensions is a comma separated show of file extensions to search on S3 bucket (txt, json etc)
-	FileExtensions string
-
+	// Text is the target string to search in a bucket
+	Text string
+	// FileName is the regex or exact name of the target file to search for specific Text
 	FileName string
+
 	*options.RootOptions
 }
 
 func (opts *SearchOptions) InitFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&opts.FileExtensions, "fileExtensions", "", "txt",
-		"comma separated show of file extensions to search on S3 bucket")
+	if cmd.Name() == "text" {
+		cmd.Flags().StringVarP(&opts.FileName, "file-name", "", "", "file-name is the regex "+
+			"or exact name of the target file to search for specific text")
+	}
 }
 
 // GetSearchOptions returns the pointer of FindOptions
@@ -34,7 +35,7 @@ func GetSearchOptions() *SearchOptions {
 }
 
 func (opts *SearchOptions) SetZeroValues() {
-	opts.FileExtensions = "txt"
+	opts.Text = ""
 	opts.FileName = ""
 	opts.RootOptions.SetZeroValues()
 }
@@ -45,7 +46,7 @@ func (opts *SearchOptions) SetZeroValues() {
 	if err != nil {
 		return err
 	}
-	opts.Substring = res
+	opts.Text = res
 
 	res, err = extensionRunner.Run()
 	if err != nil {

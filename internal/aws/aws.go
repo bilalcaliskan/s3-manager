@@ -213,37 +213,40 @@ func SearchString(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolo
 	mu := &sync.Mutex{}
 
 	// fetch all the objects in target bucket
-	listResult, err := svc.ListObjects(&s3.ListObjectsInput{
+	/*listResult, err := svc.ListObjects(&s3.ListObjectsInput{
 		Bucket: aws.String(opts.BucketName),
 	})
 	if err != nil {
 		errs = append(errs, err)
 		return matchedFiles, errs
-	}
+	}*/
 
-	var resultArr []*s3.Object
 	var wg sync.WaitGroup
 
-	extensions := strings.Split(opts.FileExtensions, ",")
+	//extensions := strings.Split(opts.FileExtensions, ",")
 
 	// separate the txt files from all of the fetched objects from bucket
-	for _, v := range listResult.Contents {
-		for _, y := range extensions {
-			if strings.HasSuffix(*v.Key, y) {
-				logger.Debug().Str("fileName", *v.Key).Msg("found file")
-				resultArr = append(resultArr, v)
-			}
+	/*for _, v := range listResult.Contents {
+		if *v.Key == opts.FileName || (strings.HasSuffix(*v.Key, opts.FileNameSuffix) || strings.HasPrefix(*v.Key, opts.FileNamePrefix)) {
+			logger.Debug().Str("fileName", *v.Key).Msg("found file")
+			resultArr = append(resultArr, v)
 		}
+	}*/
+
+	resultArr, err := GetDesiredFiles(svc, opts)
+	if err != nil {
+		errs = append(errs, err)
+		return matchedFiles, errs
 	}
 
 	// check each txt file individually if it contains provided text
 	for _, obj := range resultArr {
 		wg.Add(1)
-		go func(obj *s3.Object, wg *sync.WaitGroup) {
+		go func(fileName string, wg *sync.WaitGroup) {
 			defer wg.Done()
 			getResult, err := svc.GetObject(&s3.GetObjectInput{
 				Bucket: aws.String(opts.BucketName),
-				Key:    obj.Key,
+				Key:    aws.String(fileName),
 			})
 
 			if err != nil {
@@ -259,9 +262,9 @@ func SearchString(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolo
 				return
 			}
 
-			if strings.Contains(buf.String(), opts.Substring) {
+			if strings.Contains(buf.String(), opts.Text) {
 				mu.Lock()
-				matchedFiles = append(matchedFiles, *obj.Key)
+				matchedFiles = append(matchedFiles, fileName)
 				mu.Unlock()
 			}
 
