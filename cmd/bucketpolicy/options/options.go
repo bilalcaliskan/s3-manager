@@ -14,8 +14,17 @@ var (
 
 // BucketPolicyOptions contains frequent command line and application options.
 type BucketPolicyOptions struct {
+	BucketPolicyContent string
+
 	*options.RootOptions
 }
+
+/*func (opts *BucketPolicyOptions) InitFlags(cmd *cobra.Command) {
+	cmd.Flags().StringVarP(&opts.FilePath, "file-path", "", "", "file path to set "+
+		"policy into")
+
+	_ = cmd.MarkPersistentFlagRequired("file-path")
+}*/
 
 // GetBucketPolicyOptions returns the pointer of FindOptions
 func GetBucketPolicyOptions() *BucketPolicyOptions {
