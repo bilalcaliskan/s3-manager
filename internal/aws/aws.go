@@ -114,6 +114,19 @@ func GetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res
 	})
 }
 
+func SetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res *s3.PutBucketPolicyOutput, err error) {
+	return svc.PutBucketPolicy(&s3.PutBucketPolicyInput{
+		Bucket: aws.String(opts.BucketName),
+		Policy: aws.String(opts.BucketPolicyContent),
+	})
+}
+
+func DeleteBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res *s3.DeleteBucketPolicyOutput, err error) {
+	return svc.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
+		Bucket: aws.String(opts.BucketName),
+	})
+}
+
 // GetBucketVersioning gets the target bucket
 func GetBucketVersioning(svc s3iface.S3API, opts *options.RootOptions) (res *s3.GetBucketVersioningOutput, err error) {
 	// fetch all the objects in target bucket

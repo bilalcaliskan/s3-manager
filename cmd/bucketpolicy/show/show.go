@@ -2,15 +2,14 @@ package show
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+
+	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/utils"
 
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -29,14 +28,9 @@ var (
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
-			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)
+			svc, bucketPolicyOpts, logger = utils.PrepareConstants(cmd, options2.GetBucketPolicyOptions())
 
-			bucketPolicyOpts.RootOptions = rootOpts
-			logger = logging.GetLogger(rootOpts)
-
-			if len(args) > 0 {
-				err = errors.New("too many arguments provided")
+			if err := utils.CheckArgs(args); err != nil {
 				logger.Error().
 					Msg(err.Error())
 				return err

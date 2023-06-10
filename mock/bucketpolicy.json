@@ -1,0 +1,20 @@
+{
+  "Statement": [
+    {
+      "Action": "s3:*",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      },
+      "Effect": "Deny",
+      "Principal": "*",
+      "Resource": [
+        "arn:aws:s3:::thevpnbeast-releases-1",
+        "arn:aws:s3:::thevpnbeast-releases-1/*"
+      ],
+      "Sid": "RestrictToTLSRequestsOnly"
+    }
+  ],
+  "Version": "2012-10-17"
+}

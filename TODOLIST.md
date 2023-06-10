@@ -8,3 +8,4 @@
 - [ ] objectlock
 - [ ] re-enable prompt/select logic
 - [ ] fix code smells
+- [ ] fix duplications
