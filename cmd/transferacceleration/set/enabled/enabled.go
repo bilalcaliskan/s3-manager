@@ -33,30 +33,7 @@ var (
 
 			transferAccelerationOpts.DesiredState = "enabled"
 
-			res, err := aws.GetTransferAcceleration(svc, transferAccelerationOpts)
-			if err != nil {
-				logger.Error().Msg(err.Error())
-				return err
-			}
-
-			if err := utils.DecideActualState(res, transferAccelerationOpts); err != nil {
-				logger.Error().Msg(err.Error())
-				return err
-			}
-
-			if transferAccelerationOpts.DesiredState == transferAccelerationOpts.ActualState {
-				logger.Warn().Msg("transferr acceleration configuration is already at desired state")
-				return nil
-			}
-
-			if _, err := aws.SetTransferAcceleration(svc, transferAccelerationOpts); err != nil {
-				logger.Error().Msg(err.Error())
-				return err
-			}
-
-			logger.Info().Msg("successfully set transfer acceleration as enabled")
-
-			return nil
+			return aws.SetTransferAcceleration(svc, transferAccelerationOpts, logger)
 		},
 	}
 )
