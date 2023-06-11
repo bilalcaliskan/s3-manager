@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	options6 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
+	options5 "github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
+
 	options4 "github.com/bilalcaliskan/s3-manager/cmd/tags/options"
 
 	options3 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
@@ -42,15 +45,27 @@ var (
 	defaultGetBucketVersioningOutput = &s3.GetBucketVersioningOutput{
 		Status: aws.String("Enabled"),
 	}
-	defaultGetBucketVersioningErr    error
-	defaultPutBucketVersioningOutput = &s3.PutBucketVersioningOutput{}
-	defaultPutBucketVersioningErr    error
-	defaultGetBucketTaggingErr       error
-	defaultGetBucketTaggingOutput    = &s3.GetBucketTaggingOutput{}
-	defaultPutBucketTaggingErr       error
-	defaultPutBucketTaggingOutput    = &s3.PutBucketTaggingOutput{}
-	defaultDeleteBucketTaggingErr    error
-	defaultDeleteBucketTaggingOutput = &s3.DeleteBucketTaggingOutput{}
+	defaultGetBucketVersioningErr      error
+	defaultPutBucketVersioningOutput   = &s3.PutBucketVersioningOutput{}
+	defaultPutBucketVersioningErr      error
+	defaultGetBucketTaggingErr         error
+	defaultGetBucketTaggingOutput      = &s3.GetBucketTaggingOutput{}
+	defaultPutBucketTaggingErr         error
+	defaultPutBucketTaggingOutput      = &s3.PutBucketTaggingOutput{}
+	defaultDeleteBucketTaggingErr      error
+	defaultDeleteBucketTaggingOutput   = &s3.DeleteBucketTaggingOutput{}
+	defaultGetBucketAccelerationOutput = &s3.GetBucketAccelerateConfigurationOutput{
+		Status: aws.String("Enabled"),
+	}
+	defaultGetBucketAccelerationErr    error
+	defaultPutBucketAccelerationOutput = &s3.PutBucketAccelerateConfigurationOutput{}
+	defaultPutBucketAccelerationErr    error
+	defaultGetBucketPolicyErr          error
+	defaultGetBucketPolicyOutput       = &s3.GetBucketPolicyOutput{}
+	defaultPutBucketPolicyErr          error
+	defaultPutBucketPolicyOutput       = &s3.PutBucketPolicyOutput{}
+	defaultDeleteBucketPolicyErr       error
+	defaultDeleteBucketPolicyOutput    = &s3.DeleteBucketPolicyOutput{}
 )
 
 type mockS3Client struct {
@@ -82,6 +97,14 @@ func (m *mockS3Client) DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObje
 	return defaultDeleteObjectOutput, defaultDeleteObjectErr
 }
 
+func (m *mockS3Client) GetBucketAccelerateConfiguration(input *s3.GetBucketAccelerateConfigurationInput) (*s3.GetBucketAccelerateConfigurationOutput, error) {
+	return defaultGetBucketAccelerationOutput, defaultGetBucketAccelerationErr
+}
+
+func (m *mockS3Client) PutBucketAccelerateConfiguration(input *s3.PutBucketAccelerateConfigurationInput) (*s3.PutBucketAccelerateConfigurationOutput, error) {
+	return defaultPutBucketAccelerationOutput, defaultPutBucketAccelerationErr
+}
+
 func (m *mockS3Client) GetBucketVersioning(input *s3.GetBucketVersioningInput) (*s3.GetBucketVersioningOutput, error) {
 	return defaultGetBucketVersioningOutput, defaultGetBucketVersioningErr
 }
@@ -100,6 +123,18 @@ func (m *mockS3Client) PutBucketTagging(input *s3.PutBucketTaggingInput) (*s3.Pu
 
 func (m *mockS3Client) DeleteBucketTagging(input *s3.DeleteBucketTaggingInput) (*s3.DeleteBucketTaggingOutput, error) {
 	return defaultDeleteBucketTaggingOutput, defaultDeleteBucketTaggingErr
+}
+
+func (m *mockS3Client) GetBucketPolicy(input *s3.GetBucketPolicyInput) (*s3.GetBucketPolicyOutput, error) {
+	return defaultGetBucketPolicyOutput, defaultGetBucketPolicyErr
+}
+
+func (m *mockS3Client) PutBucketPolicy(input *s3.PutBucketPolicyInput) (*s3.PutBucketPolicyOutput, error) {
+	return defaultPutBucketPolicyOutput, defaultPutBucketPolicyErr
+}
+
+func (m *mockS3Client) DeleteBucketPolicy(input *s3.DeleteBucketPolicyInput) (*s3.DeleteBucketPolicyOutput, error) {
+	return defaultDeleteBucketPolicyOutput, defaultDeleteBucketPolicyErr
 }
 
 func TestGetAllFilesHappyPath(t *testing.T) {
@@ -509,5 +544,95 @@ func TestDeleteBucketTaggingSuccess(t *testing.T) {
 
 	defaultDeleteBucketTaggingErr = nil
 	_, err := DeleteAllBucketTags(&mockS3Client{}, tagOpts)
+	assert.Nil(t, err)
+}
+
+func TestGetTransferAcceleration(t *testing.T) {
+	taOpts := options5.GetTransferAccelerationOptions()
+	defer func() {
+		taOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	taOpts.RootOptions = rootOpts
+
+	defaultGetBucketAccelerationErr = nil
+
+	res, err := GetTransferAcceleration(&mockS3Client{}, taOpts)
+	assert.NotNil(t, res)
+	assert.Nil(t, err)
+}
+
+func TestSetTransferAcceleration(t *testing.T) {
+	taOpts := options5.GetTransferAccelerationOptions()
+	defer func() {
+		taOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	taOpts.RootOptions = rootOpts
+
+	taOpts.DesiredState = "enabled"
+	defaultPutBucketAccelerationErr = nil
+	res, err := SetTransferAcceleration(&mockS3Client{}, taOpts)
+	assert.NotNil(t, res)
+	assert.Nil(t, err)
+}
+
+func TestSetTransferAcceleration2(t *testing.T) {
+	taOpts := options5.GetTransferAccelerationOptions()
+	defer func() {
+		taOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	taOpts.RootOptions = rootOpts
+
+	taOpts.DesiredState = "disabled"
+	defaultPutBucketAccelerationErr = nil
+	res, err := SetTransferAcceleration(&mockS3Client{}, taOpts)
+	assert.NotNil(t, res)
+	assert.Nil(t, err)
+}
+
+func TestGetBucketPolicy(t *testing.T) {
+	bpOpts := options6.GetBucketPolicyOptions()
+	defer func() {
+		bpOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	bpOpts.RootOptions = rootOpts
+
+	res, err := GetBucketPolicy(&mockS3Client{}, bpOpts)
+	assert.NotNil(t, res)
+	assert.Nil(t, err)
+}
+
+func TestSetBucketPolicy(t *testing.T) {
+	bpOpts := options6.GetBucketPolicyOptions()
+	defer func() {
+		bpOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	bpOpts.RootOptions = rootOpts
+
+	res, err := SetBucketPolicy(&mockS3Client{}, bpOpts)
+	assert.NotNil(t, res)
+	assert.Nil(t, err)
+}
+
+func TestDeleteBucketPolicy(t *testing.T) {
+	bpOpts := options6.GetBucketPolicyOptions()
+	defer func() {
+		bpOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	bpOpts.RootOptions = rootOpts
+
+	res, err := DeleteBucketPolicy(&mockS3Client{}, bpOpts)
+	assert.NotNil(t, res)
 	assert.Nil(t, err)
 }

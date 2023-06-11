@@ -1,11 +1,13 @@
 - [x] versioning
 - [x] search/file
 - [x] tags
-- [NO] storageclass
-- [NO] encryption
-- [ ] search/text (all files, single file etc.)
-- [ ] bucketpolicy
-- [ ] objectlock
+- [x] search/text (all files, single file etc.)
+- [x] bucketpolicy
+- [x] transferacceleration
+- [ ] mfadelete
 - [ ] re-enable prompt/select logic
 - [ ] fix code smells
 - [ ] fix duplications
+- [ ] ~~storageclass~~
+- [ ] ~~encryption~~
+- [ ] ~~objectlock~~

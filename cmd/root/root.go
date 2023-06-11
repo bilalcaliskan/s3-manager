@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration"
+
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/tags"
@@ -36,6 +38,7 @@ func init() {
 	rootCmd.AddCommand(versioning.VersioningCmd)
 	rootCmd.AddCommand(tags.TagsCmd)
 	rootCmd.AddCommand(bucketpolicy.BucketPolicyCmd)
+	rootCmd.AddCommand(transferacceleration.TransferAccelerationCmd)
 }
 
 var (
