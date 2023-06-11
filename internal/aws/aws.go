@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	options6 "github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
+
 	options5 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning/set/utils"
@@ -105,6 +107,27 @@ func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.PutBuc
 func DeleteAllBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.DeleteBucketTaggingOutput, err error) {
 	return svc.DeleteBucketTagging(&s3.DeleteBucketTaggingInput{
 		Bucket: aws.String(opts.BucketName),
+	})
+}
+
+func GetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions) (res *s3.GetBucketAccelerateConfigurationOutput, err error) {
+	return svc.GetBucketAccelerateConfiguration(&s3.GetBucketAccelerateConfigurationInput{
+		Bucket: aws.String(opts.BucketName),
+	})
+}
+
+func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions) (res *s3.PutBucketAccelerateConfigurationOutput, err error) {
+	var status string
+	switch opts.DesiredState {
+	case "enabled":
+		status = "Enabled"
+	case "disabled":
+		status = "Suspended"
+	}
+
+	return svc.PutBucketAccelerateConfiguration(&s3.PutBucketAccelerateConfigurationInput{
+		Bucket:                  aws.String(opts.BucketName),
+		AccelerateConfiguration: &s3.AccelerateConfiguration{Status: aws.String(status)},
 	})
 }
 

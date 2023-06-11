@@ -3,11 +3,11 @@
 - [x] tags
 - [x] search/text (all files, single file etc.)
 - [x] bucketpolicy
-- [ ] ~~storageclass~~
-- [ ] ~~encryption~~
-- [ ] ~~objectlock~~
+- [x] transferacceleration
 - [ ] mfadelete
-- [ ] transferacceleration
 - [ ] re-enable prompt/select logic
 - [ ] fix code smells
 - [ ] fix duplications
+- [ ] ~~storageclass~~
+- [ ] ~~encryption~~
+- [ ] ~~objectlock~~
