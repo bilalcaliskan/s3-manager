@@ -2,8 +2,8 @@ package show
 
 import (
 	"errors"
+	"fmt"
 
-	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/utils"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -52,7 +52,12 @@ var (
 				return err
 			}
 
-			if err := utils.DecideActualState(res, transferAccelerationOpts); err != nil {
+			if *res.Status == "Enabled" {
+				transferAccelerationOpts.ActualState = "enabled"
+			} else if *res.Status == "Suspended" {
+				transferAccelerationOpts.ActualState = "disabled"
+			} else {
+				err := fmt.Errorf("unknown status '%s' returned from AWS SDK", transferAccelerationOpts.ActualState)
 				logger.Error().Msg(err.Error())
 				return err
 			}

@@ -574,8 +574,7 @@ func TestSetTransferAcceleration(t *testing.T) {
 
 	taOpts.DesiredState = "enabled"
 	defaultPutBucketAccelerationErr = nil
-	res, err := SetTransferAcceleration(&mockS3Client{}, taOpts)
-	assert.NotNil(t, res)
+	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
 	assert.Nil(t, err)
 }
 
@@ -590,8 +589,7 @@ func TestSetTransferAcceleration2(t *testing.T) {
 
 	taOpts.DesiredState = "disabled"
 	defaultPutBucketAccelerationErr = nil
-	res, err := SetTransferAcceleration(&mockS3Client{}, taOpts)
-	assert.NotNil(t, res)
+	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
 	assert.Nil(t, err)
 }
 

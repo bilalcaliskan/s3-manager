@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
@@ -10,8 +9,6 @@ import (
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-
-	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 const (
@@ -22,18 +19,6 @@ const (
 func CheckArgs(args []string) error {
 	if len(args) != 0 {
 		return errors.New(ErrTooManyArguments)
-	}
-
-	return nil
-}
-
-func DecideActualState(res *s3.GetBucketAccelerateConfigurationOutput, opts *options2.TransferAccelerationOptions) error {
-	if *res.Status == "Enabled" {
-		opts.ActualState = "enabled"
-	} else if *res.Status == "Suspended" {
-		opts.ActualState = "disabled"
-	} else {
-		return fmt.Errorf(ErrUnknownStatus, opts.ActualState)
 	}
 
 	return nil

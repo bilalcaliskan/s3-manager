@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
@@ -27,45 +26,6 @@ func TestCheckArgsSuccess(t *testing.T) {
 
 func TestCheckArgsFailure(t *testing.T) {
 	err := CheckArgs([]string{"foo"})
-	assert.NotNil(t, err)
-}
-
-func TestDecideActualStateEnabled(t *testing.T) {
-	res := &s3.GetBucketAccelerateConfigurationOutput{
-		Status: aws.String("Enabled"),
-	}
-
-	rootOpts := options.GetRootOptions()
-	opts := options3.GetTransferAccelerationOptions()
-	opts.RootOptions = rootOpts
-
-	err := DecideActualState(res, opts)
-	assert.Nil(t, err)
-}
-
-func TestDecideActualStateEnabled2(t *testing.T) {
-	res := &s3.GetBucketAccelerateConfigurationOutput{
-		Status: aws.String("Suspended"),
-	}
-
-	rootOpts := options.GetRootOptions()
-	opts := options3.GetTransferAccelerationOptions()
-	opts.RootOptions = rootOpts
-
-	err := DecideActualState(res, opts)
-	assert.Nil(t, err)
-}
-
-func TestDecideActualStateFailure(t *testing.T) {
-	res := &s3.GetBucketAccelerateConfigurationOutput{
-		Status: aws.String("Suspendedddd"),
-	}
-
-	rootOpts := options.GetRootOptions()
-	opts := options3.GetTransferAccelerationOptions()
-	opts.RootOptions = rootOpts
-
-	err := DecideActualState(res, opts)
 	assert.NotNil(t, err)
 }
 

@@ -3,6 +3,7 @@ package aws
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -116,7 +117,28 @@ func GetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerat
 	})
 }
 
-func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions) (res *s3.PutBucketAccelerateConfigurationOutput, err error) {
+func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions, logger zerolog.Logger) error {
+	res, err := GetTransferAcceleration(svc, opts)
+	if err != nil {
+		logger.Error().Msg(err.Error())
+		return err
+	}
+
+	if *res.Status == "Enabled" {
+		opts.ActualState = "enabled"
+	} else if *res.Status == "Suspended" {
+		opts.ActualState = "disabled"
+	} else {
+		err := fmt.Errorf("unknown status '%s' returned from AWS SDK", opts.ActualState)
+		logger.Error().Msg(err.Error())
+		return err
+	}
+
+	if opts.DesiredState == opts.ActualState {
+		logger.Warn().Msg("transfer acceleration configuration is already at desired state")
+		return nil
+	}
+
 	var status string
 	switch opts.DesiredState {
 	case "enabled":
@@ -125,10 +147,18 @@ func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerat
 		status = "Suspended"
 	}
 
-	return svc.PutBucketAccelerateConfiguration(&s3.PutBucketAccelerateConfigurationInput{
+	_, err = svc.PutBucketAccelerateConfiguration(&s3.PutBucketAccelerateConfigurationInput{
 		Bucket:                  aws.String(opts.BucketName),
 		AccelerateConfiguration: &s3.AccelerateConfiguration{Status: aws.String(status)},
 	})
+	if err != nil {
+		logger.Error().Msg(err.Error())
+		return err
+	}
+
+	logger.Info().Msgf("successfully set transfer acceleration as %s", opts.DesiredState)
+
+	return nil
 }
 
 func GetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res *s3.GetBucketPolicyOutput, err error) {
