@@ -573,7 +573,10 @@ func TestSetTransferAcceleration(t *testing.T) {
 	taOpts.RootOptions = rootOpts
 
 	taOpts.DesiredState = "enabled"
+
+	defaultGetBucketAccelerationErr = nil
 	defaultPutBucketAccelerationErr = nil
+
 	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
 	assert.Nil(t, err)
 }
@@ -588,9 +591,87 @@ func TestSetTransferAcceleration2(t *testing.T) {
 	taOpts.RootOptions = rootOpts
 
 	taOpts.DesiredState = "disabled"
+
+	defaultGetBucketAccelerationErr = nil
 	defaultPutBucketAccelerationErr = nil
+
 	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
 	assert.Nil(t, err)
+}
+
+func TestSetTransferAcceleration3(t *testing.T) {
+	taOpts := options5.GetTransferAccelerationOptions()
+	defer func() {
+		taOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	taOpts.RootOptions = rootOpts
+
+	taOpts.DesiredState = "disabled"
+
+	defaultGetBucketAccelerationErr = errors.New("dummy error")
+	defaultPutBucketAccelerationErr = nil
+
+	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
+	assert.NotNil(t, err)
+}
+
+func TestSetTransferAcceleration4(t *testing.T) {
+	taOpts := options5.GetTransferAccelerationOptions()
+	defer func() {
+		taOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	taOpts.RootOptions = rootOpts
+
+	taOpts.DesiredState = "enabled"
+
+	defaultGetBucketAccelerationErr = nil
+	defaultGetBucketAccelerationOutput.Status = aws.String("Suspended")
+	defaultPutBucketAccelerationErr = nil
+
+	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
+	assert.Nil(t, err)
+}
+
+func TestSetTransferAcceleration5(t *testing.T) {
+	taOpts := options5.GetTransferAccelerationOptions()
+	defer func() {
+		taOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	taOpts.RootOptions = rootOpts
+
+	taOpts.DesiredState = "enabled"
+
+	defaultGetBucketAccelerationErr = nil
+	defaultGetBucketAccelerationOutput.Status = aws.String("Suspendedddd")
+	defaultPutBucketAccelerationErr = nil
+
+	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
+	assert.NotNil(t, err)
+}
+
+func TestSetTransferAcceleration6(t *testing.T) {
+	taOpts := options5.GetTransferAccelerationOptions()
+	defer func() {
+		taOpts.SetZeroValues()
+	}()
+	rootOpts := options.GetRootOptions()
+	rootOpts.Region = "us-east-1"
+	taOpts.RootOptions = rootOpts
+
+	taOpts.DesiredState = "enabled"
+
+	defaultGetBucketAccelerationErr = nil
+	defaultGetBucketAccelerationOutput.Status = aws.String("Suspended")
+	defaultPutBucketAccelerationErr = errors.New("dummy error")
+
+	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
+	assert.NotNil(t, err)
 }
 
 func TestGetBucketPolicy(t *testing.T) {
