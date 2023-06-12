@@ -28,7 +28,7 @@ var (
 	tagOpts   *options.TagOptions
 	RemoveCmd = &cobra.Command{
 		Use:           "remove",
-		Short:         "",
+		Short:         "removes the tagging configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {

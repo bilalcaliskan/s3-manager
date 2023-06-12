@@ -19,7 +19,7 @@ var (
 	versioningOpts *options.VersioningOptions
 	EnabledCmd     = &cobra.Command{
 		Use:           "enabled",
-		Short:         "",
+		Short:         "enables the versioning configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {

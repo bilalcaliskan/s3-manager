@@ -19,7 +19,7 @@ func init() {
 var (
 	BucketPolicyCmd = &cobra.Command{
 		Use:           "bucketpolicy",
-		Short:         "",
+		Short:         "shows/sets the bucket policy configuration of the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

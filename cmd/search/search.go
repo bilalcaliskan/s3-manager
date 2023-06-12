@@ -15,7 +15,7 @@ func init() {
 var (
 	SearchCmd = &cobra.Command{
 		Use:          "search",
-		Short:        "search subcommand searches the files which has desired substrings in it",
+		Short:        "searches the files which has desired substrings in it",
 		SilenceUsage: true,
 	}
 )

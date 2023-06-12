@@ -14,7 +14,7 @@ func init() {
 var (
 	SetCmd = &cobra.Command{
 		Use:           "set",
-		Short:         "",
+		Short:         "sets the versioning configuration for the target bucket (enabled/disabled)",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

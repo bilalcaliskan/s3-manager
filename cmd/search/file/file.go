@@ -23,7 +23,7 @@ var (
 	svc        s3iface.S3API
 	FileCmd    = &cobra.Command{
 		Use:          "file",
-		Short:        "",
+		Short:        "searches the files which has desired file name pattern in it (supports regex)",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			svc, searchOpts, logger = utils.PrepareConstants(cmd, options.GetSearchOptions())

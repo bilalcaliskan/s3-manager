@@ -14,7 +14,7 @@ func init() {
 var (
 	TransferAccelerationCmd = &cobra.Command{
 		Use:           "transferacceleration",
-		Short:         "",
+		Short:         "shows/sets the transfer acceleration configuration of the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

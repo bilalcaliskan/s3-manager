@@ -36,7 +36,7 @@ var (
 	// CleanCmd represents the clean command
 	CleanCmd = &cobra.Command{
 		Use:          "clean",
-		Short:        "clean subcommand cleans the app, finds and clears desired files",
+		Short:        "finds and clears desired files by a pre-configured rule set",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(*s3.S3)

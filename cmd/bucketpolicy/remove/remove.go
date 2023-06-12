@@ -19,7 +19,7 @@ var (
 	bucketPolicyOpts *options2.BucketPolicyOptions
 	RemoveCmd        = &cobra.Command{
 		Use:           "remove",
-		Short:         "",
+		Short:         "removes the current bucket policy configuration of the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
