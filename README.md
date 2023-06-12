@@ -10,7 +10,16 @@
 [![Go version](https://img.shields.io/github/go-mod/go-version/bilalcaliskan/s3-manager)](https://github.com/bilalcaliskan/s3-manager)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-**TBD**
+It is a tool written with Golang that helps you make the following actions on an AWS S3 bucket:
+- Searches a string in files (supports regex)
+- Finds files (supports regex)
+- Sets up a file cleaning rule that matches specific pattern (great idea to check flags on [cmd/clean/options/options.go](cmd/clean/options/options.go))
+- Sets/shows tags
+- Sets/shows versioning configuration
+- Sets/shows transfer acceleration configuration
+- Sets/shows bucket policy
+
+## Access Credentials
 
 You can provide access credentials of your AWS account with below environment variables or CLI flags. Keep in mind that command line flags
 will override environment variables if you set both of them:
@@ -21,6 +30,16 @@ will override environment variables if you set both of them:
 "--bucketName" CLI flag or "AWS_BUCKET_NAME" environment variable
 ```
 
+## Available Subcommands
+Here is the list of available subcommands of **s3-manager**:
+
+- [clean](cmd/clean)
+- [search](cmd/search)
+- [tags](cmd/tags)
+- [versioning](cmd/versioning)
+- [bucketpolicy](cmd/bucketpolicy)
+- [transferacceleration](cmd/transferacceleration)
+
 ## Configuration
 ```
 Usage:
@@ -28,20 +47,24 @@ Usage:
   s3-manager [command]
 
 Available Commands:
-  clean       clean subcommand cleans the app, finds and clears desired files
-  completion  Generate the autocompletion script for the specified shell
-  search      search subcommand searches the files which has desired substrings in it
-  configure   configure subcommand configures the bucket level settings
-  help        Help about any command
+  bucketpolicy
+  clean                clean subcommand cleans the app, finds and clears desired files
+  completion           Generate the autocompletion script for the specified shell
+  help                 Help about any command
+  search               search subcommand searches the files which has desired substrings in it
+  tags
+  transferacceleration
+  versioning
 
 Flags:
-      --accessKey string    access key credential to access S3 bucket, this value also can be passed via "AWS_ACCESS_KEY" environment variable (default "")
-      --bucketName string   name of the target bucket on S3, this value also can be passed via "AWS_BUCKET_NAME" environment variable (default "")
-  -h, --help                help for s3-manager
-      --region string       region of the target bucket on S3, this value also can be passed via "AWS_REGION" environment variable (default "")
-      --secretKey string    secret key credential to access S3 bucket, this value also can be passed via "AWS_SECRET_KEY" environment variable (default "")
-      --verbose             verbose output of the logging library (default false)
-  -v, --version             version for s3-manager
+      --accessKey string        access key credential to access S3 bucket, this value also can be passed via "AWS_ACCESS_KEY" environment variable (default "")
+      --bannerFilePath string   relative path of the banner file (default "banner.txt")
+      --bucketName string       name of the target bucket on S3, this value also can be passed via "AWS_BUCKET_NAME" environment variable (default "")
+  -h, --help                    help for s3-manager
+      --region string           region of the target bucket on S3, this value also can be passed via "AWS_REGION" environment variable (default "")
+      --secretKey string        secret key credential to access S3 bucket, this value also can be passed via "AWS_SECRET_KEY" environment variable (default "")
+      --verbose                 verbose output of the logging library (default false)
+  -v, --version                 version for s3-manager
 
 Use "s3-manager [command] --help" for more information about a command.
 ```

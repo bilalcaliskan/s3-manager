@@ -23,7 +23,7 @@ var (
 	svc        s3iface.S3API
 	TextCmd    = &cobra.Command{
 		Use:          "text",
-		Short:        "",
+		Short:        "searches the texts in files which has desired file name pattern and string pattern in it (supports regex)",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			svc, searchOpts, logger = utils.PrepareConstants(cmd, options.GetSearchOptions())

@@ -8,6 +8,7 @@
 - [ ] re-enable prompt/select logic
 - [ ] fix code smells
 - [ ] fix duplications
+- [ ] github issues
 - [ ] ~~storageclass~~
 - [ ] ~~encryption~~
 - [ ] ~~objectlock~~

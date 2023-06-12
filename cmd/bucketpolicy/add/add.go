@@ -23,7 +23,7 @@ var (
 	bucketPolicyOpts *options2.BucketPolicyOptions
 	AddCmd           = &cobra.Command{
 		Use:           "add",
-		Short:         "",
+		Short:         "adds a bucket policy configuration for the target bucket by specifying a valid policy file",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

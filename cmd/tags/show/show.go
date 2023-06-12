@@ -24,7 +24,7 @@ var (
 	tagOpts *options.TagOptions
 	ShowCmd = &cobra.Command{
 		Use:           "show",
-		Short:         "",
+		Short:         "shows the tagging configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {

@@ -20,7 +20,7 @@ var (
 	transferAccelerationOpts *options2.TransferAccelerationOptions
 	DisabledCmd              = &cobra.Command{
 		Use:           "disabled",
-		Short:         "",
+		Short:         "disables the transfer acceleration configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {

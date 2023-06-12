@@ -23,7 +23,7 @@ var (
 	versioningOpts *options.VersioningOptions
 	ShowCmd        = &cobra.Command{
 		Use:           "show",
-		Short:         "",
+		Short:         "shows the versioning configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

@@ -24,7 +24,7 @@ var (
 	bucketPolicyOpts *options2.BucketPolicyOptions
 	ShowCmd          = &cobra.Command{
 		Use:           "show",
-		Short:         "",
+		Short:         "shows the bucket policy configuration of the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

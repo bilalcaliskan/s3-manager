@@ -14,7 +14,7 @@ func init() {
 var (
 	VersioningCmd = &cobra.Command{
 		Use:           "versioning",
-		Short:         "",
+		Short:         "shows/sets the versioning configuration of the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

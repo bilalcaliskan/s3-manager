@@ -20,7 +20,7 @@ var (
 	versioningOpts *options.VersioningOptions
 	DisabledCmd    = &cobra.Command{
 		Use:           "disabled",
-		Short:         "",
+		Short:         "disables the versioning configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

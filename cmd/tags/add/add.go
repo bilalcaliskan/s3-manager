@@ -24,7 +24,7 @@ var (
 	tagOpts *options.TagOptions
 	AddCmd  = &cobra.Command{
 		Use:           "add",
-		Short:         "",
+		Short:         "adds the tagging configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {

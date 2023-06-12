@@ -16,7 +16,7 @@ func init() {
 var (
 	TagsCmd = &cobra.Command{
 		Use:           "tags",
-		Short:         "",
+		Short:         "shows/sets the tagging configuration of the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
