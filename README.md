@@ -10,14 +10,17 @@
 [![Go version](https://img.shields.io/github/go-mod/go-version/bilalcaliskan/s3-manager)](https://github.com/bilalcaliskan/s3-manager)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-It is a tool written with Golang that helps you make the following actions on an AWS S3 bucket:
+[s3-manager](https://github.com/bilalcaliskan/s3-manager) is a tool written with Golang that helps you take the following actions on an AWS S3 bucket:
+- Sets up a one-shot file cleaning rule that matches specific pattern (great idea to check flags on [cmd/clean/options/options.go](cmd/clean/options/options.go)).
+  You can absolutely use [s3-manager](https://github.com/bilalcaliskan/s3-manager) to take advantage of file cleaning for your bucket on your automated operations for **decreasing your public cloud costs**.
 - Searches a string in files (supports regex)
 - Finds files (supports regex)
-- Sets up a file cleaning rule that matches specific pattern (great idea to check flags on [cmd/clean/options/options.go](cmd/clean/options/options.go))
 - Sets/shows tags
 - Sets/shows versioning configuration
 - Sets/shows transfer acceleration configuration
 - Sets/shows bucket policy
+
+About the first and the best benefit of [s3-manager](https://github.com/bilalcaliskan/s3-manager); you can read more from [here](https://aws.amazon.com/s3/pricing/).
 
 ## Access Credentials
 
@@ -31,7 +34,7 @@ will override environment variables if you set both of them:
 ```
 
 ## Available Subcommands
-Here is the list of available subcommands of **s3-manager**:
+Here is the list of available subcommands of [s3-manager](https://github.com/bilalcaliskan/s3-manager):
 
 - [clean](cmd/clean)
 - [search](cmd/search)
