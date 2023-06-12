@@ -4,11 +4,11 @@
 - [x] search/text (all files, single file etc.)
 - [x] bucketpolicy
 - [x] transferacceleration
-- [ ] mfadelete
+- [x] fix duplications
 - [ ] re-enable prompt/select logic
 - [ ] fix code smells
-- [ ] fix duplications
 - [ ] github issues
 - [ ] ~~storageclass~~
 - [ ] ~~encryption~~
 - [ ] ~~objectlock~~
+- [ ] ~~mfadelete~~
