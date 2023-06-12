@@ -16,6 +16,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const outputStr string = "%s=%s\n"
+
 func init() {
 	tagOpts = options.GetTagOptions()
 }
@@ -79,12 +81,12 @@ var (
 
 			logger.Info().Msg("here is the list of current tags")
 			for i, v := range tagOpts.ActualTags {
-				fmt.Printf("%s=%s\n", i, v)
+				fmt.Printf(outputStr, i, v)
 			}
 
 			logger.Info().Msg("will try to remove below tags")
 			for i, v := range tagOpts.TagsToRemove {
-				fmt.Printf("%s=%s\n", i, v)
+				fmt.Printf(outputStr, i, v)
 			}
 
 			utils.RemoveMapElements(tagOpts.ActualTags, tagOpts.TagsToRemove)
@@ -107,7 +109,7 @@ var (
 			logger.Info().Msg("successfully removed target tags")
 			logger.Info().Msg("here is the list of current tags again")
 			for i, v := range tagOpts.ActualTags {
-				fmt.Printf("%s=%s\n", i, v)
+				fmt.Printf(outputStr, i, v)
 			}
 
 			return nil
