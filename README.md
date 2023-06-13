@@ -50,14 +50,14 @@ Usage:
   s3-manager [command]
 
 Available Commands:
-  bucketpolicy
-  clean                clean subcommand cleans the app, finds and clears desired files
+  bucketpolicy         shows/sets the bucket policy configuration of the target bucket
+  clean                finds and clears desired files by a pre-configured rule set
   completion           Generate the autocompletion script for the specified shell
   help                 Help about any command
-  search               search subcommand searches the files which has desired substrings in it
-  tags
-  transferacceleration
-  versioning
+  search               searches the files which has desired substrings in it
+  tags                 shows/sets the tagging configuration of the target bucket
+  transferacceleration shows/sets the transfer acceleration configuration of the target bucket
+  versioning           shows/sets the versioning configuration of the target bucket
 
 Flags:
       --accessKey string        access key credential to access S3 bucket, this value also can be passed via "AWS_ACCESS_KEY" environment variable (default "")
