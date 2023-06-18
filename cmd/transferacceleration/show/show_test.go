@@ -33,7 +33,7 @@ func (m *mockS3Client) GetBucketAccelerateConfiguration(input *s3.GetBucketAccel
 	return defaultGetBucketAccelerationOutput, defaultGetBucketAccelerationErr
 }
 
-func TestExecuteTooManyArguments(t *testing.T) {
+func TestExecuteShowCmd(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -42,210 +42,70 @@ func TestExecuteTooManyArguments(t *testing.T) {
 
 	ctx := context.Background()
 	ShowCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
 
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
+	cases := []struct {
+		caseName                    string
+		args                        []string
+		shouldPass                  bool
+		shouldMock                  bool
+		getBucketAccelerationErr    error
+		getBucketAccelerationOutput *s3.GetBucketAccelerateConfigurationOutput
+	}{
+		{"Too many arguments", []string{"enabled", "foo"}, false, false, nil,
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Enabled"),
+			},
+		},
+		{"Success enabled", []string{}, true, true, nil,
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Enabled"),
+			},
+		},
+		{"Success suspended", []string{}, true, true, nil,
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Suspended"),
+			},
+		},
+		{"Failure get bucket acceleration", []string{}, false, true,
+			errors.New("dummy error"), &s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Enabled"),
+			},
+		},
+		{"Failure unknown status", []string{}, false, true, nil,
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Enableddd"),
+			},
+		},
+	}
 
-	args := []string{"enabled"}
-	ShowCmd.SetArgs(args)
+	for _, tc := range cases {
+		defaultGetBucketAccelerationErr = tc.getBucketAccelerationErr
+		defaultGetBucketAccelerationOutput = tc.getBucketAccelerationOutput
 
-	err = ShowCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	transferAccelerationOpts.SetZeroValues()
-}
-
-/*func TestExecuteWrongArguments(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	ShowCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
-
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
-
-	args := []string{"eeenabled"}
-	ShowCmd.SetArgs(args)
-
-	err = ShowCmd.Execute()
-	assert.NotNil(t, err)
-	assert.Equal(t, ErrWrongArgumentProvided, err.Error())
-
-	rootOpts.SetZeroValues()
-	versioningOpts.SetZeroValues()
-}*/
-
-/*
-	func TestExecuteNoArgument(t *testing.T) {
-		rootOpts := options.GetRootOptions()
-		rootOpts.AccessKey = "thisisaccesskey"
-		rootOpts.SecretKey = "thisissecretkey"
-		rootOpts.Region = "thisisregion"
-		rootOpts.BucketName = "thisisbucketname"
-
-		ctx := context.Background()
-		ShowCmd.SetContext(ctx)
-		svc, err := createSvc(rootOpts)
-		assert.NotNil(t, svc)
-		assert.Nil(t, err)
+		var err error
+		if tc.shouldMock {
+			mockSvc := &mockS3Client{}
+			svc = mockSvc
+			assert.NotNil(t, mockSvc)
+		} else {
+			svc, err = createSvc(rootOpts)
+			assert.NotNil(t, svc)
+			assert.Nil(t, err)
+		}
 
 		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
 		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
+		ShowCmd.SetArgs(tc.args)
 
-		ShowCmd.SetArgs([]string{})
 		err = ShowCmd.Execute()
-		assert.NotNil(t, err)
-		assert.Equal(t, ErrNoArgument, err.Error())
 
-		rootOpts.SetZeroValues()
-		versioningOpts.SetZeroValues()
+		if tc.shouldPass {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
 	}
-*/
-func TestExecuteSuccessAlreadyDisabled(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	ShowCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketAccelerationErr = nil
-	defaultGetBucketAccelerationOutput.Status = aws.String("Suspended")
-
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
-
-	ShowCmd.SetArgs([]string{})
-	err := ShowCmd.Execute()
-	assert.Nil(t, err)
 
 	rootOpts.SetZeroValues()
 	transferAccelerationOpts.SetZeroValues()
 }
-
-func TestExecuteSuccess(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	ShowCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketAccelerationErr = nil
-	defaultGetBucketAccelerationOutput.Status = aws.String("Enabled")
-
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
-
-	ShowCmd.SetArgs([]string{})
-	err := ShowCmd.Execute()
-	assert.Nil(t, err)
-
-	rootOpts.SetZeroValues()
-	transferAccelerationOpts.SetZeroValues()
-}
-
-func TestExecuteGetBucketAccelerationErr(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	ShowCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketAccelerationErr = errors.New("dummy error")
-	defaultGetBucketAccelerationOutput.Status = aws.String("Suspended")
-
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
-
-	ShowCmd.SetArgs([]string{})
-	err := ShowCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	transferAccelerationOpts.SetZeroValues()
-}
-
-func TestExecuteUnknownErr(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	ShowCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketAccelerationErr = nil
-	defaultGetBucketAccelerationOutput.Status = aws.String("Enableddd")
-
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
-
-	ShowCmd.SetArgs([]string{})
-	err := ShowCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	transferAccelerationOpts.SetZeroValues()
-}
-
-/*
-func TestExecuteSuccessEnabledWrongVersioning(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	ShowCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketAccelerationErr = nil
-	defaultGetBucketAccelerationOutput.Status = aws.String("Suspended")
-	defaultPutBucketAccelerationErr = nil
-
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
-
-	ShowCmd.SetArgs([]string{})
-	err := ShowCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	transferAccelerationOpts.SetZeroValues()
-}
-*/

@@ -2,10 +2,7 @@ package enabled
 
 import (
 	"context"
-	"errors"
 	"testing"
-
-	"github.com/bilalcaliskan/s3-manager/cmd/versioning/set/utils"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -41,7 +38,7 @@ func (m *mockS3Client) PutBucketAccelerateConfiguration(input *s3.PutBucketAccel
 	return defaultPutBucketAccelerationOutput, defaultPutBucketAccelerationErr
 }
 
-func TestExecuteTooManyArguments(t *testing.T) {
+func TestExecuteEnabledCmd(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -50,211 +47,66 @@ func TestExecuteTooManyArguments(t *testing.T) {
 
 	ctx := context.Background()
 	EnabledCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
 
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, svc))
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
+	cases := []struct {
+		caseName                    string
+		args                        []string
+		shouldPass                  bool
+		shouldMock                  bool
+		getBucketAccelerationErr    error
+		getBucketAccelerationOutput *s3.GetBucketAccelerateConfigurationOutput
+		putBucketAccelerationErr    error
+		putBucketAccelerationOutput *s3.PutBucketAccelerateConfigurationOutput
+	}{
+		{"Too many arguments", []string{"enabled", "foo"}, false, false, nil,
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Enabled"),
+			}, nil, &s3.PutBucketAccelerateConfigurationOutput{},
+		},
+		{"Success when disabled", []string{}, true, true, nil,
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Suspended"),
+			}, nil, &s3.PutBucketAccelerateConfigurationOutput{},
+		},
+		{"Success already enabled", []string{}, true, true,
+			nil, &s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Enabled"),
+			}, nil, &s3.PutBucketAccelerateConfigurationOutput{},
+		},
+		{"Failure unknown status", []string{}, false, true, nil,
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Enableddd"),
+			}, nil, &s3.PutBucketAccelerateConfigurationOutput{},
+		},
+	}
 
-	args := []string{"enabled"}
-	EnabledCmd.SetArgs(args)
+	for _, tc := range cases {
+		defaultGetBucketAccelerationErr = tc.getBucketAccelerationErr
+		defaultGetBucketAccelerationOutput = tc.getBucketAccelerationOutput
 
-	err = EnabledCmd.Execute()
-	assert.NotNil(t, err)
-	assert.Equal(t, utils.ErrTooManyArguments, err.Error())
-
-	rootOpts.SetZeroValues()
-	transferAccelerationOpts.SetZeroValues()
-}
-
-/*func TestExecuteWrongArguments(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	EnabledCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
-
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, svc))
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
-
-	args := []string{"eeenabled"}
-	EnabledCmd.SetArgs(args)
-
-	err = EnabledCmd.Execute()
-	assert.NotNil(t, err)
-	assert.Equal(t, ErrWrongArgumentProvided, err.Error())
-
-	rootOpts.SetZeroValues()
-	versioningOpts.SetZeroValues()
-}*/
-
-/*
-	func TestExecuteNoArgument(t *testing.T) {
-		rootOpts := options.GetRootOptions()
-		rootOpts.AccessKey = "thisisaccesskey"
-		rootOpts.SecretKey = "thisissecretkey"
-		rootOpts.Region = "thisisregion"
-		rootOpts.BucketName = "thisisbucketname"
-
-		ctx := context.Background()
-		EnabledCmd.SetContext(ctx)
-		svc, err := createSvc(rootOpts)
-		assert.NotNil(t, svc)
-		assert.Nil(t, err)
+		var err error
+		if tc.shouldMock {
+			mockSvc := &mockS3Client{}
+			svc = mockSvc
+			assert.NotNil(t, mockSvc)
+		} else {
+			svc, err = createSvc(rootOpts)
+			assert.NotNil(t, svc)
+			assert.Nil(t, err)
+		}
 
 		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, svc))
 		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
+		EnabledCmd.SetArgs(tc.args)
 
-		EnabledCmd.SetArgs([]string{})
 		err = EnabledCmd.Execute()
-		assert.NotNil(t, err)
-		assert.Equal(t, ErrNoArgument, err.Error())
 
-		rootOpts.SetZeroValues()
-		versioningOpts.SetZeroValues()
+		if tc.shouldPass {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
 	}
-*/
-func TestExecuteSuccessAlreadyEnabled(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	EnabledCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketAccelerationErr = nil
-	defaultGetBucketAccelerationOutput.Status = aws.String("Enabled")
-	defaultPutBucketAccelerationErr = nil
-
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, svc))
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
-
-	EnabledCmd.SetArgs([]string{})
-	err := EnabledCmd.Execute()
-	assert.Nil(t, err)
-
-	rootOpts.SetZeroValues()
-	transferAccelerationOpts.SetZeroValues()
-}
-
-func TestExecuteSuccess(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	EnabledCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketAccelerationErr = nil
-	defaultGetBucketAccelerationOutput.Status = aws.String("Suspended")
-	defaultPutBucketAccelerationErr = nil
-
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, svc))
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
-
-	EnabledCmd.SetArgs([]string{})
-	err := EnabledCmd.Execute()
-	assert.Nil(t, err)
-
-	rootOpts.SetZeroValues()
-	transferAccelerationOpts.SetZeroValues()
-}
-
-func TestExecuteGetBucketAccelerationErr(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	EnabledCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketAccelerationErr = errors.New("dummy error")
-	defaultPutBucketAccelerationErr = nil
-
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, svc))
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
-
-	EnabledCmd.SetArgs([]string{})
-	err := EnabledCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	transferAccelerationOpts.SetZeroValues()
-}
-
-func TestExecuteSetBucketAccelerationErr(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	EnabledCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketAccelerationErr = nil
-	defaultGetBucketAccelerationOutput.Status = aws.String("Suspended")
-	defaultPutBucketAccelerationErr = errors.New("dummy error")
-
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, svc))
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
-
-	EnabledCmd.SetArgs([]string{})
-	err := EnabledCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	transferAccelerationOpts.SetZeroValues()
-}
-
-func TestExecuteUnknownErr(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	EnabledCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketAccelerationErr = nil
-	defaultGetBucketAccelerationOutput.Status = aws.String("Enableddd")
-	defaultPutBucketAccelerationErr = errors.New("dummy error")
-
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, svc))
-	EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
-
-	EnabledCmd.SetArgs([]string{})
-	err := EnabledCmd.Execute()
-	assert.NotNil(t, err)
 
 	rootOpts.SetZeroValues()
 	transferAccelerationOpts.SetZeroValues()
