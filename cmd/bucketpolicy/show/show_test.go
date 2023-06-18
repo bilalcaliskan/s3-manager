@@ -32,57 +32,7 @@ func (m *mockS3Client) GetBucketPolicy(input *s3.GetBucketPolicyInput) (*s3.GetB
 	return defaultGetBucketPolicyOutput, defaultGetBucketPolicyErr
 }
 
-func TestExecuteTooManyArguments(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	ShowCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
-
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
-
-	args := []string{"enabled", "foo"}
-	ShowCmd.SetArgs(args)
-
-	err = ShowCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
-
-func TestExecuteNoArgument(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	ShowCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
-
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
-
-	ShowCmd.SetArgs([]string{})
-	err = ShowCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
-
-func TestExecuteSuccessEnabled(t *testing.T) {
+func TestExecuteShowCmd(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -92,72 +42,64 @@ func TestExecuteSuccessEnabled(t *testing.T) {
 	ctx := context.Background()
 	ShowCmd.SetContext(ctx)
 
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
+	cases := []struct {
+		caseName              string
+		args                  []string
+		shouldPass            bool
+		shouldMock            bool
+		getBucketPolicyErr    error
+		getBucketPolicyOutput *s3.GetBucketPolicyOutput
+	}{
+		{"Too many arguments", []string{"enabled", "foo"}, false, false,
+			nil, &s3.GetBucketPolicyOutput{
+				Policy: aws.String("{}"),
+			},
+		},
+		{"No argument", []string{}, false, false, nil,
+			&s3.GetBucketPolicyOutput{
+				Policy: aws.String("{}"),
+			},
+		},
+		{"Success", []string{}, true, true, nil,
+			&s3.GetBucketPolicyOutput{
+				Policy: aws.String("{}"),
+			},
+		},
+		{"Json failure", []string{}, false, true, nil,
+			&s3.GetBucketPolicyOutput{
+				Policy: aws.String(""),
+			},
+		},
+	}
 
-	defaultGetBucketPolicyErr = nil
+	for _, tc := range cases {
+		defaultGetBucketPolicyErr = tc.getBucketPolicyErr
+		defaultGetBucketPolicyOutput = tc.getBucketPolicyOutput
 
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
+		var err error
+		if tc.shouldMock {
+			mockSvc := &mockS3Client{}
+			svc = mockSvc
+			assert.NotNil(t, mockSvc)
+		} else {
+			svc, err = createSvc(rootOpts)
+			assert.NotNil(t, svc)
+			assert.Nil(t, err)
+		}
 
-	ShowCmd.SetArgs([]string{})
-	err := ShowCmd.Execute()
-	assert.Nil(t, err)
+		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
+		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
+		ShowCmd.SetArgs(tc.args)
 
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
+		err = ShowCmd.Execute()
 
-func TestExecuteSuccessEnabled2(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	ShowCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketPolicyErr = nil
-
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
-
-	ShowCmd.SetArgs([]string{})
-	err := ShowCmd.Execute()
-	assert.Nil(t, err)
-
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
-
-func TestExecuteJsonFailure(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	ShowCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketPolicyErr = nil
-	defaultGetBucketPolicyOutput.SetPolicy("")
-
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
-	ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
-
-	ShowCmd.SetArgs([]string{})
-	err := ShowCmd.Execute()
-	assert.NotNil(t, err)
+		if tc.shouldPass {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
+	}
 
 	rootOpts.SetZeroValues()
 	bucketPolicyOpts.SetZeroValues()
-	defaultGetBucketPolicyOutput.SetPolicy("{}")
 }

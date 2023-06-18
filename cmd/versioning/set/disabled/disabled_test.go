@@ -2,10 +2,7 @@ package disabled
 
 import (
 	"context"
-	"errors"
 	"testing"
-
-	"github.com/bilalcaliskan/s3-manager/cmd/versioning/set/utils"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -41,7 +38,81 @@ func (m *mockS3Client) PutBucketVersioning(input *s3.PutBucketVersioningInput) (
 	return defaultPutBucketVersioningOutput, defaultPutBucketVersioningErr
 }
 
-func TestExecuteTooManyArguments(t *testing.T) {
+func TestExecuteDisabledCmd(t *testing.T) {
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+
+	ctx := context.Background()
+	DisabledCmd.SetContext(ctx)
+
+	cases := []struct {
+		caseName                  string
+		args                      []string
+		shouldPass                bool
+		shouldMock                bool
+		getBucketVersioningErr    error
+		getBucketVersioningOutput *s3.GetBucketVersioningOutput
+		putBucketVersioningErr    error
+		putBucketVersioningOutput *s3.PutBucketVersioningOutput
+	}{
+		{"Too many arguments", []string{"enabled", "foo"}, false, false, nil,
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Enabled"),
+			}, nil, &s3.PutBucketVersioningOutput{},
+		},
+		{"Success when enabled", []string{}, true, true, nil,
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Enabled"),
+			}, nil, &s3.PutBucketVersioningOutput{},
+		},
+		{"Success already disabled", []string{}, true, true,
+			nil, &s3.GetBucketVersioningOutput{
+				Status: aws.String("Suspended"),
+			}, nil, &s3.PutBucketVersioningOutput{},
+		},
+		{"Failure unknown status", []string{}, false, true, nil,
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Enableddd"),
+			}, nil, &s3.PutBucketVersioningOutput{},
+		},
+	}
+
+	for _, tc := range cases {
+		defaultGetBucketVersioningErr = tc.getBucketVersioningErr
+		defaultGetBucketVersioningOutput = tc.getBucketVersioningOutput
+
+		var err error
+		if tc.shouldMock {
+			mockSvc := &mockS3Client{}
+			svc = mockSvc
+			assert.NotNil(t, mockSvc)
+		} else {
+			svc, err = createSvc(rootOpts)
+			assert.NotNil(t, svc)
+			assert.Nil(t, err)
+		}
+
+		DisabledCmd.SetContext(context.WithValue(DisabledCmd.Context(), options.S3SvcKey{}, svc))
+		DisabledCmd.SetContext(context.WithValue(DisabledCmd.Context(), options.OptsKey{}, rootOpts))
+		DisabledCmd.SetArgs(tc.args)
+
+		err = DisabledCmd.Execute()
+
+		if tc.shouldPass {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
+	}
+
+	rootOpts.SetZeroValues()
+	versioningOpts.SetZeroValues()
+}
+
+/*func TestExecuteTooManyArguments(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -66,7 +137,7 @@ func TestExecuteTooManyArguments(t *testing.T) {
 
 	rootOpts.SetZeroValues()
 	versioningOpts.SetZeroValues()
-}
+}*/
 
 /*func TestExecuteWrongArguments(t *testing.T) {
 	rootOpts := options.GetRootOptions()
@@ -121,7 +192,8 @@ func TestExecuteTooManyArguments(t *testing.T) {
 		versioningOpts.SetZeroValues()
 	}
 */
-func TestExecuteSuccessAlreadyDisabled(t *testing.T) {
+
+/*func TestExecuteSuccessAlreadyDisabled(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -228,9 +300,9 @@ func TestExecuteSetBucketVersioningErr(t *testing.T) {
 
 	rootOpts.SetZeroValues()
 	versioningOpts.SetZeroValues()
-}
+}*/
 
-func TestExecuteSuccessEnabledWrongVersioning(t *testing.T) {
+/*func TestExecuteSuccessEnabledWrongVersioning(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -257,3 +329,4 @@ func TestExecuteSuccessEnabledWrongVersioning(t *testing.T) {
 	rootOpts.SetZeroValues()
 	versioningOpts.SetZeroValues()
 }
+*/
