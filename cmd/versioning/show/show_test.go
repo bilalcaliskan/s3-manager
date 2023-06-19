@@ -56,22 +56,22 @@ func TestExecuteShowCmd(t *testing.T) {
 				Status: aws.String("Enabled"),
 			},
 		},
-		{"Success enabled", []string{}, true, true, nil,
+		{"Success while already enabled", []string{}, true, true, nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
 			},
 		},
-		{"Success disabled", []string{}, true, true, nil,
+		{"Success while disabled", []string{}, true, true, nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
 			},
 		},
-		{"Failure get bucket versioning", []string{}, false, true,
+		{"Failure caused by GetBucketVersioning error", []string{}, false, true,
 			errors.New("dummy error"), &s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
 			},
 		},
-		{"Failure unknown status", []string{}, false, true, nil,
+		{"Failure caused by unknown status returned by external call", []string{}, false, true, nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enableddd"),
 			},

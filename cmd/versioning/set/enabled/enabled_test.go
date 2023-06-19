@@ -63,17 +63,17 @@ func TestExecuteEnabledCmd(t *testing.T) {
 				Status: aws.String("Enabled"),
 			}, nil, &s3.PutBucketVersioningOutput{},
 		},
-		{"Success when disabled", []string{}, true, true, nil,
+		{"Success", []string{}, true, true, nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
 			}, nil, &s3.PutBucketVersioningOutput{},
 		},
-		{"Success already enabled", []string{}, true, true,
+		{"Success while already enabled", []string{}, true, true,
 			nil, &s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
 			}, nil, &s3.PutBucketVersioningOutput{},
 		},
-		{"Failure unknown status", []string{}, false, true, nil,
+		{"Failure caused by unknown status returned by external call", []string{}, false, true, nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enableddd"),
 			}, nil, &s3.PutBucketVersioningOutput{},
