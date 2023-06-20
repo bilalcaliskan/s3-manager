@@ -57,11 +57,7 @@ var (
 			logger.Info().Msg("fetched bucket tags successfully")
 
 			for _, v := range tags.TagSet {
-				tagOpts.ActualTags[*v.Key] = *v.Value
-			}
-
-			for key, val := range tagOpts.ActualTags {
-				fmt.Printf("%s=%s\n", key, val)
+				fmt.Printf("%s=%s\n", *v.Key, *v.Value)
 			}
 
 			return nil

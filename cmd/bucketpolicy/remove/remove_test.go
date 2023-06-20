@@ -31,33 +31,7 @@ func (m *mockS3Client) DeleteBucketPolicy(input *s3.DeleteBucketPolicyInput) (*s
 	return defaultDeleteBucketPolicyOutput, defaultDeleteBucketPolicyErr
 }
 
-func TestExecuteTooManyArguments(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	RemoveCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
-
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-
-	args := []string{"enabled", "foo"}
-	RemoveCmd.SetArgs(args)
-
-	err = RemoveCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
-
-func TestExecuteSuccess(t *testing.T) {
+func TestExecuteRemoveCmd(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -67,97 +41,53 @@ func TestExecuteSuccess(t *testing.T) {
 	ctx := context.Background()
 	RemoveCmd.SetContext(ctx)
 
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
+	cases := []struct {
+		caseName                 string
+		args                     []string
+		shouldPass               bool
+		shouldMock               bool
+		deleteBucketPolicyErr    error
+		deleteBucketPolicyOutput *s3.DeleteBucketPolicyOutput
+	}{
+		{"Too many arguments", []string{"enabled", "foo"}, false, false,
+			nil, &s3.DeleteBucketPolicyOutput{},
+		},
+		{"Success", []string{}, true, true,
+			nil, &s3.DeleteBucketPolicyOutput{},
+		},
+		{"Failure", []string{}, false, true,
+			errors.New("dummy error"), &s3.DeleteBucketPolicyOutput{},
+		},
+	}
 
-	defaultDeleteBucketPolicyErr = nil
+	for _, tc := range cases {
+		defaultDeleteBucketPolicyErr = tc.deleteBucketPolicyErr
+		defaultDeleteBucketPolicyOutput = tc.deleteBucketPolicyOutput
 
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
+		var err error
+		if tc.shouldMock {
+			mockSvc := &mockS3Client{}
+			svc = mockSvc
+			assert.NotNil(t, mockSvc)
+		} else {
+			svc, err = createSvc(rootOpts)
+			assert.NotNil(t, svc)
+			assert.Nil(t, err)
+		}
 
-	RemoveCmd.SetArgs([]string{})
-	err := RemoveCmd.Execute()
-	assert.Nil(t, err)
+		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
+		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
+		RemoveCmd.SetArgs(tc.args)
 
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
+		err = RemoveCmd.Execute()
 
-func TestExecuteFailure(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	RemoveCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultDeleteBucketPolicyErr = errors.New("dummy error")
-
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-
-	RemoveCmd.SetArgs([]string{})
-	err := RemoveCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
-
-/*func TestExecuteSuccessEnabled(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	RemoveCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketPolicyErr = nil
-
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-
-	RemoveCmd.SetArgs([]string{"dummy.json"})
-	err := RemoveCmd.Execute()
-	assert.Nil(t, err)
+		if tc.shouldPass {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
+	}
 
 	rootOpts.SetZeroValues()
 	bucketPolicyOpts.SetZeroValues()
 }
-*/
-/*func TestExecuteSuccessEnabled2(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	RemoveCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketPolicyErr = nil
-
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-
-	RemoveCmd.SetArgs([]string{})
-	err := RemoveCmd.Execute()
-	assert.Nil(t, err)
-
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
-*/

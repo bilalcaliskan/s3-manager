@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
@@ -31,7 +32,82 @@ func (m *mockS3Client) GetBucketTagging(input *s3.GetBucketTaggingInput) (*s3.Ge
 	return defaultGetBucketTaggingOutput, defaultGetBucketTaggingErr
 }
 
-func TestExecuteTooManyArguments(t *testing.T) {
+func TestExecuteShowCmd(t *testing.T) {
+	rootOpts := options.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+
+	ctx := context.Background()
+	ShowCmd.SetContext(ctx)
+
+	cases := []struct {
+		caseName                      string
+		args                          []string
+		shouldPass                    bool
+		shouldMock                    bool
+		defaultGetBucketTaggingErr    error
+		defaultGetBucketTaggingOutput *s3.GetBucketTaggingOutput
+	}{
+		{"Too many arguments", []string{"enabled", "foo"}, false, false, nil,
+			&s3.GetBucketTaggingOutput{},
+		},
+		{"Success with empty TagSet", []string{}, true, true, nil,
+			&s3.GetBucketTaggingOutput{},
+		},
+		{"Success with non-empty TagSet", []string{}, true, true, nil,
+			&s3.GetBucketTaggingOutput{
+				TagSet: []*s3.Tag{
+					{
+						Key:   aws.String("foo"),
+						Value: aws.String("bar"),
+					},
+					{
+						Key:   aws.String("foo2"),
+						Value: aws.String("bar2"),
+					},
+				},
+			},
+		},
+		{"Failure", []string{}, false, true, errors.New("dummy error"),
+			&s3.GetBucketTaggingOutput{},
+		},
+	}
+
+	for _, tc := range cases {
+		defaultGetBucketTaggingErr = tc.defaultGetBucketTaggingErr
+		defaultGetBucketTaggingOutput = tc.defaultGetBucketTaggingOutput
+
+		var err error
+		if tc.shouldMock {
+			mockSvc := &mockS3Client{}
+			svc = mockSvc
+			assert.NotNil(t, mockSvc)
+		} else {
+			svc, err = createSvc(rootOpts)
+			assert.NotNil(t, svc)
+			assert.Nil(t, err)
+		}
+
+		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
+		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
+		ShowCmd.SetArgs(tc.args)
+
+		err = ShowCmd.Execute()
+
+		if tc.shouldPass {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
+	}
+
+	rootOpts.SetZeroValues()
+	tagOpts.SetZeroValues()
+}
+
+/*func TestExecuteTooManyArguments(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -104,9 +180,9 @@ func TestExecuteSuccess(t *testing.T) {
 	assert.Nil(t, err)
 
 	tagOpts.SetZeroValues()
-}
+}*/
 
-func TestExecuteFailure(t *testing.T) {
+/*func TestExecuteFailure(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -127,4 +203,4 @@ func TestExecuteFailure(t *testing.T) {
 	assert.NotNil(t, err)
 
 	tagOpts.SetZeroValues()
-}
+}*/

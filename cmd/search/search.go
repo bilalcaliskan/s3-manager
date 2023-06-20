@@ -14,8 +14,9 @@ func init() {
 
 var (
 	SearchCmd = &cobra.Command{
-		Use:          "search",
-		Short:        "searches the files which has desired substrings in it",
+		Use:   "search",
+		Short: "searches the files which has desired substrings in it",
+		// we should not define PreRunE since it will override the PreRunE which is inherited from RootCmd
 		SilenceUsage: true,
 	}
 )

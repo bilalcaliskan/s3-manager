@@ -27,65 +27,11 @@ type mockS3Client struct {
 	s3iface.S3API
 }
 
-/*func (m *mockS3Client) GetBucketPolicy(input *s3.GetBucketPolicyInput) (*s3.GetBucketPolicyOutput, error) {
-	return defaultGetBucketPolicyOutput, defaultGetBucketPolicyErr
-}*/
-
 func (m *mockS3Client) PutBucketPolicy(input *s3.PutBucketPolicyInput) (*s3.PutBucketPolicyOutput, error) {
 	return defaultPutBucketPolicyOutput, defaultPutBucketPolicyErr
 }
 
-func TestExecuteTooManyArguments(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	AddCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
-
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
-
-	args := []string{"enabled", "foo"}
-	AddCmd.SetArgs(args)
-
-	err = AddCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
-
-func TestExecuteNoArgument(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	AddCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
-
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
-
-	AddCmd.SetArgs([]string{})
-	err = AddCmd.Execute()
-	assert.NotNil(t, err)
-
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
-
-func TestExecuteFailureFileNotFound(t *testing.T) {
+func TestExecuteAddCmd(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -95,95 +41,59 @@ func TestExecuteFailureFileNotFound(t *testing.T) {
 	ctx := context.Background()
 	AddCmd.SetContext(ctx)
 
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
+	cases := []struct {
+		caseName              string
+		args                  []string
+		shouldPass            bool
+		shouldMock            bool
+		putBucketPolicyErr    error
+		putBucketPolicyOutput *s3.PutBucketPolicyOutput
+	}{
+		{"Too many arguments", []string{"enabled", "foo"}, false, false,
+			nil, &s3.PutBucketPolicyOutput{},
+		},
+		{"No arguments", []string{}, false, false,
+			nil, &s3.PutBucketPolicyOutput{},
+		},
+		{"Success", []string{"../../../mock/bucketpolicy.json"}, true, true,
+			nil, &s3.PutBucketPolicyOutput{},
+		},
+		{"Failure", []string{"../../../mock/bucketpolicy.json"}, false, true,
+			errors.New("dummy error"), &s3.PutBucketPolicyOutput{},
+		},
+		{"Failure target file not found", []string{"../../../mock/bucketpolicy.jsonjjnnn"}, false,
+			true, nil, &s3.PutBucketPolicyOutput{},
+		},
+	}
 
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
+	for _, tc := range cases {
+		defaultPutBucketPolicyErr = tc.putBucketPolicyErr
+		defaultPutBucketPolicyOutput = tc.putBucketPolicyOutput
 
-	AddCmd.SetArgs([]string{"dummy.json"})
-	err := AddCmd.Execute()
-	assert.NotNil(t, err)
+		var err error
+		if tc.shouldMock {
+			mockSvc := &mockS3Client{}
+			svc = mockSvc
+			assert.NotNil(t, mockSvc)
+		} else {
+			svc, err = createSvc(rootOpts)
+			assert.NotNil(t, svc)
+			assert.Nil(t, err)
+		}
 
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
+		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
+		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
+		AddCmd.SetArgs(tc.args)
 
-func TestExecuteSuccess(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
+		err = AddCmd.Execute()
 
-	ctx := context.Background()
-	AddCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultPutBucketPolicyErr = nil
-
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
-
-	AddCmd.SetArgs([]string{"../../../mock/bucketpolicy.json"})
-	err := AddCmd.Execute()
-	assert.Nil(t, err)
-
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
-
-func TestExecutePutError(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	AddCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultPutBucketPolicyErr = errors.New("dummy error")
-
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
-
-	AddCmd.SetArgs([]string{"../../../mock/bucketpolicy.json"})
-	err := AddCmd.Execute()
-	assert.NotNil(t, err)
+		if tc.shouldPass {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
+	}
 
 	rootOpts.SetZeroValues()
 	bucketPolicyOpts.SetZeroValues()
 }
-
-/*func TestExecuteSuccessEnabled2(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	AddCmd.SetContext(ctx)
-
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	defaultGetBucketPolicyErr = nil
-
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
-
-	AddCmd.SetArgs([]string{})
-	err := AddCmd.Execute()
-	assert.Nil(t, err)
-
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
-}
-*/

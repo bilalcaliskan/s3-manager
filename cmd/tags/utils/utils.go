@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
@@ -18,9 +17,6 @@ func CheckArgs(cmd *cobra.Command, args []string) error {
 	} else if cmd.Name() == "show" && len(args) > 0 {
 		return errors.New("too many argument provided")
 	}
-
-	fmt.Printf("here")
-	fmt.Println(len(args))
 
 	if len(args) == 0 {
 		return errors.New("no argument provided")

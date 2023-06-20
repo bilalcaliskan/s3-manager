@@ -45,7 +45,7 @@ func (m *mockS3Client) DeleteBucketTagging(input *s3.DeleteBucketTaggingInput) (
 	return defaultDeleteBucketTaggingOutput, defaultDeleteBucketTaggingErr
 }
 
-func TestExecuteNoArgumentsProvided(t *testing.T) {
+func TestExecuteRemoveCmd(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
@@ -54,342 +54,179 @@ func TestExecuteNoArgumentsProvided(t *testing.T) {
 
 	ctx := context.Background()
 	RemoveCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
 
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
+	cases := []struct {
+		caseName                  string
+		args                      []string
+		shouldPass                bool
+		shouldMock                bool
+		getBucketTaggingErr       error
+		getBucketTaggingOutput    *s3.GetBucketTaggingOutput
+		putBucketTaggingErr       error
+		putBucketTaggingOutput    *s3.PutBucketTaggingOutput
+		deleteBucketTaggingErr    error
+		deleteBucketTaggingOutput *s3.DeleteBucketTaggingOutput
+	}{
+		{"No arguments provided", []string{}, false, false,
+			nil,
+			&s3.GetBucketTaggingOutput{},
+			nil,
+			&s3.PutBucketTaggingOutput{},
+			nil,
+			&s3.DeleteBucketTaggingOutput{},
+		},
+		{"Success while has single tag", []string{"foo=bar,foo2=bar2"}, true, true,
+			nil,
+			&s3.GetBucketTaggingOutput{
+				TagSet: []*s3.Tag{
+					{
+						Key:   aws.String("foo"),
+						Value: aws.String("bar"),
+					},
+				},
+			},
+			nil,
+			&s3.PutBucketTaggingOutput{},
+			nil,
+			&s3.DeleteBucketTaggingOutput{},
+		},
+		{"Success while has multiple tags", []string{"foo=bar,foo2=bar2"}, true, true,
+			nil,
+			&s3.GetBucketTaggingOutput{
+				TagSet: []*s3.Tag{
+					{
+						Key:   aws.String("foo"),
+						Value: aws.String("bar"),
+					},
+					{
+						Key:   aws.String("foo2"),
+						Value: aws.String("bar2"),
+					},
+					{
+						Key:   aws.String("foo3"),
+						Value: aws.String("bar3"),
+					},
+					{
+						Key:   aws.String("foo4"),
+						Value: aws.String("bar4"),
+					},
+				},
+			},
+			nil,
+			&s3.PutBucketTaggingOutput{},
+			nil,
+			&s3.DeleteBucketTaggingOutput{},
+		},
+		{"Failure caused by wrong argument provided", []string{"foo=bar=bar3,foo2=bar2"}, false, true,
+			nil,
+			&s3.GetBucketTaggingOutput{},
+			nil,
+			&s3.PutBucketTaggingOutput{},
+			nil,
+			&s3.DeleteBucketTaggingOutput{},
+		},
+		{"Warn while has no tags to remove", []string{"foo3=bar3,foo4=bar4"}, true, true,
+			nil,
+			&s3.GetBucketTaggingOutput{
+				TagSet: []*s3.Tag{
+					{
+						Key:   aws.String("foo"),
+						Value: aws.String("bar"),
+					},
+					{
+						Key:   aws.String("foo2"),
+						Value: aws.String("bar2"),
+					},
+				},
+			},
+			nil,
+			&s3.PutBucketTaggingOutput{},
+			nil,
+			&s3.DeleteBucketTaggingOutput{},
+		},
+		{"Failure caused by GetBucketTags error", []string{"foo=bar,foo2=bar2"}, false, true,
+			errors.New("injected error"),
+			&s3.GetBucketTaggingOutput{},
+			nil,
+			&s3.PutBucketTaggingOutput{},
+			errors.New("injected error"),
+			&s3.DeleteBucketTaggingOutput{},
+		},
+		{"Failure caused by DeleteAllBucketTags error", []string{"foo=bar,foo2=bar2"}, false, true,
+			nil,
+			&s3.GetBucketTaggingOutput{
+				TagSet: []*s3.Tag{
+					{
+						Key:   aws.String("foo"),
+						Value: aws.String("bar"),
+					},
+					{
+						Key:   aws.String("foo2"),
+						Value: aws.String("bar2"),
+					},
+				},
+			},
+			nil,
+			&s3.PutBucketTaggingOutput{},
+			errors.New("injected error"),
+			&s3.DeleteBucketTaggingOutput{},
+		},
+		{"Failure caused by DeleteAllBucketTags error", []string{"foo=bar,foo2=bar2"}, false, true,
+			nil,
+			&s3.GetBucketTaggingOutput{
+				TagSet: []*s3.Tag{
+					{
+						Key:   aws.String("foo"),
+						Value: aws.String("bar"),
+					},
+					{
+						Key:   aws.String("foo2"),
+						Value: aws.String("bar2"),
+					},
+				},
+			},
+			errors.New("injected error"),
+			&s3.PutBucketTaggingOutput{},
+			nil,
+			&s3.DeleteBucketTaggingOutput{},
+		},
+	}
 
-	RemoveCmd.SetArgs([]string{})
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+		t.Logf("here is the all cases:\n%v", tc)
 
-	err = RemoveCmd.Execute()
-	assert.NotNil(t, err)
+		defaultGetBucketTaggingErr = tc.getBucketTaggingErr
+		defaultPutBucketTaggingErr = tc.putBucketTaggingErr
+		defaultGetBucketTaggingOutput = tc.getBucketTaggingOutput
+		defaultPutBucketTaggingOutput = tc.putBucketTaggingOutput
+		defaultDeleteBucketTaggingErr = tc.deleteBucketTaggingErr
+		defaultDeleteBucketTaggingOutput = tc.deleteBucketTaggingOutput
 
+		var err error
+		if tc.shouldMock {
+			mockSvc := &mockS3Client{}
+			svc = mockSvc
+			assert.NotNil(t, mockSvc)
+		} else {
+			svc, err = createSvc(rootOpts)
+			assert.NotNil(t, svc)
+			assert.Nil(t, err)
+		}
+
+		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
+		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
+		RemoveCmd.SetArgs(tc.args)
+
+		err = RemoveCmd.Execute()
+
+		if tc.shouldPass {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
+	}
+
+	rootOpts.SetZeroValues()
 	tagOpts.SetZeroValues()
 }
-
-func TestExecuteTooManyArgumentsProvided(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	RemoveCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
-
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-
-	RemoveCmd.SetArgs([]string{"foo", "bar"})
-
-	err = RemoveCmd.Execute()
-	assert.NotNil(t, err)
-
-	tagOpts.SetZeroValues()
-}
-
-func TestExecuteWrongFormattedArgumentProvided(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	RemoveCmd.SetContext(ctx)
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-
-	RemoveCmd.SetArgs([]string{"foo=bar,foo2rtwegrg"})
-
-	err := RemoveCmd.Execute()
-	assert.NotNil(t, err)
-
-	tagOpts.SetZeroValues()
-}
-
-func TestExecuteGetTagsFailure(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	RemoveCmd.SetContext(ctx)
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-
-	defaultGetBucketTaggingErr = errors.New("dummy error")
-
-	RemoveCmd.SetArgs([]string{"foo=bar"})
-
-	err := RemoveCmd.Execute()
-	assert.NotNil(t, err)
-
-	tagOpts.SetZeroValues()
-}
-
-func TestExecuteSuccess(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	RemoveCmd.SetContext(ctx)
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-
-	var tags []*s3.Tag
-	tags = append(tags, &s3.Tag{Key: aws.String("foo"), Value: aws.String("bar")})
-	tags = append(tags, &s3.Tag{Key: aws.String("hasan"), Value: aws.String("huseyin")})
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
-	defaultGetBucketTaggingErr = nil
-	defaultPutBucketTaggingErr = nil
-	defaultDeleteBucketTaggingErr = nil
-
-	RemoveCmd.SetArgs([]string{"foo=bar"})
-	err := RemoveCmd.Execute()
-	assert.Nil(t, err)
-
-	tagOpts.SetZeroValues()
-}
-
-func TestExecuteNoTagsToDelete(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	RemoveCmd.SetContext(ctx)
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-
-	var tags []*s3.Tag
-	tags = append(tags, &s3.Tag{Key: aws.String("foo"), Value: aws.String("bar")})
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
-	defaultGetBucketTaggingErr = nil
-	defaultPutBucketTaggingErr = nil
-	defaultDeleteBucketTaggingErr = nil
-
-	RemoveCmd.SetArgs([]string{"foo2=bar"})
-	err := RemoveCmd.Execute()
-	assert.Nil(t, err)
-
-	tagOpts.SetZeroValues()
-}
-
-func TestExecuteDeleteFailure(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	RemoveCmd.SetContext(ctx)
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-
-	var tags []*s3.Tag
-	tags = append(tags, &s3.Tag{Key: aws.String("foo"), Value: aws.String("bar")})
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
-	defaultGetBucketTaggingErr = nil
-	defaultPutBucketTaggingErr = nil
-	defaultDeleteBucketTaggingErr = errors.New("dummy error")
-
-	RemoveCmd.SetArgs([]string{"foo=bar"})
-	err := RemoveCmd.Execute()
-	assert.NotNil(t, err)
-
-	tagOpts.SetZeroValues()
-}
-
-func TestExecuteUpdateFailure(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	RemoveCmd.SetContext(ctx)
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
-	RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-
-	var tags []*s3.Tag
-	tags = append(tags, &s3.Tag{Key: aws.String("foo"), Value: aws.String("bar")})
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
-	defaultGetBucketTaggingErr = nil
-	defaultPutBucketTaggingErr = errors.New("dummy error")
-	defaultDeleteBucketTaggingErr = nil
-
-	RemoveCmd.SetArgs([]string{"foo=bar"})
-	err := RemoveCmd.Execute()
-	assert.NotNil(t, err)
-
-	tagOpts.SetZeroValues()
-}
-
-/*func TestExecuteTooManyArgumentsProvided(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	AddCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
-
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
-
-	args := []string{"hello", "bar"}
-	AddCmd.SetArgs(args)
-
-	err = AddCmd.Execute()
-	assert.NotNil(t, err)
-
-	tagOpts.SetZeroValues()
-}
-
-func TestExecuteSuccess(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	AddCmd.SetContext(ctx)
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
-
-	args := []string{"foo=bar"}
-	AddCmd.SetArgs(args)
-
-	defaultGetBucketTaggingErr = nil
-	var tags []*s3.Tag
-	tags = append(tags, &s3.Tag{Key: aws.String("foo"), Value: aws.String("bar")})
-
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
-	defaultPutBucketTaggingErr = nil
-
-	err := AddCmd.Execute()
-	assert.Nil(t, err)
-
-	tagOpts.SetZeroValues()
-}
-
-func TestExecuteGetBucketTagsFailure(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	AddCmd.SetContext(ctx)
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
-
-	args := []string{"foo=bar"}
-	AddCmd.SetArgs(args)
-
-	defaultGetBucketTaggingErr = errors.New("dummy error")
-
-	err := AddCmd.Execute()
-	assert.NotNil(t, err)
-
-	tagOpts.SetZeroValues()
-}
-
-func TestExecuteSetBucketTagsFailure(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	AddCmd.SetContext(ctx)
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
-
-	args := []string{"foo=bar"}
-	AddCmd.SetArgs(args)
-
-	defaultGetBucketTaggingErr = nil
-	defaultPutBucketTaggingErr = errors.New("dummy error")
-
-	err := AddCmd.Execute()
-	assert.NotNil(t, err)
-
-	tagOpts.SetZeroValues()
-}*/
-
-/*func TestExecuteWrongArguments(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	AddCmd.SetContext(ctx)
-	mockSvc := &mockS3Client{}
-	svc = mockSvc
-
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
-	AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
-
-	args := []string{"foo=bar=asdfasdf"}
-	AddCmd.SetArgs(args)
-
-	defaultGetBucketTaggingErr = nil
-
-	err := AddCmd.Execute()
-	assert.NotNil(t, err)
-
-	tagOpts.SetZeroValues()
-}
-*/
