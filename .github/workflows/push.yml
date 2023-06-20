@@ -5,6 +5,8 @@ on:
     branches:
       - master
 
+
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -159,5 +161,6 @@ jobs:
           version: latest
           args: release --rm-dist --config build/package/.goreleaser.yaml
         env:
+          GITHUB_USERNAME: bilalcaliskan
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}

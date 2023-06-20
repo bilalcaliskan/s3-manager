@@ -15,10 +15,11 @@
   You can absolutely use [s3-manager](https://github.com/bilalcaliskan/s3-manager) to take advantage of file cleaning for your bucket on your automated operations for **decreasing your public cloud costs**.
 - Searches a string in files (supports regex)
 - Finds files (supports regex)
-- Sets/shows tags
-- Sets/shows versioning configuration
-- Sets/shows transfer acceleration configuration
-- Sets/shows bucket policy
+- Searches strings in files (supports regex)
+- enables/disables/shows tags
+- enables/disables/shows versioning configuration
+- enables/disables/shows transfer acceleration configuration
+- adds/removes/shows bucket policy
 
 About the first and the best benefit of [s3-manager](https://github.com/bilalcaliskan/s3-manager); you can read more from [here](https://aws.amazon.com/s3/pricing/).
 
