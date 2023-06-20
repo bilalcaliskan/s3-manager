@@ -142,17 +142,17 @@ func TestGetAllFilesHappyPath(t *testing.T) {
 	defaultListObjectsOutput.Contents = []*s3.Object{
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../mock/file1.txt"),
+			Key:          aws.String("../../testdata/file1.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../mock/file2.txt"),
+			Key:          aws.String("../../testdata/file2.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../mock/file3.txt"),
+			Key:          aws.String("../../testdata/file3.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 	}
@@ -218,17 +218,17 @@ func TestSearchStringSuccess(t *testing.T) {
 	defaultListObjectsOutput.Contents = []*s3.Object{
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../mock/file1.txt"),
+			Key:          aws.String("../../testdata/file1.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../mock/file2.txt"),
+			Key:          aws.String("../../testdata/file2.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../mock/file3.txt"),
+			Key:          aws.String("../../testdata/file3.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 	}
@@ -249,17 +249,17 @@ func TestSearchStringFailure(t *testing.T) {
 	defaultListObjectsOutput.Contents = []*s3.Object{
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../mock/file1.txt"),
+			Key:          aws.String("../../testdata/file1.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../mock/file2.txt"),
+			Key:          aws.String("../../testdata/file2.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../mock/file3.txt"),
+			Key:          aws.String("../../testdata/file3.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 	}
@@ -280,17 +280,17 @@ func TestSearchStringGetObjectFailure(t *testing.T) {
 	defaultListObjectsOutput.Contents = []*s3.Object{
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../mock/file1.txt"),
+			Key:          aws.String("../../testdata/file1.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../mock/file2.txt"),
+			Key:          aws.String("../../testdata/file2.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../mock/file3.txt"),
+			Key:          aws.String("../../testdata/file3.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 	}

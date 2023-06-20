@@ -22,7 +22,7 @@ func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
 	return internalaws.CreateAwsService(rootOpts)
 }
 
-// Define a mock struct to be used in your unit tests
+// Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
 	s3iface.S3API
 }
@@ -55,13 +55,13 @@ func TestExecuteAddCmd(t *testing.T) {
 		{"No arguments", []string{}, false, false,
 			nil, &s3.PutBucketPolicyOutput{},
 		},
-		{"Success", []string{"../../../mock/bucketpolicy.json"}, true, true,
+		{"Success", []string{"../../../testdata/bucketpolicy.json"}, true, true,
 			nil, &s3.PutBucketPolicyOutput{},
 		},
-		{"Failure", []string{"../../../mock/bucketpolicy.json"}, false, true,
+		{"Failure", []string{"../../../testdata/bucketpolicy.json"}, false, true,
 			errors.New("dummy error"), &s3.PutBucketPolicyOutput{},
 		},
-		{"Failure target file not found", []string{"../../../mock/bucketpolicy.jsonjjnnn"}, false,
+		{"Failure target file not found", []string{"../../../testdata/bucketpolicy.jsonjjnnn"}, false,
 			true, nil, &s3.PutBucketPolicyOutput{},
 		},
 	}
