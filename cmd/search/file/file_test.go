@@ -30,7 +30,7 @@ func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
 	return internalaws.CreateAwsService(rootOpts)
 }
 
-// Define a mock struct to be used in your unit tests
+// Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
 	s3iface.S3API
 }
@@ -139,17 +139,17 @@ func TestExecuteSuccessWithNoMatchingFiles(t *testing.T) {
 	defaultListObjectsOutput.Contents = []*s3.Object{
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../../mock/file1.txt"),
+			Key:          aws.String("../../../testdata/file1.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../../mock/file2.txt"),
+			Key:          aws.String("../../../testdata/file2.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../../mock/file3.txt"),
+			Key:          aws.String("../../../testdata/file3.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 	}
@@ -188,17 +188,17 @@ func TestExecuteSuccessWithMatchingFiles(t *testing.T) {
 	defaultListObjectsOutput.Contents = []*s3.Object{
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../../mock/file1.txt"),
+			Key:          aws.String("../../../testdata/file1.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../../mock/file2.txt"),
+			Key:          aws.String("../../../testdata/file2.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../../mock/file3.txt"),
+			Key:          aws.String("../../../testdata/file3.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 	}
@@ -237,17 +237,17 @@ func TestExecuteFailure(t *testing.T) {
 	defaultListObjectsOutput.Contents = []*s3.Object{
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../../mock/file1.txt"),
+			Key:          aws.String("../../../testdata/file1.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../../mock/file2.txt"),
+			Key:          aws.String("../../../testdata/file2.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 		{
 			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../../mock/file3.txt"),
+			Key:          aws.String("../../../testdata/file3.txt"),
 			StorageClass: aws.String("STANDARD"),
 		},
 	}

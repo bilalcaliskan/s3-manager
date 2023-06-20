@@ -24,7 +24,7 @@ var (
 	defaultDeleteObjectOutput = &s3.DeleteObjectOutput{}
 )
 
-// Define a mock struct to be used in your unit tests
+// Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
 	s3iface.S3API
 }
