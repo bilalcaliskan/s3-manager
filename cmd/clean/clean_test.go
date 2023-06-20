@@ -2,116 +2,198 @@ package clean
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
+
+	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
 
-func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
-	return aws.CreateAwsService(rootOpts)
+var (
+	defaultListObjectsErr    error
+	defaultListObjectsOutput = &s3.ListObjectsOutput{}
+
+	defaultDeleteObjectErr    error
+	defaultDeleteObjectOutput = &s3.DeleteObjectOutput{}
+)
+
+// Define a mock struct to be used in your unit tests
+type mockS3Client struct {
+	s3iface.S3API
 }
 
-func TestExecuteMissingRegion(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = ""
+func (m *mockS3Client) DeleteObject(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
+	return defaultDeleteObjectOutput, defaultDeleteObjectErr
+}
 
+func (m *mockS3Client) ListObjects(*s3.ListObjectsInput) (*s3.ListObjectsOutput, error) {
+	return defaultListObjectsOutput, defaultListObjectsErr
+}
+
+func TestExecuteShowCmd(t *testing.T) {
 	ctx := context.Background()
 	CleanCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
 
-	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
-	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
+	cases := []struct {
+		caseName           string
+		args               string
+		shouldPass         bool
+		listObjectsErr     error
+		listObjectsOutput  *s3.ListObjectsOutput
+		deleteObjectErr    error
+		deleteObjectOutput *s3.DeleteObjectOutput
+	}{
+		{"Success",
+			"",
+			true,
+			nil,
+			&s3.ListObjectsOutput{},
+			nil,
+			&s3.DeleteObjectOutput{},
+		},
+		{"Failure caused by invalid 'sortBy' flag",
+			"sortBy=asldkfjalsdkf",
+			false,
+			nil,
+			&s3.ListObjectsOutput{
+				CommonPrefixes: nil,
+				Contents: []*s3.Object{
+					{
+						ChecksumAlgorithm: nil,
+						ETag:              nil,
+						Key:               aws.String("foo.json"),
+						LastModified:      nil,
+						Owner:             nil,
+						Size:              aws.Int64(500),
+						StorageClass:      nil,
+					},
+					{
+						ChecksumAlgorithm: nil,
+						ETag:              nil,
+						Key:               aws.String("bar.json"),
+						LastModified:      nil,
+						Owner:             nil,
+						Size:              aws.Int64(600),
+						StorageClass:      nil,
+					},
+				},
+				Delimiter:      nil,
+				EncodingType:   nil,
+				IsTruncated:    nil,
+				Marker:         nil,
+				MaxKeys:        nil,
+				Name:           nil,
+				NextMarker:     nil,
+				Prefix:         nil,
+				RequestCharged: nil,
+			},
+			nil,
+			&s3.DeleteObjectOutput{},
+		},
+		{"Failure caused by wrong size flags",
+			"minFileSizeInMb=20,maxFileSizeInMb=10",
+			false,
+			nil,
+			&s3.ListObjectsOutput{
+				CommonPrefixes: nil,
+				Contents: []*s3.Object{
+					{
+						ChecksumAlgorithm: nil,
+						ETag:              nil,
+						Key:               aws.String("foo.json"),
+						LastModified:      nil,
+						Owner:             nil,
+						Size:              aws.Int64(500),
+						StorageClass:      nil,
+					},
+					{
+						ChecksumAlgorithm: nil,
+						ETag:              nil,
+						Key:               aws.String("bar.json"),
+						LastModified:      nil,
+						Owner:             nil,
+						Size:              aws.Int64(600),
+						StorageClass:      nil,
+					},
+				},
+				Delimiter:      nil,
+				EncodingType:   nil,
+				IsTruncated:    nil,
+				Marker:         nil,
+				MaxKeys:        nil,
+				Name:           nil,
+				NextMarker:     nil,
+				Prefix:         nil,
+				RequestCharged: nil,
+			},
+			nil,
+			&s3.DeleteObjectOutput{},
+		},
+		{"Failure caused by ListObjects error",
+			"",
+			false,
+			errors.New("injected error"),
+			&s3.ListObjectsOutput{},
+			nil,
+			&s3.DeleteObjectOutput{},
+		},
+	}
 
-	err = CleanCmd.Execute()
-	assert.NotNil(t, err)
+	for _, tc := range cases {
+		t.Logf("starting case '%s'", tc.caseName)
+		t.Logf("following variables provided: %v", tc)
 
-	cleanOpts.SetZeroValues()
-}
+		defaultListObjectsErr = tc.listObjectsErr
+		defaultListObjectsOutput = tc.listObjectsOutput
 
-func TestExecuteInvalidSortByOption(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
+		defaultDeleteObjectErr = tc.deleteObjectErr
+		defaultDeleteObjectOutput = tc.deleteObjectOutput
 
-	ctx := context.Background()
-	CleanCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
+		mockSvc := &mockS3Client{}
+		svc = mockSvc
+		assert.NotNil(t, mockSvc)
 
-	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
-	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
+		if len(tc.args) > 0 {
+			splittedArgs := strings.Split(tc.args, ",")
+			for _, v := range splittedArgs {
+				key := strings.Split(v, "=")[0]
+				value := strings.Split(v, "=")[1]
 
-	err = CleanCmd.Flags().Set("sortBy", "nonexistedsortbyflag")
-	assert.Nil(t, err)
+				assert.Nil(t, CleanCmd.Flags().Set(key, value))
+			}
+		}
 
-	err = CleanCmd.Execute()
-	assert.NotNil(t, err)
+		rootOpts := options.GetRootOptions()
+		rootOpts.AccessKey = "thisisaccesskey"
+		rootOpts.SecretKey = "thisissecretkey"
+		rootOpts.Region = "thisisregion"
+		rootOpts.BucketName = "thisisbucketname"
 
-	cleanOpts.SetZeroValues()
-}
+		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
+		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
 
-func TestExecuteInvalidMinMaxValues(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
+		var err error
+		t.Log(cleanOpts.MinFileSizeInMb)
+		t.Log(cleanOpts.SortBy)
+		if err = CleanCmd.Execute(); err != nil {
+			t.Logf("an error occurred while running command: %s", err.Error())
+		}
 
-	ctx := context.Background()
-	CleanCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
+		if tc.shouldPass {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
 
-	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
-	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
-
-	err = CleanCmd.Flags().Set("minFileSizeInMb", "20")
-	assert.Nil(t, err)
-
-	err = CleanCmd.Flags().Set("maxFileSizeInMb", "10")
-	assert.Nil(t, err)
-
-	err = CleanCmd.Execute()
-	assert.NotNil(t, err)
-
-	cleanOpts.SetZeroValues()
-}
-
-func TestExecute(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
-	ctx := context.Background()
-	CleanCmd.SetContext(ctx)
-	svc, err := createSvc(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
-
-	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
-	CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
-
-	err = CleanCmd.Execute()
-	assert.NotNil(t, err)
-
-	cleanOpts.SetZeroValues()
-}
-
-func TestExecuteSuccess(t *testing.T) {
-	// TODO: implement
+		rootOpts.SetZeroValues()
+		cleanOpts.SetZeroValues()
+		t.Logf("ending case '%s'", tc.caseName)
+	}
 }

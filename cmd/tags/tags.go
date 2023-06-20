@@ -19,5 +19,6 @@ var (
 		Short:         "shows/sets the tagging configuration of the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		// we should not define PreRunE since it will override the PreRunE which is inherited from RootCmd
 	}
 )
