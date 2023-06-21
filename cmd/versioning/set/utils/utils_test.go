@@ -1,60 +1,113 @@
 package utils
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCheckArgsSuccess(t *testing.T) {
-	err := CheckArgs([]string{})
-	assert.Nil(t, err)
+// Define a testdata struct to be used in your unit tests
+type mockS3Client struct {
+	s3iface.S3API
 }
 
-func TestCheckArgsFailure(t *testing.T) {
-	err := CheckArgs([]string{"foo"})
-	assert.NotNil(t, err)
-}
-
-func TestDecideActualStateEnabled(t *testing.T) {
-	res := &s3.GetBucketVersioningOutput{
-		Status: aws.String("Enabled"),
+func TestCheckArgs(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     []string
+		expected error
+	}{
+		{
+			name:     "Failure caused by too many arguments",
+			args:     []string{"foo", "bar"},
+			expected: errors.New(ErrTooManyArguments),
+		},
+		{
+			name:     "Success",
+			args:     []string{},
+			expected: nil,
+		},
 	}
 
-	rootOpts := options.GetRootOptions()
-	opts := options2.GetVersioningOptions()
-	opts.RootOptions = rootOpts
-
-	err := DecideActualState(res, opts)
-	assert.Nil(t, err)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := CheckArgs(test.args)
+			assert.Equal(t, test.expected, err)
+		})
+	}
 }
 
-func TestDecideActualStateSuspended(t *testing.T) {
-	res := &s3.GetBucketVersioningOutput{
-		Status: aws.String("Suspended"),
-	}
+func TestPrepareConstants(t *testing.T) {
+	var (
+		svc            s3iface.S3API
+		versioningOpts *options2.VersioningOptions
+		logger         zerolog.Logger
+	)
 
-	rootOpts := options.GetRootOptions()
-	opts := options2.GetVersioningOptions()
-	opts.RootOptions = rootOpts
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
 
-	err := DecideActualState(res, opts)
-	assert.Nil(t, err)
+	rootOpts := rootopts.GetRootOptions()
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
+
+	mockSvc := &mockS3Client{}
+	svc = mockSvc
+	assert.NotNil(t, mockSvc)
+
+	cmd.SetContext(context.WithValue(context.Background(), rootopts.OptsKey{}, rootOpts))
+	cmd.SetContext(context.WithValue(cmd.Context(), rootopts.S3SvcKey{}, svc))
+
+	svc, versioningOpts, logger = PrepareConstants(cmd, options2.GetVersioningOptions())
+	assert.NotNil(t, svc)
+	assert.NotNil(t, versioningOpts)
+	assert.NotNil(t, logger)
 }
 
-func TestDecideActualStateUndefined(t *testing.T) {
-	res := &s3.GetBucketVersioningOutput{
-		Status: aws.String("Suspendedddddd"),
+func TestDecideActualState(t *testing.T) {
+	tests := []struct {
+		name     string
+		res      *s3.GetBucketVersioningOutput
+		expected error
+	}{
+		{
+			name: "Success enabled",
+			res: &s3.GetBucketVersioningOutput{
+				Status: aws.String("Enabled"),
+			},
+			expected: nil,
+		},
+		{
+			name: "Success suspended",
+			res: &s3.GetBucketVersioningOutput{
+				Status: aws.String("Suspended"),
+			},
+			expected: nil,
+		},
+		{
+			name: "Failure caused by unknown state",
+			res: &s3.GetBucketVersioningOutput{
+				Status: aws.String("Suspendeddd"),
+			},
+			expected: fmt.Errorf(ErrUnknownStatus, "Suspendeddd"),
+		},
 	}
 
-	rootOpts := options.GetRootOptions()
 	opts := options2.GetVersioningOptions()
-	opts.RootOptions = rootOpts
-
-	err := DecideActualState(res, opts)
-	assert.NotNil(t, err)
+	for _, test := range tests {
+		err := DecideActualState(test.res, opts)
+		assert.Equal(t, test.expected, err)
+	}
 }
