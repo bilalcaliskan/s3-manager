@@ -1,8 +1,12 @@
+//go:build unit
+// +build unit
+
 package logging
 
 import (
-	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"testing"
+
+	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
 	"github.com/stretchr/testify/assert"
 )
