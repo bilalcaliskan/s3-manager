@@ -5,8 +5,6 @@ on:
     branches:
       - master
 
-
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -71,6 +69,38 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
 
+  unit_tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: "go.mod"
+          cache: true
+      - name: Test
+        run: make -s test-unit
+
+  e2e_tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: "go.mod"
+          cache: true
+      - name: Test
+        run: make -s test-e2e
+
   sonarcloud:
     runs-on: ubuntu-latest
     steps:
@@ -83,7 +113,7 @@ jobs:
           go-version-file: "go.mod"
           cache: true
       - name: Coverage Test
-        run: make -s test-with-coverage
+        run: make -s test
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -92,11 +122,11 @@ jobs:
         with:
           args: >
             -Dproject.settings=build/ci/sonar-project.properties
-#      - name: SonarQube Quality Gate check
-#        uses: sonarsource/sonarqube-quality-gate-action@master
-#        timeout-minutes: 5
-#        env:
-#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: SonarQube Quality Gate check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build:
     strategy:
@@ -119,7 +149,8 @@ jobs:
     needs:
       - lint
       - fmt
-      - test
+      - unit_tests
+      - e2e_tests
       - codeql
       - sonarcloud
       - build
