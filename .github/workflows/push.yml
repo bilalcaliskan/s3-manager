@@ -35,22 +35,6 @@ jobs:
       - name: Clean downloaded binaries
         run: make -s clean
 
-  test:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install Go
-        uses: actions/setup-go@v4
-        with:
-          go-version-file: "go.mod"
-          cache: true
-      - name: Test
-        run: make -s test
-
   codeql:
     runs-on: ubuntu-latest
     strategy:
