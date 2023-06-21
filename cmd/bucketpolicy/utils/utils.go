@@ -11,9 +11,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const errTooManyArgsProvided = "too many arguments provided"
+
 func CheckArgs(args []string) error {
 	if len(args) > 0 {
-		return errors.New("too many arguments provided")
+		return errors.New(errTooManyArgsProvided)
 	}
 
 	return nil

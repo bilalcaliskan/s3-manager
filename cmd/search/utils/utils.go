@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	ErrTooManyArguments = "too many arguments. please provide just your desired text to search in --fileExtensions files"
-	ErrNoArgument       = "no argument provided. 'text' subcommand takes your desired text to search in --fileExtensions files"
+	ErrTooManyArguments = "too many arguments"
+	ErrNoArgument       = "no argument provided"
 )
 
 func CheckFlags(args []string) (err error) {

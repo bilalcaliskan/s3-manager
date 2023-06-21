@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -18,34 +19,51 @@ func createSvc(rootOpts *options2.RootOptions) (*s3.S3, error) {
 	return internalaws.CreateAwsService(rootOpts)
 }
 
-func TestCheckArgsSuccess(t *testing.T) {
-	cmd := &cobra.Command{Use: "show"}
-	err := CheckArgs(cmd, []string{})
-	assert.Nil(t, err)
-}
+func TestCheckArgs(t *testing.T) {
+	tests := []struct {
+		name     string
+		cmd      *cobra.Command
+		args     []string
+		expected error
+	}{
+		{
+			name:     "Show command with no arguments",
+			cmd:      &cobra.Command{Use: "show"},
+			args:     []string{},
+			expected: nil,
+		},
+		{
+			name:     "Success",
+			cmd:      &cobra.Command{Use: "anothercommand"},
+			args:     []string{"foo"},
+			expected: nil,
+		},
+		{
+			name:     "Show command with arguments",
+			cmd:      &cobra.Command{Use: "show"},
+			args:     []string{"arg1"},
+			expected: errors.New("too many argument provided"),
+		},
+		{
+			name:     "Command with no arguments",
+			cmd:      &cobra.Command{},
+			args:     []string{},
+			expected: errors.New("no argument provided"),
+		},
+		{
+			name:     "Command with too many arguments",
+			cmd:      &cobra.Command{},
+			args:     []string{"arg1", "arg2"},
+			expected: errors.New("too many argument provided"),
+		},
+	}
 
-func TestCheckArgsSuccess2(t *testing.T) {
-	cmd := &cobra.Command{Use: "show"}
-	err := CheckArgs(cmd, []string{"foo"})
-	assert.NotNil(t, err)
-}
-
-func TestCheckArgsSuccess3(t *testing.T) {
-	cmd := &cobra.Command{Use: "add"}
-	err := CheckArgs(cmd, []string{"foo"})
-	assert.Nil(t, err)
-}
-
-func TestCheckArgsFailure1(t *testing.T) {
-	cmd := &cobra.Command{Use: "add"}
-	err := CheckArgs(cmd, []string{"foo", "bar"})
-	assert.NotNil(t, err)
-}
-
-func TestCheckArgsFailure2(t *testing.T) {
-	cmd := &cobra.Command{Use: "add"}
-	err := CheckArgs(cmd, []string{})
-	assert.NotNil(t, err)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := CheckArgs(test.cmd, test.args)
+			assert.Equal(t, test.expected, err)
+		})
+	}
 }
 
 func TestPrepareConstants(t *testing.T) {

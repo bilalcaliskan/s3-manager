@@ -331,10 +331,12 @@ func SearchString(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolo
 			}
 
 			buf := new(bytes.Buffer)
+			mu.Lock()
 			if _, err := buf.ReadFrom(getResult.Body); err != nil {
 				errs = append(errs, err)
 				return
 			}
+			mu.Unlock()
 
 			if strings.Contains(buf.String(), opts.Text) {
 				mu.Lock()

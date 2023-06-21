@@ -9,8 +9,6 @@ import (
 )
 
 func init() {
-	/*BucketPolicyCmd.AddCommand(show.ShowCmd)
-	BucketPolicyCmd.AddCommand(set.SetCmd)*/
 	BucketPolicyCmd.AddCommand(show.ShowCmd)
 	BucketPolicyCmd.AddCommand(add.AddCmd)
 	BucketPolicyCmd.AddCommand(remove.RemoveCmd)
