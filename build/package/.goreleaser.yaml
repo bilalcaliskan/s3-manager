@@ -59,4 +59,4 @@ brews:
     goarm: 6
     homepage: https://github.com/{{ .Env.GITHUB_USERNAME }}/{{ .ProjectName }}
     license: apache-2.0
-    description: s3-manager does something
+    description: s3-manager is a tool written with Golang that helps you take the various discovery/management related actions on your target AWS S3 bucket.
