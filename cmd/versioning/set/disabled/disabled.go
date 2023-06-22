@@ -23,6 +23,9 @@ var (
 		Short:         "disables the versioning configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		Example: `# set the versioning configuration for bucket as disabled
+s3-manager versioning set disabled
+		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			svc, versioningOpts, logger = utils.PrepareConstants(cmd, options.GetVersioningOptions())
 

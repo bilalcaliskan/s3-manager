@@ -77,11 +77,6 @@ Use "s3-manager [command] --help" for more information about a command.
 ### Binary
 Binary can be downloaded from [Releases](https://github.com/bilalcaliskan/s3-manager/releases) page.
 
-After then, you can simply run binary by providing required command line arguments:
-```shell
-$ ./s3-manager search --accessKey asdasfasfasfasfasfas --secretKey asdasfasfasfasfasfas --bucketName demo-bucket --region us-east-2 --text "catch me if you can"
-```
-
 ### Homebrew
 This project can also be installed with [Homebrew](https://brew.sh/):
 ```shell
@@ -89,10 +84,24 @@ $ brew tap bilalcaliskan/tap
 $ brew install bilalcaliskan/tap/s3-manager
 ```
 
-Then similar to binary method, you can run it by calling below command:
+## Examples
+Here is the couple of examples:
 ```shell
-$ s3-manager search --accessKey asdasfasfasfasfasfas --secretKey asdasfasfasfasfasfas --bucketName demo-bucket --region us-east-2 --text "catch me if you can"
+# bucket cleaning with specified ruleset
+$ export AWS_ACCESS_KEY=${YOUR_ACCESS_KEY}
+$ export AWS_SECRET_KEY=${YOUR_SECRET_KEY}
+$ export AWS_REGION=${YOUR_REGION}
+$ export AWS_BUCKET_NAME=${YOUR_BUCKET_NAME}
+$ s3-manager clean --min-size-mb=1 --max-size-mb=1000 --keep-last-n-files=2 --sort-by=lastModificationDate
+
+# set bucket versioning as enabled
+$ s3-manager versioning set enabled --access-key ${YOUR_ACCESS_KEY} --secret-key ${YOUR_SECRET_KEY} --bucketName ${TARGET_BUCKET_NAME} --region ${TARGET_REGION}
+
+# text search
+$ s3-manager search --access-key asdasfasfasfasfasfas --secret-key asdasfasfasfasfasfas --bucket-name demo-bucket --region us-east-2 --text "catch me if you can"
 ```
+
+Every subcommand has its own usage examples, please refer to `s3-manager [command] --help` for more information about a command.
 
 ## Development
 This project requires below tools while developing:

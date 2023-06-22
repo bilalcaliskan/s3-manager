@@ -26,6 +26,9 @@ var (
 		Short:         "adds a bucket policy configuration for the target bucket by specifying a valid policy file",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		Example: `# add a bucket policy configuration onto target bucket
+s3-manager bucketpolicy add my_custom_policy.json
+		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			svc, bucketPolicyOpts, logger = utils.PrepareConstants(cmd, options2.GetBucketPolicyOptions())
 

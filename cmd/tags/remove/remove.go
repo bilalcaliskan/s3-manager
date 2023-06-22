@@ -31,6 +31,9 @@ var (
 		Short:         "removes the tagging configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		Example: `# remove comma separated tagging configuration from bucket
+s3-manager tags remove foo1=bar1,foo2=bar2
+		`,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 			svc, tagOpts, logger = utils2.PrepareConstants(cmd, options.GetTagOptions())
 

@@ -36,9 +36,13 @@ var (
 	})
 	// CleanCmd represents the clean command
 	CleanCmd = &cobra.Command{
-		Use:          "clean",
-		Short:        "finds and clears desired files by a pre-configured rule set",
-		SilenceUsage: true,
+		Use:           "clean",
+		Short:         "finds and clears desired files by a pre-configured rule set",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Example: `# clean the desired files on target bucket
+s3-manager clean --min-size-mb=1 --max-size-mb=1000 --keep-last-n-files=2 --sort-by=lastModificationDate
+		`,
 		// we should not define PreRunE since it will override the PreRunE which is inherited from RootCmd
 		RunE: func(cmd *cobra.Command, args []string) error {
 			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)
