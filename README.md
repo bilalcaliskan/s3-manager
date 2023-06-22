@@ -28,10 +28,10 @@ About the first and the best benefit of [s3-manager](https://github.com/bilalcal
 You can provide access credentials of your AWS account with below environment variables or CLI flags. Keep in mind that command line flags
 will override environment variables if you set both of them:
 ```
-"--accessKey" CLI flag or "AWS_ACCESS_KEY" environment variable
-"--secretKey" CLI flag or "AWS_SECRET_KEY" environment variable
+"--access-key" CLI flag or "AWS_ACCESS_KEY" environment variable
+"--secret-key" CLI flag or "AWS_SECRET_KEY" environment variable
 "--region" CLI flag or "AWS_REGION" environment variable
-"--bucketName" CLI flag or "AWS_BUCKET_NAME" environment variable
+"--bucket-name" CLI flag or "AWS_BUCKET_NAME" environment variable
 ```
 
 ## Available Subcommands
@@ -61,14 +61,14 @@ Available Commands:
   versioning           shows/sets the versioning configuration of the target bucket
 
 Flags:
-      --accessKey string        access key credential to access S3 bucket, this value also can be passed via "AWS_ACCESS_KEY" environment variable (default "")
-      --bannerFilePath string   relative path of the banner file (default "banner.txt")
-      --bucketName string       name of the target bucket on S3, this value also can be passed via "AWS_BUCKET_NAME" environment variable (default "")
-  -h, --help                    help for s3-manager
-      --region string           region of the target bucket on S3, this value also can be passed via "AWS_REGION" environment variable (default "")
-      --secretKey string        secret key credential to access S3 bucket, this value also can be passed via "AWS_SECRET_KEY" environment variable (default "")
-      --verbose                 verbose output of the logging library (default false)
-  -v, --version                 version for s3-manager
+      --access-key string         access key credential to access S3 bucket, this value also can be passed via "AWS_ACCESS_KEY" environment variable (default "")
+      --banner-file-path string   relative path of the banner file (default "banner.txt")
+      --bucket-name string        name of the target bucket on S3, this value also can be passed via "AWS_BUCKET_NAME" environment variable (default "")
+  -h, --help                      help for s3-manager
+      --region string             region of the target bucket on S3, this value also can be passed via "AWS_REGION" environment variable (default "")
+      --secret-key string         secret key credential to access S3 bucket, this value also can be passed via "AWS_SECRET_KEY" environment variable (default "")
+      --verbose                   verbose output of the logging library (default false)
+  -v, --version                   version for s3-manager
 
 Use "s3-manager [command] --help" for more information about a command.
 ```

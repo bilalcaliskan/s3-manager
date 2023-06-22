@@ -67,7 +67,7 @@ func TestExecute(t *testing.T) {
 	err = rootCmd.PersistentFlags().Set("verbose", "true")
 	assert.Nil(t, err)
 
-	err = rootCmd.PersistentFlags().Set("bannerFilePath", "./../../build/ci/banner.txt")
+	err = rootCmd.PersistentFlags().Set("banner-file-path", "./../../build/ci/banner.txt")
 	assert.Nil(t, err)
 
 	// TODO: uncomment when interactivity enabled again
@@ -84,15 +84,15 @@ func TestExecute(t *testing.T) {
 }
 
 func setAccessFlags(cmd *cobra.Command, accessKey, secretKey, bucketName, region string) error {
-	if err := cmd.PersistentFlags().Set("accessKey", accessKey); err != nil {
+	if err := cmd.PersistentFlags().Set("access-key", accessKey); err != nil {
 		return err
 	}
 
-	if err := cmd.PersistentFlags().Set("secretKey", secretKey); err != nil {
+	if err := cmd.PersistentFlags().Set("secret-key", secretKey); err != nil {
 		return err
 	}
 
-	if err := cmd.PersistentFlags().Set("bucketName", bucketName); err != nil {
+	if err := cmd.PersistentFlags().Set("bucket-name", bucketName); err != nil {
 		return err
 	}
 

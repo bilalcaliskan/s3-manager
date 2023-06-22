@@ -21,20 +21,20 @@ type CleanOptions struct {
 }
 
 func (opts *CleanOptions) InitFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVarP(&opts.FileNamePrefix, "fileNamePrefix", "", "",
+	cmd.Flags().StringVarP(&opts.FileNamePrefix, "file-name-prefix", "", "",
 		"folder name of target bucket objects, means it can be used for folder-based object grouping buckets (default \"\")")
-	cmd.Flags().Int64VarP(&opts.MinFileSizeInMb, "minFileSizeInMb", "", 0,
+	cmd.Flags().Int64VarP(&opts.MinFileSizeInMb, "min-size-mb", "", 0,
 		"minimum size in mb to clean from target bucket, 0 means no lower limit")
-	cmd.Flags().Int64VarP(&opts.MaxFileSizeInMb, "maxFileSizeInMb", "", 0,
+	cmd.Flags().Int64VarP(&opts.MaxFileSizeInMb, "max-size-mb", "", 0,
 		"maximum size in mb to clean from target bucket, 0 means no upper limit")
-	cmd.Flags().StringVarP(&opts.FileExtensions, "fileExtensions", "", "",
-		"selects the files with defined extensions to clean from target bucket, \"\" means all files (default \"\")")
-	cmd.Flags().IntVarP(&opts.KeepLastNFiles, "keepLastNFiles", "", 2,
+	/*cmd.Flags().StringVarP(&opts.FileExtensions, "fileExtensions", "", "",
+	"selects the files with defined extensions to clean from target bucket, \"\" means all files (default \"\")")*/
+	cmd.Flags().IntVarP(&opts.KeepLastNFiles, "keep-last-n-files", "", 2,
 		"defines how many of the files to skip deletion in specified criteria, 0 means clean them all")
-	cmd.Flags().StringVarP(&opts.SortBy, "sortBy", "", "lastModificationDate",
+	cmd.Flags().StringVarP(&opts.SortBy, "sort-by", "", "lastModificationDate",
 		"defines the ascending order in the specified criteria, valid options are \"lastModificationDate\" and \"size\"")
-	cmd.Flags().BoolVarP(&opts.AutoApprove, "autoApprove", "", false, "Skip interactive approval (default false)")
-	cmd.Flags().BoolVarP(&opts.DryRun, "dryRun", "", false, "specifies that if you "+
+	cmd.Flags().BoolVarP(&opts.AutoApprove, "auto-approve", "", false, "Skip interactive approval (default false)")
+	cmd.Flags().BoolVarP(&opts.DryRun, "dry-run", "", false, "specifies that if you "+
 		"just want to see what to delete or completely delete them all (default false)")
 }
 
