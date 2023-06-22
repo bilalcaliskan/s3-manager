@@ -27,6 +27,9 @@ var (
 		Short:         "shows the tagging configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		Example: `# show the current tagging configuration for bucket
+s3-manager tags show
+		`,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
 			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)

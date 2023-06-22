@@ -27,6 +27,9 @@ var (
 		Short:         "adds the tagging configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		Example: `# add comma separated tagging configuration into bucket
+s3-manager tags add foo1=bar1,foo2=bar2
+		`,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 			svc, tagOpts, logger = utils.PrepareConstants(cmd, options.GetTagOptions())
 

@@ -27,6 +27,9 @@ var (
 		Short:         "shows the bucket policy configuration of the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		Example: `# show the current bucket policy configuration for target bucket
+s3-manager bucketpolicy show
+		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			svc, bucketPolicyOpts, logger = utils.PrepareConstants(cmd, options2.GetBucketPolicyOptions())
 

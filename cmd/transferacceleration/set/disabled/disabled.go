@@ -23,6 +23,9 @@ var (
 		Short:         "disables the transfer acceleration configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		Example: `# set the transfer acceleration configuration for bucket as disabled
+s3-manager transferacceleration set disabled
+		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			svc, transferAccelerationOpts, logger = utils.PrepareConstants(cmd, transferAccelerationOpts)
 

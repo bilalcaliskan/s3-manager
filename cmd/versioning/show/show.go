@@ -26,6 +26,9 @@ var (
 		Short:         "shows the versioning configuration for the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		Example: `# show the current versioning configuration for bucket
+s3-manager versioning show
+		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
 			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)

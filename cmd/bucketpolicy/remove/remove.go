@@ -22,6 +22,9 @@ var (
 		Short:         "removes the current bucket policy configuration of the target bucket",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		Example: `# remove the current bucket policy configuration onto target bucket
+s3-manager bucketpolicy remove
+		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			svc, bucketPolicyOpts, logger = utils.PrepareConstants(cmd, options2.GetBucketPolicyOptions())
 
