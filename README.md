@@ -98,7 +98,7 @@ $ s3-manager clean --min-size-mb=1 --max-size-mb=1000 --keep-last-n-files=2 --so
 $ s3-manager versioning set enabled --access-key ${YOUR_ACCESS_KEY} --secret-key ${YOUR_SECRET_KEY} --bucketName ${TARGET_BUCKET_NAME} --region ${TARGET_REGION}
 
 # text search
-$ s3-manager search --access-key asdasfasfasfasfasfas --secret-key asdasfasfasfasfasfas --bucket-name demo-bucket --region us-east-2 --text "catch me if you can"
+$ s3-manager search text "catch me if you can" --access-key asdasfasfasfasfasfas --secret-key asdasfasfasfasfasfas --bucket-name demo-bucket --region us-east-2
 ```
 
 Every subcommand has its own usage examples, please refer to `s3-manager [command] --help` for more information about a command.
