@@ -6,7 +6,6 @@ package clean
 import (
 	"context"
 	"errors"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -46,7 +45,7 @@ func TestExecuteShowCmd(t *testing.T) {
 
 	cases := []struct {
 		caseName           string
-		args               string
+		args               []string
 		shouldPass         bool
 		listObjectsErr     error
 		listObjectsOutput  *s3.ListObjectsOutput
@@ -54,7 +53,7 @@ func TestExecuteShowCmd(t *testing.T) {
 		deleteObjectOutput *s3.DeleteObjectOutput
 	}{
 		{"Success",
-			"",
+			[]string{},
 			true,
 			nil,
 			&s3.ListObjectsOutput{},
@@ -62,7 +61,7 @@ func TestExecuteShowCmd(t *testing.T) {
 			&s3.DeleteObjectOutput{},
 		},
 		{"Failure caused by invalid 'sortBy' flag",
-			"sortBy=asldkfjalsdkf",
+			[]string{"--sort-by=asldkfjalsdkf"},
 			false,
 			nil,
 			&s3.ListObjectsOutput{
@@ -101,7 +100,7 @@ func TestExecuteShowCmd(t *testing.T) {
 			&s3.DeleteObjectOutput{},
 		},
 		{"Failure caused by wrong size flags",
-			"minFileSizeInMb=20,maxFileSizeInMb=10",
+			[]string{"--max-size-mb=10", "--min-size-mb=20"},
 			false,
 			nil,
 			&s3.ListObjectsOutput{
@@ -140,7 +139,7 @@ func TestExecuteShowCmd(t *testing.T) {
 			&s3.DeleteObjectOutput{},
 		},
 		{"Failure caused by ListObjects error",
-			"",
+			[]string{},
 			false,
 			errors.New("injected error"),
 			&s3.ListObjectsOutput{},
@@ -163,22 +162,13 @@ func TestExecuteShowCmd(t *testing.T) {
 		svc = mockSvc
 		assert.NotNil(t, mockSvc)
 
-		if len(tc.args) > 0 {
-			splittedArgs := strings.Split(tc.args, ",")
-			for _, v := range splittedArgs {
-				key := strings.Split(v, "=")[0]
-				value := strings.Split(v, "=")[1]
-
-				assert.Nil(t, CleanCmd.Flags().Set(key, value))
-			}
-		}
-
 		rootOpts := options.GetRootOptions()
 		rootOpts.AccessKey = "thisisaccesskey"
 		rootOpts.SecretKey = "thisissecretkey"
 		rootOpts.Region = "thisisregion"
 		rootOpts.BucketName = "thisisbucketname"
 
+		CleanCmd.SetArgs(tc.args)
 		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
 		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
 

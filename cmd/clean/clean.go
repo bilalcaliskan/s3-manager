@@ -47,13 +47,13 @@ var (
 			logger = logging.GetLogger(rootOpts)
 
 			if cleanOpts.MinFileSizeInMb > cleanOpts.MaxFileSizeInMb && (cleanOpts.MinFileSizeInMb != 0 && cleanOpts.MaxFileSizeInMb != 0) {
-				err := fmt.Errorf("minFileSizeInMb should be lower than maxFileSizeInMb")
+				err := fmt.Errorf("flag '--min-size-mb' must be equal or lower than '--max-size-mb'")
 				logger.Error().Str("error", err.Error()).Msg("an error occured while validating flags")
 				return err
 			}
 
 			if !utils.Contains(ValidSortByOpts, cleanOpts.SortBy) {
-				err := fmt.Errorf("no such sortBy option called %s, valid options are %v", cleanOpts.SortBy,
+				err := fmt.Errorf("no such '--sort-by' option called %s, valid options are %v", cleanOpts.SortBy,
 					ValidSortByOpts)
 				logger.Error().Str("error", err.Error()).Msg("an error occurred while validating flags")
 				return err

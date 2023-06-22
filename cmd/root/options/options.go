@@ -42,12 +42,12 @@ type RootOptions struct {
 }
 
 func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVarP(&opts.BucketName, "bucketName", "", "", "name of "+
+	cmd.PersistentFlags().StringVarP(&opts.BucketName, "bucket-name", "", "", "name of "+
 		"the target bucket on S3, this value also can be passed via \"AWS_BUCKET_NAME\" environment variable (default \"\")")
-	cmd.PersistentFlags().StringVarP(&opts.AccessKey, "accessKey", "", "",
+	cmd.PersistentFlags().StringVarP(&opts.AccessKey, "access-key", "", "",
 		"access key credential to access S3 bucket, this value also can be passed via \"AWS_ACCESS_KEY\" "+
 			"environment variable (default \"\")")
-	cmd.PersistentFlags().StringVarP(&opts.SecretKey, "secretKey", "", "",
+	cmd.PersistentFlags().StringVarP(&opts.SecretKey, "secret-key", "", "",
 		"secret key credential to access S3 bucket, this value also can be passed via \"AWS_SECRET_KEY\" "+
 			"environment variable (default \"\")")
 	cmd.PersistentFlags().StringVarP(&opts.Region, "region", "", "",
@@ -58,21 +58,21 @@ func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
 	// TODO: uncomment when interactivity enabled again
 	/*cmd.PersistentFlags().BoolVarP(&opts.Interactive, "interactive", "i", false,
 	"decision of that if you want to use interactive feature (default false)")*/
-	cmd.PersistentFlags().StringVarP(&opts.BannerFilePath, "bannerFilePath", "", "banner.txt",
+	cmd.PersistentFlags().StringVarP(&opts.BannerFilePath, "banner-file-path", "", "banner.txt",
 		"relative path of the banner file")
 }
 
 func (opts *RootOptions) SetAccessFlagsRequired(cmd *cobra.Command) {
 	if opts.AccessKey == "" {
-		_ = cmd.MarkPersistentFlagRequired("accessKey")
+		_ = cmd.MarkPersistentFlagRequired("access-key")
 	}
 
 	if opts.SecretKey == "" {
-		_ = cmd.MarkPersistentFlagRequired("secretKey")
+		_ = cmd.MarkPersistentFlagRequired("secret-key")
 	}
 
 	if opts.BucketName == "" {
-		_ = cmd.MarkPersistentFlagRequired("bucketName")
+		_ = cmd.MarkPersistentFlagRequired("bucket-name")
 	}
 
 	if opts.Region == "" {
