@@ -3,7 +3,7 @@ module github.com/bilalcaliskan/s3-manager
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go v1.44.284
+	github.com/aws/aws-sdk-go v1.44.289
 	github.com/dimiro1/banner v1.1.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/rs/zerolog v1.29.1
