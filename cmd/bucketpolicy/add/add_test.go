@@ -7,8 +7,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/spf13/cobra"
-
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -45,23 +43,15 @@ func (m *mockS3Client) PutBucketPolicy(input *s3.PutBucketPolicyInput) (*s3.PutB
 	return defaultPutBucketPolicyOutput, defaultPutBucketPolicyErr
 }
 
-func prepareRootOpts(opts *options.RootOptions, cmd *cobra.Command) {
-	//opts.InitFlags(cmd)
-	opts.AccessKey = "thisisaccesskey"
-	opts.SecretKey = "thisissecretkey"
-	opts.Region = "thisisregion"
-	opts.BucketName = "thisisbucketname"
-}
-
 func TestExecuteAddCmd(t *testing.T) {
 	ctx := context.Background()
 	AddCmd.SetContext(ctx)
 
-	rootOpts := &options.RootOptions{}
+	rootOpts := options.GetRootOptions()
 	rootOpts.AccessKey = "thisisaccesskey"
 	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.BucketName = "thisisbucketname"
 	rootOpts.Region = "thisisregion"
+	rootOpts.BucketName = "thisisbucketname"
 
 	cases := []struct {
 		caseName              string
@@ -74,12 +64,6 @@ func TestExecuteAddCmd(t *testing.T) {
 		dryRun                bool
 		autoApprove           bool
 	}{
-		{"Too many arguments", []string{"enabled", "foo"}, false, false,
-			nil, &s3.PutBucketPolicyOutput{}, nil, false, false,
-		},
-		{"No arguments", []string{}, false, false,
-			nil, &s3.PutBucketPolicyOutput{}, nil, false, false,
-		},
 		{"Success", []string{"../../../testdata/bucketpolicy.json"},
 			true, true,
 			nil, &s3.PutBucketPolicyOutput{},
@@ -122,6 +106,13 @@ func TestExecuteAddCmd(t *testing.T) {
 			false, true, nil,
 			&s3.PutBucketPolicyOutput{}, nil, false, false,
 		},
+		{"Failure caused by too many arguments error", []string{"enabled", "foo"},
+			false, false, nil, &s3.PutBucketPolicyOutput{},
+			nil, false, false,
+		},
+		{"Failure caused by no arguments provided error", []string{}, false, false,
+			nil, &s3.PutBucketPolicyOutput{}, nil, false, false,
+		},
 	}
 
 	for _, tc := range cases {
@@ -159,7 +150,7 @@ func TestExecuteAddCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
-
-		bucketPolicyOpts.SetZeroValues()
 	}
+
+	bucketPolicyOpts.SetZeroValues()
 }
