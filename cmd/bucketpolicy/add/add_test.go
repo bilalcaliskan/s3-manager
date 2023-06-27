@@ -1,5 +1,4 @@
 //go:build e2e
-// +build e2e
 
 package add
 
@@ -7,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"testing"
+
+	"github.com/spf13/cobra"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 
@@ -25,6 +26,16 @@ func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
 	return internalaws.CreateAwsService(rootOpts)
 }
 
+type promptMock struct {
+	msg string
+	err error
+}
+
+func (p promptMock) Run() (string, error) {
+	// return expected result
+	return p.msg, p.err
+}
+
 // Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
 	s3iface.S3API
@@ -34,15 +45,23 @@ func (m *mockS3Client) PutBucketPolicy(input *s3.PutBucketPolicyInput) (*s3.PutB
 	return defaultPutBucketPolicyOutput, defaultPutBucketPolicyErr
 }
 
-func TestExecuteAddCmd(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
+func prepareRootOpts(opts *options.RootOptions, cmd *cobra.Command) {
+	//opts.InitFlags(cmd)
+	opts.AccessKey = "thisisaccesskey"
+	opts.SecretKey = "thisissecretkey"
+	opts.Region = "thisisregion"
+	opts.BucketName = "thisisbucketname"
+}
 
+func TestExecuteAddCmd(t *testing.T) {
 	ctx := context.Background()
 	AddCmd.SetContext(ctx)
+
+	rootOpts := &options.RootOptions{}
+	rootOpts.AccessKey = "thisisaccesskey"
+	rootOpts.SecretKey = "thisissecretkey"
+	rootOpts.BucketName = "thisisbucketname"
+	rootOpts.Region = "thisisregion"
 
 	cases := []struct {
 		caseName              string
@@ -51,29 +70,71 @@ func TestExecuteAddCmd(t *testing.T) {
 		shouldMock            bool
 		putBucketPolicyErr    error
 		putBucketPolicyOutput *s3.PutBucketPolicyOutput
+		promptMock            *promptMock
+		dryRun                bool
+		autoApprove           bool
 	}{
 		{"Too many arguments", []string{"enabled", "foo"}, false, false,
-			nil, &s3.PutBucketPolicyOutput{},
+			nil, &s3.PutBucketPolicyOutput{}, nil, false, false,
 		},
 		{"No arguments", []string{}, false, false,
+			nil, &s3.PutBucketPolicyOutput{}, nil, false, false,
+		},
+		{"Success", []string{"../../../testdata/bucketpolicy.json"},
+			true, true,
 			nil, &s3.PutBucketPolicyOutput{},
+			&promptMock{
+				msg: "y",
+				err: nil,
+			}, false, false,
 		},
-		{"Success", []string{"../../../testdata/bucketpolicy.json"}, true, true,
+		{"Success with dry-run",
+			[]string{"../../../testdata/bucketpolicy.json"},
+			true, true,
 			nil, &s3.PutBucketPolicyOutput{},
+			&promptMock{
+				msg: "y",
+				err: nil,
+			}, true, false,
 		},
-		{"Failure", []string{"../../../testdata/bucketpolicy.json"}, false, true,
-			errors.New("dummy error"), &s3.PutBucketPolicyOutput{},
+		{"Failure", []string{"../../../testdata/bucketpolicy.json"},
+			false, true,
+			errors.New("dummy error"),
+			&s3.PutBucketPolicyOutput{}, nil, false, false,
 		},
-		{"Failure target file not found", []string{"../../../testdata/bucketpolicy.jsonjjnnn"}, false,
-			true, nil, &s3.PutBucketPolicyOutput{},
+		{"Failure caused by user terminated process", []string{"../../../testdata/bucketpolicy.json"},
+			false, true,
+			nil, &s3.PutBucketPolicyOutput{},
+			&promptMock{
+				msg: "n",
+				err: nil,
+			}, false, false,
+		},
+		{"Failure caused by prompt error", []string{"../../../testdata/bucketpolicy.json"},
+			false, true,
+			nil, &s3.PutBucketPolicyOutput{},
+			&promptMock{
+				msg: "nasdasd",
+				err: errors.New("injected error"),
+			}, false, false,
+		},
+		{"Failure caused by target file not found", []string{"../../../testdata/bucketpolicy.jsonnnn"},
+			false, true, nil,
+			&s3.PutBucketPolicyOutput{}, nil, false, false,
 		},
 	}
 
 	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		rootOpts.DryRun = tc.dryRun
+		rootOpts.AutoApprove = tc.autoApprove
+
 		defaultPutBucketPolicyErr = tc.putBucketPolicyErr
 		defaultPutBucketPolicyOutput = tc.putBucketPolicyOutput
 
 		var err error
+
 		if tc.shouldMock {
 			mockSvc := &mockS3Client{}
 			svc = mockSvc
@@ -84,19 +145,21 @@ func TestExecuteAddCmd(t *testing.T) {
 			assert.Nil(t, err)
 		}
 
+		if tc.promptMock != nil {
+			confirmRunner = tc.promptMock
+		}
+
 		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
 		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
 		AddCmd.SetArgs(tc.args)
 
 		err = AddCmd.Execute()
-
 		if tc.shouldPass {
 			assert.Nil(t, err)
 		} else {
 			assert.NotNil(t, err)
 		}
-	}
 
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
+		bucketPolicyOpts.SetZeroValues()
+	}
 }

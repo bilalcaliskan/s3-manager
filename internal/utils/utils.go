@@ -1,6 +1,10 @@
 package utils
 
-import "github.com/aws/aws-sdk-go/service/s3"
+import (
+	"encoding/json"
+
+	"github.com/aws/aws-sdk-go/service/s3"
+)
 
 func Contains(s []string, e string) bool {
 	for _, a := range s {
@@ -30,4 +34,20 @@ func RemoveMapElements(source, toRemove map[string]string) {
 func HasKeyValuePair(m map[string]string, key, value string) bool {
 	v, ok := m[key]
 	return ok && v == value
+}
+
+func BeautifyJSON(jsonString string) (string, error) {
+	var jsonData interface{}
+
+	err := json.Unmarshal([]byte(jsonString), &jsonData)
+	if err != nil {
+		return "", err
+	}
+
+	beautifiedBytes, err := json.MarshalIndent(jsonData, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(beautifiedBytes), nil
 }

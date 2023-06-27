@@ -39,6 +39,9 @@ type RootOptions struct {
 	//Interactive bool
 	// BannerFilePath is the relative path to the banner file
 	BannerFilePath string
+
+	AutoApprove bool
+	DryRun      bool
 }
 
 func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
@@ -60,6 +63,9 @@ func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
 	"decision of that if you want to use interactive feature (default false)")*/
 	cmd.PersistentFlags().StringVarP(&opts.BannerFilePath, "banner-file-path", "", "banner.txt",
 		"relative path of the banner file")
+	cmd.PersistentFlags().BoolVarP(&opts.AutoApprove, "auto-approve", "", false, "Skip interactive approval (default false)")
+	cmd.PersistentFlags().BoolVarP(&opts.DryRun, "dry-run", "", false, "specifies that if you "+
+		"just want to see on what content to take action (default false)")
 }
 
 func (opts *RootOptions) SetAccessFlagsRequired(cmd *cobra.Command) {
@@ -120,6 +126,8 @@ func (opts *RootOptions) SetZeroValues() {
 	// TODO: uncomment when interactivity enabled again
 	//opts.Interactive = false
 	opts.BannerFilePath = "banner.txt"
+	opts.DryRun = false
+	opts.AutoApprove = false
 }
 
 // TODO: uncomment when interactivity enabled again

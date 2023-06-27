@@ -2,25 +2,29 @@ package add
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	options2 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
+	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/utils"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	bucketPolicyOpts = options2.GetBucketPolicyOptions()
+	bucketPolicyOpts = options.GetBucketPolicyOptions()
 }
 
 var (
 	svc              s3iface.S3API
 	logger           zerolog.Logger
-	bucketPolicyOpts *options2.BucketPolicyOptions
+	confirmRunner    prompt.PromptRunner = prompt.GetConfirmRunner()
+	bucketPolicyOpts *options.BucketPolicyOptions
 	AddCmd           = &cobra.Command{
 		Use:           "add",
 		Short:         "adds a bucket policy configuration for the target bucket by specifying a valid policy file",
@@ -30,7 +34,7 @@ var (
 s3-manager bucketpolicy add my_custom_policy.json
 		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			svc, bucketPolicyOpts, logger = utils.PrepareConstants(cmd, options2.GetBucketPolicyOptions())
+			svc, bucketPolicyOpts, logger = utils.PrepareConstants(cmd, options.GetBucketPolicyOptions())
 
 			if len(args) < 1 {
 				err = errors.New("no argument provided, you should provide bucket policy path on your filesystem")
@@ -69,8 +73,26 @@ s3-manager bucketpolicy add my_custom_policy.json
 				return err
 			}
 
-			bucketPolicyOpts.BucketPolicyContent = string(content)
 			logger.Info().Msg("successfully read target policy file")
+			bucketPolicyOpts.BucketPolicyContent = string(content)
+
+			logger.Info().Msg("will attempt to add below bucket policy")
+			fmt.Println(bucketPolicyOpts.BucketPolicyContent)
+			if bucketPolicyOpts.DryRun {
+				logger.Info().Msg("skipping add operation for bucket policy since '--dry-run' flag is passed")
+				return nil
+			}
+
+			if !bucketPolicyOpts.AutoApprove {
+				var res string
+				if res, err = confirmRunner.Run(); err != nil {
+					return err
+				}
+
+				if strings.ToLower(res) == "n" {
+					return errors.New("user terminated the process")
+				}
+			}
 
 			logger.Info().Msg("trying to add bucket policy")
 			_, err = aws.SetBucketPolicy(svc, bucketPolicyOpts)

@@ -1,21 +1,28 @@
 package remove
 
 import (
+	"errors"
+	"fmt"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/utils"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	bucketPolicyOpts = options2.GetBucketPolicyOptions()
+	//bucketPolicyOpts.InitFlags(RemoveCmd)
 }
 
 var (
 	svc              s3iface.S3API
 	logger           zerolog.Logger
+	confirmRunner    prompt.PromptRunner = prompt.GetConfirmRunner()
 	bucketPolicyOpts *options2.BucketPolicyOptions
 	RemoveCmd        = &cobra.Command{
 		Use:           "remove",
@@ -32,6 +39,35 @@ s3-manager bucketpolicy remove
 				logger.Error().
 					Msg(err.Error())
 				return err
+			}
+
+			res, err := aws.GetBucketPolicyString(svc, bucketPolicyOpts)
+			if err != nil {
+				logger.Error().
+					Str("error", err.Error()).
+					Msg("an error occurred while getting bucket policy")
+				return err
+			}
+
+			logger.Info().Msg("fetched bucket policy successfully")
+			bucketPolicyOpts.BucketPolicyContent = res
+
+			logger.Info().Msg("will attempt to delete below bucket policy")
+			fmt.Println(bucketPolicyOpts.BucketPolicyContent)
+			if bucketPolicyOpts.DryRun {
+				logger.Info().Msg("skipping remove operation for bucket policy since '--dry-run' flag is passed")
+				return nil
+			}
+
+			if !bucketPolicyOpts.AutoApprove {
+				var res string
+				if res, err = confirmRunner.Run(); err != nil {
+					return err
+				}
+
+				if strings.ToLower(res) == "n" {
+					return errors.New("user terminated the process")
+				}
 			}
 
 			logger.Info().Msg("trying to remove current bucket policy if exists")
