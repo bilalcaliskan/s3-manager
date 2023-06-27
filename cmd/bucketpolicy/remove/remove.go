@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	options2 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
+	options "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/utils"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	bucketPolicyOpts = options2.GetBucketPolicyOptions()
+	bucketPolicyOpts = options.GetBucketPolicyOptions()
 	//bucketPolicyOpts.InitFlags(RemoveCmd)
 }
 
@@ -23,7 +23,7 @@ var (
 	svc              s3iface.S3API
 	logger           zerolog.Logger
 	confirmRunner    prompt.PromptRunner = prompt.GetConfirmRunner()
-	bucketPolicyOpts *options2.BucketPolicyOptions
+	bucketPolicyOpts *options.BucketPolicyOptions
 	RemoveCmd        = &cobra.Command{
 		Use:           "remove",
 		Short:         "removes the current bucket policy configuration of the target bucket",
@@ -33,7 +33,7 @@ var (
 s3-manager bucketpolicy remove
 		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			svc, bucketPolicyOpts, logger = utils.PrepareConstants(cmd, options2.GetBucketPolicyOptions())
+			svc, bucketPolicyOpts, logger = utils.PrepareConstants(cmd, options.GetBucketPolicyOptions())
 
 			if err := utils.CheckArgs(args); err != nil {
 				logger.Error().
