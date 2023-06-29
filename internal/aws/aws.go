@@ -2,12 +2,14 @@ package aws
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
 	"strings"
 	"sync"
+
+	internalutil "github.com/bilalcaliskan/s3-manager/internal/utils"
+	"github.com/pkg/errors"
 
 	options6 "github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
 
@@ -165,6 +167,15 @@ func GetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res
 	return svc.GetBucketPolicy(&s3.GetBucketPolicyInput{
 		Bucket: aws.String(opts.BucketName),
 	})
+}
+
+func GetBucketPolicyString(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (out string, err error) {
+	res, err := GetBucketPolicy(svc, opts)
+	if err != nil {
+		return out, errors.Wrap(err, "an error occurred while getting bucket policy")
+	}
+
+	return internalutil.BeautifyJSON(*res.Policy)
 }
 
 func SetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res *s3.PutBucketPolicyOutput, err error) {

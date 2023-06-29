@@ -21,12 +21,12 @@ func CheckArgs(args []string) error {
 	return nil
 }
 
-func PrepareConstants(cmd *cobra.Command, tagOpts *options.BucketPolicyOptions) (s3iface.S3API, *options.BucketPolicyOptions, zerolog.Logger) {
+func PrepareConstants(cmd *cobra.Command, opts *options.BucketPolicyOptions) (s3iface.S3API, *options.BucketPolicyOptions, zerolog.Logger) {
 	svc := cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)
 	rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
-	tagOpts.RootOptions = rootOpts
+	opts.RootOptions = rootOpts
 
-	logger := logging.GetLogger(tagOpts.RootOptions)
+	logger := logging.GetLogger(opts.RootOptions)
 
-	return svc, tagOpts, logger
+	return svc, opts, logger
 }

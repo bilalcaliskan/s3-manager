@@ -15,23 +15,22 @@ var (
 // BucketPolicyOptions contains frequent command line and application options.
 type BucketPolicyOptions struct {
 	BucketPolicyContent string
-
 	*options.RootOptions
 }
-
-/*func (opts *BucketPolicyOptions) InitFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&opts.FilePath, "file-path", "", "", "file path to set "+
-		"policy into")
-
-	_ = cmd.MarkPersistentFlagRequired("file-path")
-}*/
 
 // GetBucketPolicyOptions returns the pointer of FindOptions
 func GetBucketPolicyOptions() *BucketPolicyOptions {
 	return bucketPolicyOpts
 }
 
+/*func (opts *BucketPolicyOptions) InitFlags(cmd *cobra.Command) {
+	cmd.Flags().BoolVarP(&opts.AutoApprove, "auto-approve", "", false, "Skip interactive approval (default false)")
+	cmd.Flags().BoolVarP(&opts.DryRun, "dry-run", "", false, "specifies that if you "+
+		"just want to see on what content to take action (default false)")
+}*/
+
 func (opts *BucketPolicyOptions) SetZeroValues() {
+	opts.BucketPolicyContent = ""
 	opts.RootOptions.SetZeroValues()
 }
 

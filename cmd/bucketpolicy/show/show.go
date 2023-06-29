@@ -1,7 +1,6 @@
 package show
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/utils"
@@ -39,7 +38,7 @@ s3-manager bucketpolicy show
 				return err
 			}
 
-			res, err := aws.GetBucketPolicy(svc, bucketPolicyOpts)
+			res, err := aws.GetBucketPolicyString(svc, bucketPolicyOpts)
 			if err != nil {
 				logger.Error().
 					Str("error", err.Error()).
@@ -48,32 +47,9 @@ s3-manager bucketpolicy show
 			}
 
 			logger.Info().Msg("fetched bucket policy successfully")
-
-			beautifiedJSON, err := beautifyJSON(*res.Policy)
-			if err != nil {
-				logger.Error().Msg(err.Error())
-				return err
-			}
-
-			fmt.Println(beautifiedJSON)
+			fmt.Println(res)
 
 			return nil
 		},
 	}
 )
-
-func beautifyJSON(jsonString string) (string, error) {
-	var jsonData interface{}
-
-	err := json.Unmarshal([]byte(jsonString), &jsonData)
-	if err != nil {
-		return "", err
-	}
-
-	beautifiedBytes, err := json.MarshalIndent(jsonData, "", "  ")
-	if err != nil {
-		return "", err
-	}
-
-	return string(beautifiedBytes), nil
-}
