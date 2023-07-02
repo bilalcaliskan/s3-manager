@@ -34,12 +34,10 @@ import (
 
 // createSession initializes session with provided credentials
 func createSession(accessKey, secretKey, region string) (*session.Session, error) {
-	sess, err := session.NewSession(&aws.Config{
+	return session.NewSession(&aws.Config{
 		Region:      aws.String(region),
 		Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
 	})
-
-	return sess, err
 }
 
 func CreateAwsService(opts *options.RootOptions) (svc *s3.S3, err error) {
@@ -60,28 +58,16 @@ func CreateAwsService(opts *options.RootOptions) (svc *s3.S3, err error) {
 // GetAllFiles gets all of the files in the target bucket as the function name indicates
 func GetAllFiles(svc s3iface.S3API, opts *options.RootOptions, prefix string) (res *s3.ListObjectsOutput, err error) {
 	// fetch all the objects in target bucket
-	res, err = svc.ListObjects(&s3.ListObjectsInput{
+	return svc.ListObjects(&s3.ListObjectsInput{
 		Bucket: aws.String(opts.BucketName),
 		Prefix: aws.String(prefix),
 	})
-	if err != nil {
-		return res, err
-	}
-
-	return res, nil
 }
 
 func GetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.GetBucketTaggingOutput, err error) {
-	// fetch all the objects in target bucket
-	res, err = svc.GetBucketTagging(&s3.GetBucketTaggingInput{
+	return svc.GetBucketTagging(&s3.GetBucketTaggingInput{
 		Bucket: aws.String(opts.BucketName),
 	})
-
-	if err != nil {
-		return res, err
-	}
-
-	return res, nil
 }
 
 func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.PutBucketTaggingOutput, err error) {
@@ -193,16 +179,9 @@ func DeleteBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (
 
 // GetBucketVersioning gets the target bucket
 func GetBucketVersioning(svc s3iface.S3API, opts *options.RootOptions) (res *s3.GetBucketVersioningOutput, err error) {
-	// fetch all the objects in target bucket
-	res, err = svc.GetBucketVersioning(&s3.GetBucketVersioningInput{
+	return svc.GetBucketVersioning(&s3.GetBucketVersioningInput{
 		Bucket: aws.String(opts.BucketName),
 	})
-
-	if err != nil {
-		return res, err
-	}
-
-	return res, nil
 }
 
 // SetBucketVersioning sets the target bucket
@@ -292,7 +271,7 @@ func GetDesiredFiles(svc s3iface.S3API, opts *options2.SearchOptions) (matchedFi
 }
 
 // SearchString does the heavy lifting, communicates with the S3 and finds the files
-func SearchString(svc s3iface.S3API, opts *options2.SearchOptions, logger zerolog.Logger) ([]string, []error) {
+func SearchString(svc s3iface.S3API, opts *options2.SearchOptions) ([]string, []error) {
 	var errs []error
 	var matchedFiles []string
 	mu := &sync.Mutex{}
