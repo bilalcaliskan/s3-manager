@@ -117,6 +117,15 @@ func GetRootOptions() *RootOptions {
 	return rootOptions
 }
 
+func GetMockedRootOptions() *RootOptions {
+	return &RootOptions{
+		AccessKey:  "thisisaccesskey",
+		SecretKey:  "thisissecretkey",
+		Region:     "thisisregion",
+		BucketName: "thisisbucketname",
+	}
+}
+
 func (opts *RootOptions) SetZeroValues() {
 	opts.BucketName = ""
 	opts.AccessKey = ""
