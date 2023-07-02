@@ -66,11 +66,7 @@ func TestPrepareConstants(t *testing.T) {
 	cmd := &cobra.Command{}
 	cmd.SetContext(context.Background())
 
-	rootOpts := options2.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
+	rootOpts := options2.GetMockedRootOptions()
 
 	svc, err := createSvc(rootOpts)
 	assert.NotNil(t, svc)

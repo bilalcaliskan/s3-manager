@@ -35,12 +35,7 @@ func (m *mockS3Client) GetBucketPolicy(input *s3.GetBucketPolicyInput) (*s3.GetB
 }
 
 func TestExecuteShowCmd(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
+	rootOpts := options.GetMockedRootOptions()
 	ctx := context.Background()
 	ShowCmd.SetContext(ctx)
 
