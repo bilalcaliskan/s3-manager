@@ -3,19 +3,19 @@
 package aws
 
 import (
-	"errors"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
+
 	options6 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
+	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 	options5 "github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
 
 	options4 "github.com/bilalcaliskan/s3-manager/cmd/tags/options"
 
 	options3 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
-
-	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
@@ -27,23 +27,25 @@ import (
 )
 
 var (
-	defaultListObjectsErr    error
-	defaultGetObjectErr      error
-	defaultDeleteObjectErr   error
-	fileNamePrefix           string
-	defaultListObjectsOutput = &s3.ListObjectsOutput{
+	injectedErr            = errors.New("injected error")
+	defaultListObjectsErr  error
+	defaultGetObjectErr    error
+	defaultDeleteObjectErr error
+	fileNamePrefix         string
+	/*defaultListObjectsOutput = &s3.ListObjectsOutput{
 		Name:        aws.String(""),
 		Marker:      aws.String(""),
 		MaxKeys:     aws.Int64(1000),
 		Prefix:      aws.String(""),
 		IsTruncated: aws.Bool(false),
-	}
-	defaultDeleteObjectOutput = &s3.DeleteObjectOutput{
+	}*/
+	defaultListObjectsOutput = &s3.ListObjectsOutput{}
+	/*defaultDeleteObjectOutput = &s3.DeleteObjectOutput{
 		DeleteMarker:   nil,
 		RequestCharged: nil,
 		VersionId:      nil,
-	}
-	mockLogger                       = logging.GetLogger(options.GetRootOptions())
+	}*/
+	defaultDeleteObjectOutput        = &s3.DeleteObjectOutput{}
 	defaultGetBucketVersioningOutput = &s3.GetBucketVersioningOutput{
 		Status: aws.String("Enabled"),
 	}
@@ -68,6 +70,29 @@ var (
 	defaultPutBucketPolicyOutput       = &s3.PutBucketPolicyOutput{}
 	defaultDeleteBucketPolicyErr       error
 	defaultDeleteBucketPolicyOutput    = &s3.DeleteBucketPolicyOutput{}
+
+	bucketPolicyStr = `
+{
+  "Statement": [
+    {
+      "Action": "s3:*",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      },
+      "Effect": "Deny",
+      "Principal": "*",
+      "Resource": [
+        "arn:aws:s3:::thevpnbeast-releases-1",
+        "arn:aws:s3:::thevpnbeast-releases-1/*"
+      ],
+      "Sid": "RestrictToTLSRequestsOnly"
+    }
+  ],
+  "Version": "2012-10-17"
+}
+`
 )
 
 type mockS3Client struct {
@@ -139,581 +164,829 @@ func (m *mockS3Client) DeleteBucketPolicy(input *s3.DeleteBucketPolicyInput) (*s
 	return defaultDeleteBucketPolicyOutput, defaultDeleteBucketPolicyErr
 }
 
-func TestGetAllFilesHappyPath(t *testing.T) {
-	m := &mockS3Client{}
-	defaultListObjectsOutput.Contents = []*s3.Object{
-		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../testdata/file1.txt"),
-			StorageClass: aws.String("STANDARD"),
+func TestGetAllFiles(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName          string
+		expected          error
+		listObjectsErr    error
+		listObjectsOutput *s3.ListObjectsOutput
+	}{
+		{"Success with non-empty file list",
+			nil, nil,
+			&s3.ListObjectsOutput{
+				Contents: []*s3.Object{
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+						Key:          aws.String("../../testdata/file1.txt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+						Key:          aws.String("../../testdata/file2.txt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+						Key:          aws.String("../../testdata/file3.txt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+				},
+			},
 		},
-		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../testdata/file2.txt"),
-			StorageClass: aws.String("STANDARD"),
-		},
-		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../testdata/file3.txt"),
-			StorageClass: aws.String("STANDARD"),
+		{"Failure caused by List objects error",
+			injectedErr, injectedErr,
+			nil,
 		},
 	}
 
-	result, err := GetAllFiles(m, options.GetRootOptions(), fileNamePrefix)
-	assert.NotEmpty(t, result)
-	assert.Nil(t, err)
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		defaultListObjectsErr = tc.listObjectsErr
+		defaultListObjectsOutput = tc.listObjectsOutput
+
+		mockSvc := &mockS3Client{}
+		assert.NotNil(t, mockSvc)
+
+		_, err := GetAllFiles(mockSvc, rootOpts, "")
+		assert.Equal(t, tc.expected, err)
+	}
 }
 
-func TestGetAllFilesFailedListObjectsCall(t *testing.T) {
-	m := &mockS3Client{}
-	defaultListObjectsErr = errors.New("dummy error thrown")
-	_, err := GetAllFiles(m, options.GetRootOptions(), fileNamePrefix)
-	assert.NotNil(t, err)
-}
-
-func TestDeleteFilesHappyPath(t *testing.T) {
-	var input []*s3.Object
-	m := &mockS3Client{}
-	defaultDeleteObjectErr = nil
-
-	err := DeleteFiles(m, "dummy bucket", input, false, mockLogger)
-	assert.Nil(t, err)
-}
-
-func TestDeleteFilesHappyPathDryRun(t *testing.T) {
-	var input []*s3.Object
-	m := &mockS3Client{}
-	defaultDeleteObjectErr = nil
-
-	err := DeleteFiles(m, "dummy bucket", input, true, mockLogger)
-	assert.Nil(t, err)
-}
-
-func TestDeleteFilesFailedDeleteObjectCall(t *testing.T) {
-	var input []*s3.Object
-	for i := 0; i < 3; i++ {
-		o := s3.Object{Key: aws.String("hello-world"), LastModified: aws.Time(time.Now()), Size: aws.Int64(10000000)}
-		input = append(input, &o)
+func TestDeleteFiles(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName        string
+		expected        error
+		deleteObjectErr error
+		dryRun          bool
+		objects         []*s3.Object
+	}{
+		{"Success with non-empty file list",
+			nil, nil, false,
+			[]*s3.Object{
+				{
+					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+					Key:          aws.String("../../testdata/file1.txt"),
+					StorageClass: aws.String("STANDARD"),
+					Size:         aws.Int64(500),
+					LastModified: aws.Time(time.Now().Add(-5 * time.Hour)),
+				},
+				{
+					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+					Key:          aws.String("../../testdata/file2.txt"),
+					StorageClass: aws.String("STANDARD"),
+					Size:         aws.Int64(1000),
+					LastModified: aws.Time(time.Now().Add(-2 * time.Hour)),
+				},
+				{
+					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+					Key:          aws.String("../../testdata/file3.txt"),
+					StorageClass: aws.String("STANDARD"),
+					Size:         aws.Int64(1500),
+					LastModified: aws.Time(time.Now().Add(-10 * time.Hour)),
+				},
+			},
+		},
+		{"Failure caused by delete object err",
+			injectedErr, injectedErr, false,
+			[]*s3.Object{
+				{
+					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+					Key:          aws.String("../../testdata/file1.txt"),
+					StorageClass: aws.String("STANDARD"),
+					Size:         aws.Int64(500),
+					LastModified: aws.Time(time.Now().Add(-5 * time.Hour)),
+				},
+				{
+					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+					Key:          aws.String("../../testdata/file2.txt"),
+					StorageClass: aws.String("STANDARD"),
+					Size:         aws.Int64(1000),
+					LastModified: aws.Time(time.Now().Add(-2 * time.Hour)),
+				},
+				{
+					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+					Key:          aws.String("../../testdata/file3.txt"),
+					StorageClass: aws.String("STANDARD"),
+					Size:         aws.Int64(1500),
+					LastModified: aws.Time(time.Now().Add(-10 * time.Hour)),
+				},
+			},
+		},
 	}
 
-	m := &mockS3Client{}
-	defaultDeleteObjectErr = errors.New("dummy error")
-	err := DeleteFiles(m, "dummy bucket", input, false, mockLogger)
-	assert.NotNil(t, err)
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		defaultDeleteObjectErr = tc.deleteObjectErr
+
+		mockSvc := &mockS3Client{}
+		assert.NotNil(t, mockSvc)
+
+		assert.Equal(t, tc.expected, DeleteFiles(mockSvc, "thisisdemobucket", tc.objects, tc.dryRun, logging.GetLogger(rootOpts)))
+	}
 }
 
 func TestCreateAwsService(t *testing.T) {
-	opts := options.GetRootOptions()
-	opts.AccessKey = "thisisaccesskey"
-	opts.SecretKey = "thisissecretkey"
-	opts.Region = "thisisregion"
-	opts.BucketName = "thisisbucketname"
+	cases := []struct {
+		caseName   string
+		opts       *options.RootOptions
+		shouldPass bool
+	}{
+		{"Success",
+			&options.RootOptions{
+				AccessKey:  "thisisaccesskey",
+				SecretKey:  "thisissecretkey",
+				BucketName: "thisisbucketname",
+				Region:     "thisisregion",
+			}, true,
+		},
+		{"Failure caused by missing required field",
+			&options.RootOptions{
+				AccessKey:  "thisisaccesskey",
+				SecretKey:  "thisissecretkey",
+				BucketName: "thisisbucketname",
+				Region:     "",
+			}, false,
+		},
+	}
 
-	svc, err := CreateAwsService(opts)
-	assert.Nil(t, err)
-	assert.NotNil(t, svc)
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		_, err := CreateAwsService(tc.opts)
+
+		if tc.shouldPass {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
+	}
 }
 
-func TestSearchStringSuccess(t *testing.T) {
-	mockSvc := &mockS3Client{}
-	defaultListObjectsErr = nil
-	defaultListObjectsOutput.Contents = []*s3.Object{
+func TestSearchString(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName          string
+		searchOpts        *options2.SearchOptions
+		shouldPass        bool
+		listObjectsErr    error
+		listObjectsOutput *s3.ListObjectsOutput
+		getObjectErr      error
+		matchCount        int
+	}{
+		{"Success with specific text",
+			&options2.SearchOptions{
+				Text:        "pvRRTaigmb",
+				FileName:    "",
+				RootOptions: nil,
+			}, true, nil,
+			&s3.ListObjectsOutput{
+				Contents: []*s3.Object{
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+						Key:          aws.String("../../testdata/file1.txt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+						Key:          aws.String("../../testdata/file2.txt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+						Key:          aws.String("../../testdata/file3.txt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+				},
+			}, nil, 2,
+		},
+		{"Success with file name regex",
+			&options2.SearchOptions{
+				Text:        "pvRRTaigmb",
+				FileName:    "file2.*.",
+				RootOptions: nil,
+			}, true, nil,
+			&s3.ListObjectsOutput{
+				Contents: []*s3.Object{
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+						Key:          aws.String("../../testdata/file1.txt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+						Key:          aws.String("../../testdata/file2.txt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+						Key:          aws.String("../../testdata/file3.txt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+				},
+			}, nil, 1,
+		},
+		{"Failure caused by list objects error",
+			&options2.SearchOptions{
+				Text:        "pvRRTaigmb",
+				FileName:    "",
+				RootOptions: nil,
+			}, false, errors.New("injected error"),
+			nil, nil, 0,
+		},
+		{"Failure caused by get object error",
+			&options2.SearchOptions{
+				Text:        "pvRRTaigmb",
+				FileName:    "",
+				RootOptions: nil,
+			}, false, nil,
+			&s3.ListObjectsOutput{
+				Contents: []*s3.Object{
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+						Key:          aws.String("../../testdata/file1.txttt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+						Key:          aws.String("../../testdata/file2.txt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+					{
+						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+						Key:          aws.String("../../testdata/file3.txt"),
+						StorageClass: aws.String("STANDARD"),
+					},
+				},
+			}, errors.New("injected error"), 0,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		tc.searchOpts.RootOptions = rootOpts
+		defaultListObjectsErr = tc.listObjectsErr
+		defaultListObjectsOutput = tc.listObjectsOutput
+		defaultGetObjectErr = tc.getObjectErr
+
+		mockSvc := &mockS3Client{}
+		assert.NotNil(t, mockSvc)
+
+		res, err := SearchString(mockSvc, tc.searchOpts)
+
+		if tc.shouldPass {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
+
+		assert.Equal(t, tc.matchCount, len(res))
+	}
+}
+
+func TestSetBucketVersioning(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName string
+		*options3.VersioningOptions
+		*s3.GetBucketVersioningOutput
+		getBucketVersioningErr error
+		putBucketVersioningErr error
+		expected               error
+	}{
 		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../testdata/file1.txt"),
-			StorageClass: aws.String("STANDARD"),
+			"Successfully enabled when disabled",
+			&options3.VersioningOptions{
+				ActualState:  "",
+				DesiredState: "enabled",
+				RootOptions:  rootOpts,
+			},
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Suspended"),
+			}, nil, nil, nil,
 		},
 		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../testdata/file2.txt"),
-			StorageClass: aws.String("STANDARD"),
+			"Successfully enabled when already enabled",
+			&options3.VersioningOptions{
+				ActualState:  "",
+				DesiredState: "enabled",
+				RootOptions:  rootOpts,
+			},
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Enabled"),
+			}, nil, nil, nil,
 		},
 		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../testdata/file3.txt"),
-			StorageClass: aws.String("STANDARD"),
-		},
-	}
-	searchOpts := options2.GetSearchOptions()
-	rootOpts := options.GetRootOptions()
-	searchOpts.RootOptions = rootOpts
-
-	searchOpts.Text = "akqASmLLlK"
-
-	result, errs := SearchString(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
-	assert.NotNil(t, result)
-	assert.Empty(t, errs)
-}
-
-func TestSearchStringFailure(t *testing.T) {
-	mockSvc := &mockS3Client{}
-	defaultListObjectsErr = errors.New("dummy error")
-	defaultListObjectsOutput.Contents = []*s3.Object{
-		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../testdata/file1.txt"),
-			StorageClass: aws.String("STANDARD"),
+			"Successfully disabled when enabled",
+			&options3.VersioningOptions{
+				ActualState:  "",
+				DesiredState: "disabled",
+				RootOptions:  rootOpts,
+			},
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Enabled"),
+			}, nil, nil, nil,
 		},
 		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../testdata/file2.txt"),
-			StorageClass: aws.String("STANDARD"),
+			"Failure caused by get versioning error",
+			&options3.VersioningOptions{
+				ActualState:  "",
+				DesiredState: "disabled",
+				RootOptions:  rootOpts,
+			},
+			nil, injectedErr, nil, injectedErr,
 		},
 		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../testdata/file3.txt"),
-			StorageClass: aws.String("STANDARD"),
+			"Failure caused by unknown status",
+			&options3.VersioningOptions{
+				ActualState:  "",
+				DesiredState: "disabled",
+				RootOptions:  rootOpts,
+			},
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Enableddddd"),
+			}, nil, nil, errors.New("unknown status 'Enableddddd' returned from AWS SDK"),
 		},
 	}
-	searchOpts := options2.GetSearchOptions()
-	rootOpts := options.GetRootOptions()
-	searchOpts.RootOptions = rootOpts
 
-	searchOpts.Text = "akqASmLLlK"
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
 
-	result, errs := SearchString(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
-	assert.Nil(t, result)
-	assert.NotEmpty(t, errs)
+		defaultGetBucketVersioningOutput = tc.GetBucketVersioningOutput
+		defaultGetBucketVersioningErr = tc.getBucketVersioningErr
+		defaultPutBucketVersioningErr = tc.putBucketVersioningErr
+
+		mockSvc := &mockS3Client{}
+		assert.NotNil(t, mockSvc)
+
+		err := SetBucketVersioning(mockSvc, tc.VersioningOptions, logging.GetLogger(tc.VersioningOptions.RootOptions))
+		if tc.expected != nil {
+			assert.NotNil(t, err)
+		} else {
+			assert.Nil(t, err)
+		}
+	}
 }
 
-func TestSearchStringGetObjectFailure(t *testing.T) {
-	mockSvc := &mockS3Client{}
-	defaultListObjectsErr = nil
-	defaultListObjectsOutput.Contents = []*s3.Object{
+func TestGetBucketVersioning(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName string
+		expected error
+		*s3.GetBucketVersioningOutput
+		getBucketVersioningErr error
+	}{
 		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("../../testdata/file1.txt"),
-			StorageClass: aws.String("STANDARD"),
+			"Success", nil,
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Enableddddd"),
+			}, nil,
 		},
 		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-			Key:          aws.String("../../testdata/file2.txt"),
-			StorageClass: aws.String("STANDARD"),
+			"Failure", injectedErr,
+			nil, injectedErr,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		defaultGetBucketVersioningOutput = tc.GetBucketVersioningOutput
+		defaultGetBucketVersioningErr = tc.getBucketVersioningErr
+
+		mockSvc := &mockS3Client{}
+		assert.NotNil(t, mockSvc)
+
+		_, err := GetBucketVersioning(mockSvc, rootOpts)
+		assert.Equal(t, tc.expected, err)
+	}
+}
+
+func TestGetBucketTags(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName string
+		expected error
+		*options4.TagOptions
+		*s3.GetBucketTaggingOutput
+		getBucketTaggingErr error
+	}{
+		{
+			"Success", nil,
+			&options4.TagOptions{
+				RootOptions: rootOpts,
+			},
+			&s3.GetBucketTaggingOutput{
+				TagSet: []*s3.Tag{
+					{
+						Key:   aws.String("foo"),
+						Value: aws.String("bar"),
+					},
+					{
+						Key:   aws.String("foo2"),
+						Value: aws.String("bar2"),
+					},
+				},
+			}, nil,
 		},
 		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-			Key:          aws.String("../../testdata/file3.txt"),
-			StorageClass: aws.String("STANDARD"),
+			"Failure", injectedErr,
+			&options4.TagOptions{
+				RootOptions: rootOpts,
+			},
+			nil, injectedErr,
 		},
 	}
-	defaultGetObjectErr = errors.New("dummy error")
-	searchOpts := options2.GetSearchOptions()
-	rootOpts := options.GetRootOptions()
-	searchOpts.RootOptions = rootOpts
 
-	searchOpts.Text = "akqASmLLlK"
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
 
-	result, errs := SearchString(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
-	assert.Nil(t, result)
-	assert.NotEmpty(t, errs)
+		defaultGetBucketTaggingOutput = tc.GetBucketTaggingOutput
+		defaultGetBucketTaggingErr = tc.getBucketTaggingErr
+
+		mockSvc := &mockS3Client{}
+		assert.NotNil(t, mockSvc)
+
+		_, err := GetBucketTags(mockSvc, tc.TagOptions)
+		assert.Equal(t, tc.expected, err)
+	}
 }
 
-func TestSearchStringWrongFilePath(t *testing.T) {
-	mockSvc := &mockS3Client{}
-	defaultListObjectsOutput.Contents = []*s3.Object{
+func TestSetBucketTags(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName string
+		expected error
+		*options4.TagOptions
+		tags                []*s3.Tag
+		putBucketTaggingErr error
+	}{
 		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("file1asdfasdf.txt"),
-			StorageClass: aws.String("STANDARD"),
+			"Success", nil,
+			&options4.TagOptions{
+				RootOptions:  rootOpts,
+				TagsToAdd:    make(map[string]string),
+				TagsToRemove: make(map[string]string),
+			},
+			[]*s3.Tag{
+				{
+					Key:   aws.String("foo"),
+					Value: aws.String("bar"),
+				},
+				{
+					Key:   aws.String("foo2"),
+					Value: aws.String("bar2"),
+				},
+			}, nil,
 		},
-	}
-	searchOpts := options2.GetSearchOptions()
-	rootOpts := options.GetRootOptions()
-	searchOpts.RootOptions = rootOpts
-
-	res, err := SearchString(mockSvc, searchOpts, logging.GetLogger(options.GetRootOptions()))
-	assert.NotNil(t, err)
-	assert.Empty(t, res)
-}
-
-func TestGetDesiredFilesSuccess(t *testing.T) {
-	mockSvc := &mockS3Client{}
-	defaultListObjectsErr = nil
-	defaultListObjectsOutput.Contents = []*s3.Object{
 		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("file1asdfasdf.txt"),
-			StorageClass: aws.String("STANDARD"),
+			"Failure", injectedErr,
+			&options4.TagOptions{
+				RootOptions:  rootOpts,
+				TagsToAdd:    make(map[string]string),
+				TagsToRemove: make(map[string]string),
+			},
+			[]*s3.Tag{
+				{
+					Key:   aws.String("foo"),
+					Value: aws.String("bar"),
+				},
+				{
+					Key:   aws.String("foo2"),
+					Value: aws.String("bar2"),
+				},
+			},
+			injectedErr,
 		},
 	}
-	searchOpts := options2.GetSearchOptions()
-	rootOpts := options.GetRootOptions()
-	searchOpts.RootOptions = rootOpts
-	searchOpts.FileName = "file1.*"
 
-	res, err := GetDesiredFiles(mockSvc, searchOpts)
-	assert.Nil(t, err)
-	assert.NotEmpty(t, res)
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		mockSvc := &mockS3Client{}
+
+		for _, v := range tc.tags {
+			tc.TagOptions.TagsToAdd[*v.Key] = *v.Value
+		}
+
+		defaultPutBucketTaggingErr = tc.putBucketTaggingErr
+
+		_, err := SetBucketTags(mockSvc, tc.TagOptions)
+		assert.Equal(t, tc.expected, err)
+	}
 }
 
-func TestGetDesiredFilesFailure(t *testing.T) {
-	mockSvc := &mockS3Client{}
-	defaultListObjectsErr = errors.New("dummy error")
-	defaultListObjectsOutput.Contents = []*s3.Object{
+func TestDeleteAllBucketTags(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName string
+		expected error
+		*options4.TagOptions
+		deleteBucketTaggingErr error
+	}{
 		{
-			ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-			Key:          aws.String("file1asdfasdf.txt"),
-			StorageClass: aws.String("STANDARD"),
+			"Success", nil,
+			&options4.TagOptions{
+				RootOptions: rootOpts,
+			}, nil,
 		},
-	}
-	searchOpts := options2.GetSearchOptions()
-	rootOpts := options.GetRootOptions()
-	searchOpts.RootOptions = rootOpts
-	searchOpts.FileName = "file1.*"
-
-	res, err := GetDesiredFiles(mockSvc, searchOpts)
-	assert.NotNil(t, err)
-	assert.Empty(t, res)
-}
-
-func TestSetBucketVersioningSuccessEnabled(t *testing.T) {
-	mockSvc := &mockS3Client{}
-	defaultPutBucketVersioningErr = nil
-	versioningOpts := &options3.VersioningOptions{
-		DesiredState: "enabled",
-		RootOptions: &options.RootOptions{
-			BucketName: "demo-bucket",
+		{
+			"Failure", injectedErr,
+			&options4.TagOptions{
+				RootOptions: rootOpts,
+			},
+			injectedErr,
 		},
 	}
 
-	assert.Nil(t, SetBucketVersioning(mockSvc, versioningOpts, logging.GetLogger(versioningOpts.RootOptions)))
-}
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
 
-func TestSetBucketVersioningSuccessDisabled(t *testing.T) {
-	mockSvc := &mockS3Client{}
-	defaultPutBucketVersioningErr = nil
-	versioningOpts := &options3.VersioningOptions{
-		DesiredState: "disabled",
-		RootOptions: &options.RootOptions{
-			BucketName: "demo-bucket",
-		},
+		mockSvc := &mockS3Client{}
+
+		defaultDeleteBucketTaggingErr = tc.deleteBucketTaggingErr
+
+		_, err := DeleteAllBucketTags(mockSvc, tc.TagOptions)
+		assert.Equal(t, tc.expected, err)
 	}
-
-	assert.Nil(t, SetBucketVersioning(mockSvc, versioningOpts, logging.GetLogger(versioningOpts.RootOptions)))
-}
-
-func TestSetBucketVersioningError(t *testing.T) {
-	mockSvc := &mockS3Client{}
-	defaultGetBucketVersioningOutput = &s3.GetBucketVersioningOutput{Status: aws.String("disabledd")}
-	defaultPutBucketVersioningErr = errors.New("asdflkjasdf")
-	versioningOpts := &options3.VersioningOptions{
-		DesiredState: "enabled",
-		RootOptions: &options.RootOptions{
-			BucketName: "demo-bucket",
-		},
-	}
-	versioningOpts.ActualState = "disableddd"
-
-	assert.NotNil(t, SetBucketVersioning(mockSvc, versioningOpts, logging.GetLogger(versioningOpts.RootOptions)))
-}
-
-func TestGetBucketVersioningSuccess(t *testing.T) {
-	mockSvc := &mockS3Client{}
-	defaultGetBucketVersioningErr = nil
-	versioningOpts := &options3.VersioningOptions{
-		DesiredState: "enabled",
-		RootOptions: &options.RootOptions{
-			BucketName: "demo-bucket",
-		},
-	}
-
-	_, err := GetBucketVersioning(mockSvc, versioningOpts.RootOptions)
-	assert.Nil(t, err)
-}
-
-func TestGetBucketVersioningFailure(t *testing.T) {
-	mockSvc := &mockS3Client{}
-	defaultGetBucketVersioningErr = errors.New("adsfafdsadsf")
-	versioningOpts := &options3.VersioningOptions{
-		DesiredState: "enabled",
-		RootOptions: &options.RootOptions{
-			BucketName: "demo-bucket",
-		},
-	}
-
-	_, err := GetBucketVersioning(mockSvc, versioningOpts.RootOptions)
-	assert.NotNil(t, err)
-}
-
-func TestCreateAwsServiceErr(t *testing.T) {
-	opts := &options.RootOptions{
-		AccessKey:  "asdfadsf",
-		SecretKey:  "asdfsadf",
-		BucketName: "asdfasdf",
-		Region:     "",
-	}
-
-	svc, err := CreateAwsService(opts)
-	assert.Nil(t, svc)
-	assert.NotNil(t, err)
-}
-
-func TestGetBucketTaggingSuccess(t *testing.T) {
-	tagOpts := options4.GetTagOptions()
-	defer func() {
-		tagOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	tagOpts.RootOptions = rootOpts
-
-	mockSvc := &mockS3Client{}
-	var tags []*s3.Tag
-	tags = append(tags, &s3.Tag{Key: aws.String("foo"), Value: aws.String("bar")})
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
-	defaultGetBucketTaggingErr = nil
-
-	_, err := GetBucketTags(mockSvc, tagOpts)
-	assert.Nil(t, err)
-}
-
-func TestGetBucketTaggingFailure(t *testing.T) {
-	tagOpts := options4.GetTagOptions()
-	defer func() {
-		tagOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	tagOpts.RootOptions = rootOpts
-
-	mockSvc := &mockS3Client{}
-	var tags []*s3.Tag
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
-	defaultGetBucketTaggingErr = errors.New("dummy error")
-
-	_, err := GetBucketTags(mockSvc, tagOpts)
-	assert.NotNil(t, err)
-}
-
-func TestPutBucketTaggingSuccess(t *testing.T) {
-	tagOpts := options4.GetTagOptions()
-	defer func() {
-		tagOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	tagOpts.RootOptions = rootOpts
-
-	mockSvc := &mockS3Client{}
-	var tags []*s3.Tag
-	tags = append(tags, &s3.Tag{Key: aws.String("foo"), Value: aws.String("bar")})
-	for _, v := range tags {
-		tagOpts.TagsToAdd[*v.Key] = *v.Value
-	}
-
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
-	defaultGetBucketTaggingErr = nil
-
-	defaultPutBucketTaggingErr = nil
-
-	_, err := SetBucketTags(mockSvc, tagOpts)
-	assert.Nil(t, err)
-}
-
-func TestPutBucketTaggingFailure(t *testing.T) {
-	tagOpts := options4.GetTagOptions()
-	defer func() {
-		tagOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	tagOpts.RootOptions = rootOpts
-
-	mockSvc := &mockS3Client{}
-	var tags []*s3.Tag
-	tags = append(tags, &s3.Tag{Key: aws.String("foo"), Value: aws.String("bar")})
-	for _, v := range tags {
-		tagOpts.TagsToAdd[*v.Key] = *v.Value
-	}
-
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{TagSet: tags}
-	defaultGetBucketTaggingErr = nil
-
-	defaultPutBucketTaggingErr = errors.New("dummy error")
-
-	_, err := SetBucketTags(mockSvc, tagOpts)
-	assert.NotNil(t, err)
-}
-
-func TestDeleteBucketTaggingSuccess(t *testing.T) {
-	tagOpts := options4.GetTagOptions()
-	defer func() {
-		tagOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	tagOpts.RootOptions = rootOpts
-
-	defaultDeleteBucketTaggingErr = nil
-	_, err := DeleteAllBucketTags(&mockS3Client{}, tagOpts)
-	assert.Nil(t, err)
-}
-
-func TestGetTransferAcceleration(t *testing.T) {
-	taOpts := options5.GetTransferAccelerationOptions()
-	defer func() {
-		taOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	taOpts.RootOptions = rootOpts
-
-	defaultGetBucketAccelerationErr = nil
-
-	res, err := GetTransferAcceleration(&mockS3Client{}, taOpts)
-	assert.NotNil(t, res)
-	assert.Nil(t, err)
-}
-
-func TestSetTransferAcceleration(t *testing.T) {
-	taOpts := options5.GetTransferAccelerationOptions()
-	defer func() {
-		taOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	taOpts.RootOptions = rootOpts
-
-	taOpts.DesiredState = "enabled"
-
-	defaultGetBucketAccelerationErr = nil
-	defaultPutBucketAccelerationErr = nil
-
-	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
-	assert.Nil(t, err)
-}
-
-func TestSetTransferAcceleration2(t *testing.T) {
-	taOpts := options5.GetTransferAccelerationOptions()
-	defer func() {
-		taOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	taOpts.RootOptions = rootOpts
-
-	taOpts.DesiredState = "disabled"
-
-	defaultGetBucketAccelerationErr = nil
-	defaultPutBucketAccelerationErr = nil
-
-	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
-	assert.Nil(t, err)
-}
-
-func TestSetTransferAcceleration3(t *testing.T) {
-	taOpts := options5.GetTransferAccelerationOptions()
-	defer func() {
-		taOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	taOpts.RootOptions = rootOpts
-
-	taOpts.DesiredState = "disabled"
-
-	defaultGetBucketAccelerationErr = errors.New("dummy error")
-	defaultPutBucketAccelerationErr = nil
-
-	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
-	assert.NotNil(t, err)
-}
-
-func TestSetTransferAcceleration4(t *testing.T) {
-	taOpts := options5.GetTransferAccelerationOptions()
-	defer func() {
-		taOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	taOpts.RootOptions = rootOpts
-
-	taOpts.DesiredState = "enabled"
-
-	defaultGetBucketAccelerationErr = nil
-	defaultGetBucketAccelerationOutput.Status = aws.String("Suspended")
-	defaultPutBucketAccelerationErr = nil
-
-	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
-	assert.Nil(t, err)
-}
-
-func TestSetTransferAcceleration5(t *testing.T) {
-	taOpts := options5.GetTransferAccelerationOptions()
-	defer func() {
-		taOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	taOpts.RootOptions = rootOpts
-
-	taOpts.DesiredState = "enabled"
-
-	defaultGetBucketAccelerationErr = nil
-	defaultGetBucketAccelerationOutput.Status = aws.String("Suspendedddd")
-	defaultPutBucketAccelerationErr = nil
-
-	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
-	assert.NotNil(t, err)
-}
-
-func TestSetTransferAcceleration6(t *testing.T) {
-	taOpts := options5.GetTransferAccelerationOptions()
-	defer func() {
-		taOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	taOpts.RootOptions = rootOpts
-
-	taOpts.DesiredState = "enabled"
-
-	defaultGetBucketAccelerationErr = nil
-	defaultGetBucketAccelerationOutput.Status = aws.String("Suspended")
-	defaultPutBucketAccelerationErr = errors.New("dummy error")
-
-	err := SetTransferAcceleration(&mockS3Client{}, taOpts, logging.GetLogger(taOpts.RootOptions))
-	assert.NotNil(t, err)
 }
 
 func TestGetBucketPolicy(t *testing.T) {
-	bpOpts := options6.GetBucketPolicyOptions()
-	defer func() {
-		bpOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	bpOpts.RootOptions = rootOpts
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName string
+		expected error
+		*options6.BucketPolicyOptions
+		getBucketPolicyErr error
+	}{
+		{
+			"Success", nil,
+			&options6.BucketPolicyOptions{
+				RootOptions: rootOpts,
+			}, nil,
+		},
+		{
+			"Failure", injectedErr,
+			&options6.BucketPolicyOptions{
+				RootOptions: rootOpts,
+			},
+			injectedErr,
+		},
+	}
 
-	res, err := GetBucketPolicy(&mockS3Client{}, bpOpts)
-	assert.NotNil(t, res)
-	assert.Nil(t, err)
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		mockSvc := &mockS3Client{}
+
+		defaultGetBucketPolicyErr = tc.getBucketPolicyErr
+
+		_, err := GetBucketPolicy(mockSvc, tc.BucketPolicyOptions)
+		assert.Equal(t, tc.expected, err)
+	}
 }
 
 func TestSetBucketPolicy(t *testing.T) {
-	bpOpts := options6.GetBucketPolicyOptions()
-	defer func() {
-		bpOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	bpOpts.RootOptions = rootOpts
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName string
+		expected error
+		*options6.BucketPolicyOptions
+		putBucketPolicyErr error
+	}{
+		{
+			"Success", nil,
+			&options6.BucketPolicyOptions{
+				RootOptions:         rootOpts,
+				BucketPolicyContent: bucketPolicyStr,
+			}, nil,
+		},
+		{
+			"Failure", injectedErr,
+			&options6.BucketPolicyOptions{
+				RootOptions:         rootOpts,
+				BucketPolicyContent: bucketPolicyStr,
+			},
+			injectedErr,
+		},
+	}
 
-	res, err := SetBucketPolicy(&mockS3Client{}, bpOpts)
-	assert.NotNil(t, res)
-	assert.Nil(t, err)
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		mockSvc := &mockS3Client{}
+
+		defaultPutBucketPolicyErr = tc.putBucketPolicyErr
+
+		_, err := SetBucketPolicy(mockSvc, tc.BucketPolicyOptions)
+		assert.Equal(t, tc.expected, err)
+	}
+}
+
+func TestGetBucketPolicyString(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName string
+		expected error
+		*options6.BucketPolicyOptions
+		*s3.GetBucketPolicyOutput
+		getBucketPolicyErr error
+	}{
+		{
+			"Success", nil,
+			&options6.BucketPolicyOptions{
+				RootOptions:         rootOpts,
+				BucketPolicyContent: bucketPolicyStr,
+			},
+			&s3.GetBucketPolicyOutput{
+				Policy: aws.String(bucketPolicyStr),
+			}, nil,
+		},
+		{
+			"Failure", injectedErr,
+			&options6.BucketPolicyOptions{
+				RootOptions:         rootOpts,
+				BucketPolicyContent: bucketPolicyStr,
+			},
+			nil, injectedErr,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		mockSvc := &mockS3Client{}
+
+		defaultGetBucketPolicyOutput = tc.GetBucketPolicyOutput
+		defaultGetBucketPolicyErr = tc.getBucketPolicyErr
+
+		_, err := GetBucketPolicyString(mockSvc, tc.BucketPolicyOptions)
+		if tc.expected == nil {
+			assert.Nil(t, err)
+		} else {
+			assert.Contains(t, err.Error(), tc.expected.Error())
+		}
+	}
 }
 
 func TestDeleteBucketPolicy(t *testing.T) {
-	bpOpts := options6.GetBucketPolicyOptions()
-	defer func() {
-		bpOpts.SetZeroValues()
-	}()
-	rootOpts := options.GetRootOptions()
-	rootOpts.Region = "us-east-1"
-	bpOpts.RootOptions = rootOpts
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName string
+		expected error
+		*options6.BucketPolicyOptions
+		deleteBucketPolicyErr error
+	}{
+		{
+			"Success", nil,
+			&options6.BucketPolicyOptions{
+				RootOptions:         rootOpts,
+				BucketPolicyContent: bucketPolicyStr,
+			}, nil,
+		},
+		{
+			"Failure", injectedErr,
+			&options6.BucketPolicyOptions{
+				RootOptions:         rootOpts,
+				BucketPolicyContent: bucketPolicyStr,
+			}, injectedErr,
+		},
+	}
 
-	res, err := DeleteBucketPolicy(&mockS3Client{}, bpOpts)
-	assert.NotNil(t, res)
-	assert.Nil(t, err)
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		mockSvc := &mockS3Client{}
+
+		defaultDeleteBucketPolicyErr = tc.deleteBucketPolicyErr
+
+		_, err := DeleteBucketPolicy(mockSvc, tc.BucketPolicyOptions)
+		assert.Equal(t, tc.expected, err)
+	}
+}
+
+func TestGetTransferAcceleration(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName string
+		expected error
+		*options5.TransferAccelerationOptions
+		getBucketAccelerationErr error
+	}{
+		{
+			"Success", nil,
+			&options5.TransferAccelerationOptions{
+				RootOptions: rootOpts,
+			}, nil,
+		},
+		{
+			"Failure", injectedErr,
+			&options5.TransferAccelerationOptions{
+				RootOptions: rootOpts,
+			}, injectedErr,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		mockSvc := &mockS3Client{}
+
+		defaultGetBucketAccelerationErr = tc.getBucketAccelerationErr
+
+		_, err := GetTransferAcceleration(mockSvc, tc.TransferAccelerationOptions)
+		assert.Equal(t, tc.expected, err)
+	}
+}
+
+func TestSetTransferAcceleration(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cases := []struct {
+		caseName string
+		expected error
+		*options5.TransferAccelerationOptions
+		*s3.GetBucketAccelerateConfigurationOutput
+		getBucketAccelerationErr error
+		putBucketAccelerationErr error
+	}{
+		{
+			"Success", nil,
+			&options5.TransferAccelerationOptions{
+				RootOptions:  rootOpts,
+				DesiredState: "enabled",
+			},
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Suspended"),
+			}, nil, nil,
+		},
+		{
+			"Success when already enabled", nil,
+			&options5.TransferAccelerationOptions{
+				RootOptions:  rootOpts,
+				DesiredState: "enabled",
+			},
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Enabled"),
+			}, nil, nil,
+		},
+		{
+			"Success when already disabled", nil,
+			&options5.TransferAccelerationOptions{
+				RootOptions:  rootOpts,
+				DesiredState: "disabled",
+			},
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Suspended"),
+			}, nil, nil,
+		},
+		{
+			"Failure caused by get transfer acceleration error", injectedErr,
+			&options5.TransferAccelerationOptions{
+				RootOptions:  rootOpts,
+				DesiredState: "disabled",
+			},
+			nil, injectedErr, nil,
+		},
+		{
+			"Failure caused by unknown status returned by get transfer acceleration", injectedErr,
+			&options5.TransferAccelerationOptions{
+				RootOptions:  rootOpts,
+				DesiredState: "disabled",
+			},
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Suspendedddd"),
+			}, nil, nil,
+		},
+		{
+			"Failure caused by put transfer acceleration error", injectedErr,
+			&options5.TransferAccelerationOptions{
+				RootOptions:  rootOpts,
+				DesiredState: "disabled",
+			},
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Enabled"),
+			}, nil, injectedErr,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
+		mockSvc := &mockS3Client{}
+
+		defaultGetBucketAccelerationOutput = tc.GetBucketAccelerateConfigurationOutput
+		defaultGetBucketAccelerationErr = tc.getBucketAccelerationErr
+		defaultPutBucketAccelerationErr = tc.putBucketAccelerationErr
+
+		err := SetTransferAcceleration(mockSvc, tc.TransferAccelerationOptions, logging.GetLogger(tc.RootOptions))
+		if tc.expected == nil {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
+	}
 }

@@ -26,6 +26,11 @@ func TestGetRootOptions(t *testing.T) {
 	assert.NotNil(t, opts)
 }
 
+func TestGetMockedRootOptions(t *testing.T) {
+	opts := GetMockedRootOptions()
+	assert.NotNil(t, opts)
+}
+
 func TestRootOptions_InitFlags(t *testing.T) {
 	cmd := cobra.Command{}
 	opts := GetRootOptions()

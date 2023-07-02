@@ -42,6 +42,7 @@ func TestExecuteShowCmd(t *testing.T) {
 	ctx := context.Background()
 	CleanCmd.SetContext(ctx)
 
+	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
 		caseName           string
 		args               []string
@@ -161,12 +162,6 @@ func TestExecuteShowCmd(t *testing.T) {
 		svc = mockSvc
 		assert.NotNil(t, mockSvc)
 
-		rootOpts := options.GetRootOptions()
-		rootOpts.AccessKey = "thisisaccesskey"
-		rootOpts.SecretKey = "thisissecretkey"
-		rootOpts.Region = "thisisregion"
-		rootOpts.BucketName = "thisisbucketname"
-
 		CleanCmd.SetArgs(tc.args)
 		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
 		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
@@ -184,7 +179,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			assert.NotNil(t, err)
 		}
 
-		rootOpts.SetZeroValues()
 		cleanOpts.SetZeroValues()
 		t.Logf("ending case '%s'", tc.caseName)
 	}

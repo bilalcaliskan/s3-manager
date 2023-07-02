@@ -62,12 +62,7 @@ func (m *mockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput,
 }
 
 func TestExecuteFileCmd(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
+	rootOpts := options.GetMockedRootOptions()
 	ctx := context.Background()
 	FileCmd.SetContext(ctx)
 
@@ -157,24 +152,6 @@ func TestExecuteFileCmd(t *testing.T) {
 				Body: getMockBody("BrYKzqcTqn"),
 			},
 		},
-		/*{"Failure caused by ListObjects error",
-			[]string{"text1", "--file-name=text2.txt"},
-			true,
-			false,
-			errors.New("injected error"),
-			&s3.ListObjectsOutput{},
-			nil,
-			&s3.GetObjectOutput{},
-		},
-		{"Failure caused by no arguments",
-			[]string{"--file-name=text2.txt"},
-			true,
-			false,
-			nil,
-			&s3.ListObjectsOutput{},
-			nil,
-			&s3.GetObjectOutput{},
-		},*/
 	}
 
 	for _, tc := range cases {

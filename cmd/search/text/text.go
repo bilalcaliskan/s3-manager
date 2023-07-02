@@ -54,7 +54,7 @@ s3-manager search text "catch me if you can" --file-name=".*.txt"
 				Str("fileName", searchOpts.FileName).
 				Msg("trying to search files on target bucket")
 
-			matchedFiles, errs := aws.SearchString(svc, searchOpts, logger)
+			matchedFiles, errs := aws.SearchString(svc, searchOpts)
 			if len(errs) != 0 {
 				err := fmt.Errorf("multiple errors occurred while searching files, try to target individual files %s", errs)
 				logger.Error().Str("error", err.Error())

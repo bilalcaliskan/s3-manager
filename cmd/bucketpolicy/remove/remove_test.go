@@ -79,12 +79,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 	ctx := context.Background()
 	RemoveCmd.SetContext(ctx)
 
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
+	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
 		caseName                 string
 		args                     []string

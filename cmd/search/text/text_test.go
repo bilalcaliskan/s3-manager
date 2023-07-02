@@ -64,12 +64,7 @@ func (m *mockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput,
 }
 
 func TestExecuteTextCmd(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
-
+	rootOpts := options.GetMockedRootOptions()
 	ctx := context.Background()
 	TextCmd.SetContext(ctx)
 
@@ -172,9 +167,6 @@ func TestExecuteTextCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
-
-		rootOpts.SetZeroValues()
-		searchOpts.SetZeroValues()
 	}
 }
 
