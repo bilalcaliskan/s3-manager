@@ -17,6 +17,7 @@ builds:
       - darwin
     goarch:
       - amd64
+      - arm64
     binary: "{{ .ProjectName }}"
     ldflags:
       - -s -w -X github.com/{{ .Env.GITHUB_USERNAME }}/{{ .ProjectName }}/internal/version.gitVersion={{ .Version }}
