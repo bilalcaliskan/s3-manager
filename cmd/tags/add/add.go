@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	"github.com/bilalcaliskan/s3-manager/cmd/tags/utils"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -19,10 +21,11 @@ func init() {
 }
 
 var (
-	svc     s3iface.S3API
-	logger  zerolog.Logger
-	tagOpts *options.TagOptions
-	AddCmd  = &cobra.Command{
+	svc           s3iface.S3API
+	logger        zerolog.Logger
+	confirmRunner prompt.PromptRunner = prompt.GetConfirmRunner()
+	tagOpts       *options.TagOptions
+	AddCmd        = &cobra.Command{
 		Use:           "add",
 		Short:         "adds the tagging configuration for the target bucket",
 		SilenceUsage:  true,
@@ -74,6 +77,22 @@ s3-manager tags add foo1=bar1,foo2=bar2
 			logger.Info().Msg("will try to set tags as below")
 			for i, v := range tagOpts.TagsToAdd {
 				fmt.Printf("%s=%s\n", i, v)
+			}
+
+			if tagOpts.DryRun {
+				logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+				return nil
+			}
+
+			if !tagOpts.AutoApprove {
+				var res string
+				if res, err = confirmRunner.Run(); err != nil {
+					return err
+				}
+
+				if strings.ToLower(res) == "n" {
+					return errors.New("user terminated the process")
+				}
 			}
 
 			if _, err := aws.SetBucketTags(svc, tagOpts); err != nil {

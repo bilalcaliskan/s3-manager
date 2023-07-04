@@ -79,7 +79,7 @@ s3-manager bucketpolicy add my_custom_policy.json
 			logger.Info().Msg("will attempt to add below bucket policy")
 			fmt.Println(bucketPolicyOpts.BucketPolicyContent)
 			if bucketPolicyOpts.DryRun {
-				logger.Info().Msg("skipping add operation for bucket policy since '--dry-run' flag is passed")
+				logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
 				return nil
 			}
 
