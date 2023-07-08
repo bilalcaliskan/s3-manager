@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	internalutil "github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/pkg/errors"
 
@@ -105,7 +107,24 @@ func GetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerat
 	})
 }
 
-func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions, logger zerolog.Logger) error {
+func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions, confirmRunner prompt.PromptRunner, logger zerolog.Logger) error {
+	if opts.DryRun {
+		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		return nil
+	}
+
+	var err error
+	if !opts.AutoApprove {
+		var res string
+		if res, err = confirmRunner.Run(); err != nil {
+			return err
+		}
+
+		if strings.ToLower(res) == "n" {
+			return errors.New("user terminated the process")
+		}
+	}
+
 	res, err := GetTransferAcceleration(svc, opts)
 	if err != nil {
 		logger.Error().Msg(err.Error())
@@ -185,7 +204,24 @@ func GetBucketVersioning(svc s3iface.S3API, opts *options.RootOptions) (res *s3.
 }
 
 // SetBucketVersioning sets the target bucket
-func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningOptions, logger zerolog.Logger) error {
+func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningOptions, confirmRunner prompt.PromptRunner, logger zerolog.Logger) error {
+	if versioningOpts.DryRun {
+		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		return nil
+	}
+
+	var err error
+	if !versioningOpts.AutoApprove {
+		var res string
+		if res, err = confirmRunner.Run(); err != nil {
+			return err
+		}
+
+		if strings.ToLower(res) == "n" {
+			return errors.New("user terminated the process")
+		}
+	}
+
 	versioning, err := GetBucketVersioning(svc, versioningOpts.RootOptions)
 	if err != nil {
 		logger.Error().Msg(err.Error())

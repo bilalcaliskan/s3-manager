@@ -1,15 +1,11 @@
 package disabled
 
 import (
-	"strings"
-
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/utils"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
-	"github.com/pkg/errors"
-
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -42,24 +38,7 @@ s3-manager transferacceleration set disabled
 
 			transferAccelerationOpts.DesiredState = "disabled"
 
-			if transferAccelerationOpts.DryRun {
-				logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
-				return nil
-			}
-
-			var err error
-			if !transferAccelerationOpts.AutoApprove {
-				var res string
-				if res, err = confirmRunner.Run(); err != nil {
-					return err
-				}
-
-				if strings.ToLower(res) == "n" {
-					return errors.New("user terminated the process")
-				}
-			}
-
-			return aws.SetTransferAcceleration(svc, transferAccelerationOpts, logger)
+			return aws.SetTransferAcceleration(svc, transferAccelerationOpts, confirmRunner, logger)
 		},
 	}
 )
