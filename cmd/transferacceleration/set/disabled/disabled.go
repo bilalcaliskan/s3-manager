@@ -1,11 +1,11 @@
 package disabled
 
 import (
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/utils"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
-
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +17,7 @@ func init() {
 var (
 	svc                      s3iface.S3API
 	logger                   zerolog.Logger
+	confirmRunner            prompt.PromptRunner = prompt.GetConfirmRunner()
 	transferAccelerationOpts *options2.TransferAccelerationOptions
 	DisabledCmd              = &cobra.Command{
 		Use:           "disabled",
@@ -37,7 +38,7 @@ s3-manager transferacceleration set disabled
 
 			transferAccelerationOpts.DesiredState = "disabled"
 
-			return aws.SetTransferAcceleration(svc, transferAccelerationOpts, logger)
+			return aws.SetTransferAcceleration(svc, transferAccelerationOpts, confirmRunner, logger)
 		},
 	}
 )

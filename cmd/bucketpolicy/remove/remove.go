@@ -55,7 +55,7 @@ s3-manager bucketpolicy remove
 			logger.Info().Msg("will attempt to delete below bucket policy")
 			fmt.Println(bucketPolicyOpts.BucketPolicyContent)
 			if bucketPolicyOpts.DryRun {
-				logger.Info().Msg("skipping remove operation for bucket policy since '--dry-run' flag is passed")
+				logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
 				return nil
 			}
 

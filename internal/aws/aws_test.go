@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	"github.com/pkg/errors"
 
 	options6 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
@@ -94,6 +96,16 @@ var (
 }
 `
 )
+
+type promptMock struct {
+	msg string
+	err error
+}
+
+func (p promptMock) Run() (string, error) {
+	// return expected result
+	return p.msg, p.err
+}
 
 type mockS3Client struct {
 	s3iface.S3API
@@ -457,6 +469,9 @@ func TestSetBucketVersioning(t *testing.T) {
 		getBucketVersioningErr error
 		putBucketVersioningErr error
 		expected               error
+		dryRun                 bool
+		autoApprove            bool
+		prompt.PromptRunner
 	}{
 		{
 			"Successfully enabled when disabled",
@@ -467,7 +482,7 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil, nil,
+			}, nil, nil, nil, false, true, nil,
 		},
 		{
 			"Successfully enabled when already enabled",
@@ -478,7 +493,11 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
-			}, nil, nil, nil,
+			}, nil, nil, nil, false, false,
+			promptMock{
+				msg: "y",
+				err: nil,
+			},
 		},
 		{
 			"Successfully disabled when enabled",
@@ -489,7 +508,11 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
-			}, nil, nil, nil,
+			}, nil, nil, nil, false, false,
+			promptMock{
+				msg: "y",
+				err: nil,
+			},
 		},
 		{
 			"Failure caused by get versioning error",
@@ -498,7 +521,11 @@ func TestSetBucketVersioning(t *testing.T) {
 				DesiredState: "disabled",
 				RootOptions:  rootOpts,
 			},
-			nil, injectedErr, nil, injectedErr,
+			nil, injectedErr, nil, injectedErr, false, false,
+			promptMock{
+				msg: "y",
+				err: nil,
+			},
 		},
 		{
 			"Failure caused by unknown status",
@@ -509,12 +536,61 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enableddddd"),
-			}, nil, nil, errors.New("unknown status 'Enableddddd' returned from AWS SDK"),
+			}, nil, nil, errors.New("unknown status 'Enableddddd' returned from AWS SDK"), false, false,
+			promptMock{
+				msg: "y",
+				err: nil,
+			},
+		},
+		{
+			"Success when dry-run enabled",
+			&options3.VersioningOptions{
+				ActualState:  "",
+				DesiredState: "enabled",
+				RootOptions:  rootOpts,
+			},
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Suspended"),
+			}, nil, nil, nil, true, false,
+			nil,
+		},
+		{
+			"Failure caused by user terminated the process",
+			&options3.VersioningOptions{
+				ActualState:  "",
+				DesiredState: "enabled",
+				RootOptions:  rootOpts,
+			},
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Suspended"),
+			}, nil, nil, errors.New("user terminated the process"), false, false,
+			promptMock{
+				msg: "n",
+				err: nil,
+			},
+		},
+		{
+			"Failure caused by prompt error",
+			&options3.VersioningOptions{
+				ActualState:  "",
+				DesiredState: "enabled",
+				RootOptions:  rootOpts,
+			},
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Suspended"),
+			}, nil, nil, injectedErr, false, false,
+			promptMock{
+				msg: "n",
+				err: injectedErr,
+			},
 		},
 	}
 
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
+
+		tc.DryRun = tc.dryRun
+		tc.AutoApprove = tc.autoApprove
 
 		defaultGetBucketVersioningOutput = tc.GetBucketVersioningOutput
 		defaultGetBucketVersioningErr = tc.getBucketVersioningErr
@@ -523,7 +599,7 @@ func TestSetBucketVersioning(t *testing.T) {
 		mockSvc := &mockS3Client{}
 		assert.NotNil(t, mockSvc)
 
-		err := SetBucketVersioning(mockSvc, tc.VersioningOptions, logging.GetLogger(tc.VersioningOptions.RootOptions))
+		err := SetBucketVersioning(mockSvc, tc.VersioningOptions, tc.PromptRunner, logging.GetLogger(tc.VersioningOptions.RootOptions))
 		if tc.expected != nil {
 			assert.NotNil(t, err)
 		} else {
@@ -912,6 +988,9 @@ func TestSetTransferAcceleration(t *testing.T) {
 		*s3.GetBucketAccelerateConfigurationOutput
 		getBucketAccelerationErr error
 		putBucketAccelerationErr error
+		dryRun                   bool
+		autoApprove              bool
+		prompt.PromptRunner
 	}{
 		{
 			"Success", nil,
@@ -921,7 +1000,8 @@ func TestSetTransferAcceleration(t *testing.T) {
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil,
+			}, nil, nil, false, true,
+			nil,
 		},
 		{
 			"Success when already enabled", nil,
@@ -931,7 +1011,11 @@ func TestSetTransferAcceleration(t *testing.T) {
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
-			}, nil, nil,
+			}, nil, nil, false, false,
+			promptMock{
+				msg: "y",
+				err: nil,
+			},
 		},
 		{
 			"Success when already disabled", nil,
@@ -941,7 +1025,25 @@ func TestSetTransferAcceleration(t *testing.T) {
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil,
+			}, nil, nil, false, false,
+			promptMock{
+				msg: "y",
+				err: nil,
+			},
+		},
+		{
+			"Success when dry-run enabled", nil,
+			&options5.TransferAccelerationOptions{
+				RootOptions:  rootOpts,
+				DesiredState: "disabled",
+			},
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Suspended"),
+			}, nil, nil, true, false,
+			promptMock{
+				msg: "y",
+				err: nil,
+			},
 		},
 		{
 			"Failure caused by get transfer acceleration error", injectedErr,
@@ -949,7 +1051,11 @@ func TestSetTransferAcceleration(t *testing.T) {
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
-			nil, injectedErr, nil,
+			nil, injectedErr, nil, false, false,
+			promptMock{
+				msg: "y",
+				err: nil,
+			},
 		},
 		{
 			"Failure caused by unknown status returned by get transfer acceleration", injectedErr,
@@ -959,7 +1065,11 @@ func TestSetTransferAcceleration(t *testing.T) {
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Suspendedddd"),
-			}, nil, nil,
+			}, nil, nil, false, false,
+			promptMock{
+				msg: "y",
+				err: nil,
+			},
 		},
 		{
 			"Failure caused by put transfer acceleration error", injectedErr,
@@ -969,12 +1079,47 @@ func TestSetTransferAcceleration(t *testing.T) {
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
-			}, nil, injectedErr,
+			}, nil, injectedErr, false, false,
+			promptMock{
+				msg: "y",
+				err: nil,
+			},
+		},
+		{
+			"Failure caused by prompt error", injectedErr,
+			&options5.TransferAccelerationOptions{
+				RootOptions:  rootOpts,
+				DesiredState: "disabled",
+			},
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Enabled"),
+			}, nil, nil, false, false,
+			promptMock{
+				msg: "dkslfa",
+				err: injectedErr,
+			},
+		},
+		{
+			"Failure caused by user terminated the process", errors.New("user terminated the process"),
+			&options5.TransferAccelerationOptions{
+				RootOptions:  rootOpts,
+				DesiredState: "disabled",
+			},
+			&s3.GetBucketAccelerateConfigurationOutput{
+				Status: aws.String("Enabled"),
+			}, nil, nil, false, false,
+			promptMock{
+				msg: "n",
+				err: nil,
+			},
 		},
 	}
 
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
+
+		tc.DryRun = tc.dryRun
+		tc.AutoApprove = tc.autoApprove
 
 		mockSvc := &mockS3Client{}
 
@@ -982,7 +1127,7 @@ func TestSetTransferAcceleration(t *testing.T) {
 		defaultGetBucketAccelerationErr = tc.getBucketAccelerationErr
 		defaultPutBucketAccelerationErr = tc.putBucketAccelerationErr
 
-		err := SetTransferAcceleration(mockSvc, tc.TransferAccelerationOptions, logging.GetLogger(tc.RootOptions))
+		err := SetTransferAcceleration(mockSvc, tc.TransferAccelerationOptions, tc.PromptRunner, logging.GetLogger(tc.RootOptions))
 		if tc.expected == nil {
 			assert.Nil(t, err)
 		} else {

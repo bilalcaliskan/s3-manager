@@ -5,6 +5,7 @@ import (
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning/set/utils"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -16,6 +17,7 @@ func init() {
 var (
 	svc            s3iface.S3API
 	logger         zerolog.Logger
+	confirmRunner  prompt.PromptRunner = prompt.GetConfirmRunner()
 	versioningOpts *options.VersioningOptions
 	EnabledCmd     = &cobra.Command{
 		Use:           "enabled",
@@ -36,7 +38,7 @@ s3-manager versioning set enabled
 
 			versioningOpts.DesiredState = "enabled"
 
-			return aws.SetBucketVersioning(svc, versioningOpts, logger)
+			return aws.SetBucketVersioning(svc, versioningOpts, confirmRunner, logger)
 		},
 	}
 )

@@ -5,6 +5,7 @@ import (
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/utils"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -16,6 +17,7 @@ func init() {
 var (
 	svc                      s3iface.S3API
 	logger                   zerolog.Logger
+	confirmRunner            prompt.PromptRunner = prompt.GetConfirmRunner()
 	transferAccelerationOpts *options.TransferAccelerationOptions
 	EnabledCmd               = &cobra.Command{
 		Use:           "enabled",
@@ -36,7 +38,7 @@ s3-manager transferacceleration set enabled
 
 			transferAccelerationOpts.DesiredState = "enabled"
 
-			return aws.SetTransferAcceleration(svc, transferAccelerationOpts, logger)
+			return aws.SetTransferAcceleration(svc, transferAccelerationOpts, confirmRunner, logger)
 		},
 	}
 )

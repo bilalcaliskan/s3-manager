@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	utils2 "github.com/bilalcaliskan/s3-manager/cmd/tags/utils"
 
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
@@ -23,10 +25,11 @@ func init() {
 }
 
 var (
-	svc       s3iface.S3API
-	logger    zerolog.Logger
-	tagOpts   *options.TagOptions
-	RemoveCmd = &cobra.Command{
+	svc           s3iface.S3API
+	logger        zerolog.Logger
+	confirmRunner prompt.PromptRunner = prompt.GetConfirmRunner()
+	tagOpts       *options.TagOptions
+	RemoveCmd     = &cobra.Command{
 		Use:           "remove",
 		Short:         "removes the tagging configuration for the target bucket",
 		SilenceUsage:  true,
@@ -92,6 +95,22 @@ s3-manager tags remove foo1=bar1,foo2=bar2
 				fmt.Printf(outputStr, i, v)
 			}
 
+			if tagOpts.DryRun {
+				logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+				return nil
+			}
+
+			if !tagOpts.AutoApprove {
+				var res string
+				if res, err = confirmRunner.Run(); err != nil {
+					return err
+				}
+
+				if strings.ToLower(res) == "n" {
+					return errors.New("user terminated the process")
+				}
+			}
+
 			utils.RemoveMapElements(tagOpts.ActualTags, tagOpts.TagsToRemove)
 
 			if _, err := aws.DeleteAllBucketTags(svc, tagOpts); err != nil {
@@ -110,7 +129,7 @@ s3-manager tags remove foo1=bar1,foo2=bar2
 			}
 
 			logger.Info().Msg("successfully removed target tags")
-			logger.Info().Msg("here is the list of current tags again")
+			logger.Info().Msg("here is the list of current tags")
 			for i, v := range tagOpts.ActualTags {
 				fmt.Printf(outputStr, i, v)
 			}
