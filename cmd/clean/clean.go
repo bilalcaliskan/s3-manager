@@ -1,7 +1,6 @@
 package clean
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -27,18 +26,12 @@ var (
 	ValidSortByOpts = []string{"size", "lastModificationDate"}
 	cleanOpts       *options.CleanOptions
 	svc             s3iface.S3API
-	promptRunner    prompt.PromptRunner = prompt.GetPromptRunner("Delete Files? (y/N)", true, func(s string) error {
-		if len(s) == 1 {
-			return nil
-		}
-
-		return errors.New("invalid input")
-	})
+	confirmRunner   prompt.PromptRunner = prompt.GetConfirmRunner()
 	// CleanCmd represents the clean command
 	CleanCmd = &cobra.Command{
 		Use:           "clean",
 		Short:         "finds and clears desired files by a pre-configured rule set",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Example: `# clean the desired files on target bucket
 s3-manager clean --min-size-mb=1 --max-size-mb=1000 --keep-last-n-files=2 --sort-by=lastModificationDate
@@ -49,6 +42,11 @@ s3-manager clean --min-size-mb=1 --max-size-mb=1000 --keep-last-n-files=2 --sort
 			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
 			cleanOpts.RootOptions = rootOpts
 			logger = logging.GetLogger(rootOpts)
+
+			if err := utils.CheckArgs(args, 0); err != nil {
+				logger.Error().Msg(err.Error())
+				return err
+			}
 
 			if cleanOpts.MinFileSizeInMb > cleanOpts.MaxFileSizeInMb && (cleanOpts.MinFileSizeInMb != 0 && cleanOpts.MaxFileSizeInMb != 0) {
 				err := fmt.Errorf("flag '--min-size-mb' must be equal or lower than '--max-size-mb'")
@@ -65,7 +63,7 @@ s3-manager clean --min-size-mb=1 --max-size-mb=1000 --keep-last-n-files=2 --sort
 
 			logger.Info().Msg("trying to search files on target bucket")
 
-			if err := cleaner.StartCleaning(svc, promptRunner, cleanOpts, logger); err != nil {
+			if err := cleaner.StartCleaning(svc, confirmRunner, cleanOpts, logger); err != nil {
 				logger.Error().Str("error", err.Error()).Msg("an error occurred while cleaning")
 				return err
 			}

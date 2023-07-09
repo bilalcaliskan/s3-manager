@@ -1,7 +1,6 @@
 package show
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
@@ -26,7 +25,7 @@ var (
 	ShowCmd = &cobra.Command{
 		Use:           "show",
 		Short:         "shows the tagging configuration for the target bucket",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Example: `# show the current tagging configuration for bucket
 s3-manager tags show
@@ -36,10 +35,8 @@ s3-manager tags show
 			svc, rootOpts, logger = utils.PrepareConstants(cmd)
 			tagOpts.RootOptions = rootOpts
 
-			if len(args) > 0 {
-				err = errors.New("too many arguments provided")
-				logger.Error().
-					Msg(err.Error())
+			if err := utils.CheckArgs(args, 0); err != nil {
+				logger.Error().Msg(err.Error())
 				return err
 			}
 

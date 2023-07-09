@@ -32,7 +32,7 @@ var (
 	RemoveCmd     = &cobra.Command{
 		Use:           "remove",
 		Short:         "removes the tagging configuration for the target bucket",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Example: `# remove comma separated tagging configuration from bucket
 s3-manager tags remove foo1=bar1,foo2=bar2

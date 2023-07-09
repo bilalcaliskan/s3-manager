@@ -5,8 +5,7 @@ import (
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
-	"github.com/bilalcaliskan/s3-manager/cmd/search/utils"
-	internalutils "github.com/bilalcaliskan/s3-manager/internal/utils"
+	"github.com/bilalcaliskan/s3-manager/internal/utils"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/search/options"
@@ -26,17 +25,17 @@ var (
 	FileCmd    = &cobra.Command{
 		Use:           "file",
 		Short:         "searches the files which has desired file name pattern in it (supports regex)",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Example: `# search a file on target bucket by specifying regex for files
 s3-manager search file ".*.json"
 		`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			var rootOpts *rootopts.RootOptions
-			svc, rootOpts, logger = internalutils.PrepareConstants(cmd)
+			svc, rootOpts, logger = utils.PrepareConstants(cmd)
 			searchOpts.RootOptions = rootOpts
 
-			if err := utils.CheckFlags(args); err != nil {
+			if err := utils.CheckArgs(args, 1); err != nil {
 				logger.Error().Msg(err.Error())
 				return err
 			}

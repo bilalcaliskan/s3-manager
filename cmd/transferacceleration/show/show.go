@@ -1,15 +1,15 @@
 package show
 
 import (
-	"errors"
 	"fmt"
+
+	"github.com/bilalcaliskan/s3-manager/internal/utils"
 
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -25,29 +25,21 @@ var (
 	ShowCmd                  = &cobra.Command{
 		Use:           "show",
 		Short:         "shows the transfer acceleration configuration for the target bucket",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Example: `# show the current transfer acceleration configuration for bucket
 s3-manager transferacceleration show
 		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
-			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)
-
+			var rootOpts *rootopts.RootOptions
+			svc, rootOpts, logger = utils.PrepareConstants(cmd)
 			transferAccelerationOpts.RootOptions = rootOpts
-			logger = logging.GetLogger(rootOpts)
 
-			if len(args) > 0 {
-				err = errors.New("too many arguments provided")
+			if err := utils.CheckArgs(args, 0); err != nil {
 				logger.Error().
 					Msg(err.Error())
 				return err
 			}
-
-			/*ta, err := aws.GetTransferAcceleration(svc, transferAccelerationOpts)
-			if err != nil {
-				return err
-			}*/
 
 			res, err := aws.GetTransferAcceleration(svc, transferAccelerationOpts)
 			if err != nil {

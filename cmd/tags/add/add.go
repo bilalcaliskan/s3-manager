@@ -29,7 +29,7 @@ var (
 	AddCmd        = &cobra.Command{
 		Use:           "add",
 		Short:         "adds the tagging configuration for the target bucket",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Example: `# add comma separated tagging configuration into bucket
 s3-manager tags add foo1=bar1,foo2=bar2

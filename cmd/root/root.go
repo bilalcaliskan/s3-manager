@@ -46,10 +46,12 @@ var (
 	ver     = version.Get()
 	logger  zerolog.Logger
 	rootCmd = &cobra.Command{
-		Use:     "s3-manager",
-		Short:   "configure subcommand configures the bucket level settings",
-		Long:    ``,
-		Version: ver.GitVersion,
+		Use:           "s3-manager",
+		Short:         "configure subcommand configures the bucket level settings",
+		Long:          ``,
+		Version:       ver.GitVersion,
+		SilenceUsage:  false,
+		SilenceErrors: false,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// TODO: uncomment when interactivity enabled again
 			/*if !opts.Interactive {
