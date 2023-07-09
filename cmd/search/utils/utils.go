@@ -2,13 +2,6 @@ package utils
 
 import (
 	"errors"
-
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	"github.com/bilalcaliskan/s3-manager/cmd/search/options"
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
-	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -28,7 +21,7 @@ func CheckFlags(args []string) (err error) {
 	return nil
 }
 
-func PrepareConstants(cmd *cobra.Command, searchOptions *options.SearchOptions) (s3iface.S3API, *options.SearchOptions, zerolog.Logger) {
+/*func PrepareConstants(cmd *cobra.Command, searchOptions *options.SearchOptions) (s3iface.S3API, *options.SearchOptions, zerolog.Logger) {
 	svc := cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)
 	rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
 	searchOptions.RootOptions = rootOpts
@@ -36,4 +29,4 @@ func PrepareConstants(cmd *cobra.Command, searchOptions *options.SearchOptions) 
 	logger := logging.GetLogger(searchOptions.RootOptions)
 
 	return svc, searchOptions, logger
-}
+}*/

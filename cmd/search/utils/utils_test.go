@@ -3,23 +3,14 @@
 package utils
 
 import (
-	"context"
 	"testing"
 
-	options3 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
-
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	options2 "github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
-	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
-func createSvc(rootOpts *options2.RootOptions) (*s3.S3, error) {
+/*func createSvc(rootOpts *options2.RootOptions) (*s3.S3, error) {
 	return internalaws.CreateAwsService(rootOpts)
-}
+}*/
 
 func TestCheckFlags(t *testing.T) {
 	cases := []struct {
@@ -56,7 +47,7 @@ func TestCheckFlags(t *testing.T) {
 	}
 }
 
-func TestPrepareConstants(t *testing.T) {
+/*func TestPrepareConstants(t *testing.T) {
 	var (
 		svc        s3iface.S3API
 		searchOpts *options3.SearchOptions
@@ -79,4 +70,4 @@ func TestPrepareConstants(t *testing.T) {
 	assert.NotNil(t, svc)
 	assert.NotNil(t, searchOpts)
 	assert.NotNil(t, logger)
-}
+}*/

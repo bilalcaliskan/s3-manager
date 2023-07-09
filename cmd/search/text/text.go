@@ -3,7 +3,10 @@ package text
 import (
 	"fmt"
 
+	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
+
 	"github.com/bilalcaliskan/s3-manager/cmd/search/utils"
+	internalutils "github.com/bilalcaliskan/s3-manager/internal/utils"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/search/options"
@@ -30,7 +33,9 @@ var (
 s3-manager search text "catch me if you can" --file-name=".*.txt"
 		`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			svc, searchOpts, logger = utils.PrepareConstants(cmd, options.GetSearchOptions())
+			var rootOpts *rootopts.RootOptions
+			svc, rootOpts, logger = internalutils.PrepareConstants(cmd)
+			searchOpts.RootOptions = rootOpts
 
 			if err := utils.CheckFlags(args); err != nil {
 				logger.Error().Msg(err.Error())
