@@ -4,8 +4,9 @@ package enabled
 
 import (
 	"context"
-	"errors"
 	"testing"
+
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -125,7 +126,7 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			}, nil, &s3.PutBucketAccelerateConfigurationOutput{},
 			&promptMock{
 				msg: "asdfadsf",
-				err: errors.New("injected error"),
+				err: constants.ErrInjected,
 			}, false, false,
 		},
 		{"Failure caused by user terminated the process", []string{}, false, true, nil,
@@ -134,7 +135,7 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			}, nil, &s3.PutBucketAccelerateConfigurationOutput{},
 			&promptMock{
 				msg: "n",
-				err: nil,
+				err: constants.ErrInjected,
 			}, false, false,
 		},
 	}

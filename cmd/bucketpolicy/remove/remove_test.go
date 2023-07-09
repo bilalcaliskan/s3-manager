@@ -7,6 +7,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
+
 	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -145,7 +147,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			nil,
 			&s3.DeleteBucketPolicyOutput{}, &promptMock{
 				msg: "n",
-				err: nil,
+				err: constants.ErrInjected,
 			}, false, false,
 		},
 		{"Failure caused by prompt error", []string{}, false, true,
@@ -155,7 +157,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			nil,
 			&s3.DeleteBucketPolicyOutput{}, &promptMock{
 				msg: "nasdfadf",
-				err: errors.New("injected error"),
+				err: constants.ErrInjected,
 			}, false, false,
 		},
 	}

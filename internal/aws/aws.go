@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
+
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	internalutil "github.com/bilalcaliskan/s3-manager/internal/utils"
@@ -118,11 +120,11 @@ func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerat
 	if !opts.AutoApprove {
 		var res string
 		if res, err = confirmRunner.Run(); err != nil {
-			return err
-		}
+			if strings.ToLower(res) == "n" {
+				return constants.ErrUserTerminated
+			}
 
-		if strings.ToLower(res) == "n" {
-			return errors.New("user terminated the process")
+			return constants.ErrInvalidInput
 		}
 	}
 
@@ -214,11 +216,11 @@ func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningO
 	if !versioningOpts.AutoApprove {
 		var res string
 		if res, err = confirmRunner.Run(); err != nil {
-			return err
-		}
+			if strings.ToLower(res) == "n" {
+				return constants.ErrUserTerminated
+			}
 
-		if strings.ToLower(res) == "n" {
-			return errors.New("user terminated the process")
+			return constants.ErrInvalidInput
 		}
 	}
 

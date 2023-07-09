@@ -2,8 +2,9 @@ package cleaner
 
 import (
 	"bytes"
-	"errors"
 	"strings"
+
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
@@ -25,7 +26,7 @@ func StartCleaning(svc s3iface.S3API, runner prompt.PromptRunner, cleanOpts *sta
 	sortObjects(res, cleanOpts)
 
 	border := len(res) - cleanOpts.KeepLastNFiles
-	if border < 0 {
+	if border <= 0 {
 		logger.Warn().
 			Int("arrayLength", len(res)).
 			Int("keepLastNFiles", cleanOpts.KeepLastNFiles).
@@ -34,10 +35,6 @@ func StartCleaning(svc s3iface.S3API, runner prompt.PromptRunner, cleanOpts *sta
 	}
 
 	targetObjects := res[:len(res)-cleanOpts.KeepLastNFiles]
-	if err := checkLength(targetObjects); err != nil {
-		logger.Warn().Msg(err.Error())
-		return nil
-	}
 
 	keys := utils.GetKeysOnly(targetObjects)
 	var buffer bytes.Buffer
@@ -56,17 +53,12 @@ func StartCleaning(svc s3iface.S3API, runner prompt.PromptRunner, cleanOpts *sta
 
 		if res, err := runner.Run(); err != nil {
 			if strings.ToLower(res) == "n" {
-				return errors.New("user terminated the process")
+				return constants.ErrUserTerminated
 			}
 
-			return errors.New("invalid input")
+			return constants.ErrInvalidInput
 		}
 	}
-
-	/*if err := promptDeletion(cleanOpts, logger, keys); err != nil {
-		logger.Warn().Str("error", err.Error()).Msg("an error occurred while prompting file deletion")
-		return err
-	}*/
 
 	if err := aws.DeleteFiles(svc, cleanOpts.RootOptions.BucketName, targetObjects, cleanOpts.DryRun, logger); err != nil {
 		logger.Error().Str("error", err.Error()).Msg("an error occurred while deleting target files")

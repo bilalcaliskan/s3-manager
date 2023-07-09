@@ -1,13 +1,15 @@
 package remove
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	options "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
+	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/utils"
+
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
+
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/rs/zerolog"
@@ -62,11 +64,11 @@ s3-manager bucketpolicy remove
 			if !bucketPolicyOpts.AutoApprove {
 				var res string
 				if res, err = confirmRunner.Run(); err != nil {
-					return err
-				}
+					if strings.ToLower(res) == "n" {
+						return constants.ErrUserTerminated
+					}
 
-				if strings.ToLower(res) == "n" {
-					return errors.New("user terminated the process")
+					return constants.ErrInvalidInput
 				}
 			}
 

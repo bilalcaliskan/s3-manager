@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
+
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/pkg/errors"
@@ -29,24 +31,10 @@ import (
 )
 
 var (
-	injectedErr            = errors.New("injected error")
-	defaultListObjectsErr  error
-	defaultGetObjectErr    error
-	defaultDeleteObjectErr error
-	fileNamePrefix         string
-	/*defaultListObjectsOutput = &s3.ListObjectsOutput{
-		Name:        aws.String(""),
-		Marker:      aws.String(""),
-		MaxKeys:     aws.Int64(1000),
-		Prefix:      aws.String(""),
-		IsTruncated: aws.Bool(false),
-	}*/
-	defaultListObjectsOutput = &s3.ListObjectsOutput{}
-	/*defaultDeleteObjectOutput = &s3.DeleteObjectOutput{
-		DeleteMarker:   nil,
-		RequestCharged: nil,
-		VersionId:      nil,
-	}*/
+	defaultListObjectsErr            error
+	defaultGetObjectErr              error
+	defaultDeleteObjectErr           error
+	defaultListObjectsOutput         = &s3.ListObjectsOutput{}
 	defaultDeleteObjectOutput        = &s3.DeleteObjectOutput{}
 	defaultGetBucketVersioningOutput = &s3.GetBucketVersioningOutput{
 		Status: aws.String("Enabled"),
@@ -207,7 +195,7 @@ func TestGetAllFiles(t *testing.T) {
 			},
 		},
 		{"Failure caused by List objects error",
-			injectedErr, injectedErr,
+			constants.ErrInjected, constants.ErrInjected,
 			nil,
 		},
 	}
@@ -262,7 +250,7 @@ func TestDeleteFiles(t *testing.T) {
 			},
 		},
 		{"Failure caused by delete object err",
-			injectedErr, injectedErr, false,
+			constants.ErrInjected, constants.ErrInjected, false,
 			[]*s3.Object{
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
@@ -521,7 +509,8 @@ func TestSetBucketVersioning(t *testing.T) {
 				DesiredState: "disabled",
 				RootOptions:  rootOpts,
 			},
-			nil, injectedErr, nil, injectedErr, false, false,
+			nil, constants.ErrInjected, nil,
+			constants.ErrInjected, false, false,
 			promptMock{
 				msg: "y",
 				err: nil,
@@ -536,7 +525,8 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enableddddd"),
-			}, nil, nil, errors.New("unknown status 'Enableddddd' returned from AWS SDK"), false, false,
+			}, nil, nil, errors.New("unknown status 'Enableddddd' returned from AWS SDK"),
+			false, false,
 			promptMock{
 				msg: "y",
 				err: nil,
@@ -563,10 +553,10 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil, errors.New("user terminated the process"), false, false,
+			}, nil, nil, constants.ErrUserTerminated, false, false,
 			promptMock{
 				msg: "n",
-				err: nil,
+				err: constants.ErrInjected,
 			},
 		},
 		{
@@ -578,10 +568,10 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil, injectedErr, false, false,
+			}, nil, nil, constants.ErrInvalidInput, false, false,
 			promptMock{
-				msg: "n",
-				err: injectedErr,
+				msg: "nasdf",
+				err: constants.ErrInjected,
 			},
 		},
 	}
@@ -623,8 +613,8 @@ func TestGetBucketVersioning(t *testing.T) {
 			}, nil,
 		},
 		{
-			"Failure", injectedErr,
-			nil, injectedErr,
+			"Failure", constants.ErrInjected,
+			nil, constants.ErrInjected,
 		},
 	}
 
@@ -670,11 +660,11 @@ func TestGetBucketTags(t *testing.T) {
 			}, nil,
 		},
 		{
-			"Failure", injectedErr,
+			"Failure", constants.ErrInjected,
 			&options4.TagOptions{
 				RootOptions: rootOpts,
 			},
-			nil, injectedErr,
+			nil, constants.ErrInjected,
 		},
 	}
 
@@ -720,7 +710,7 @@ func TestSetBucketTags(t *testing.T) {
 			}, nil,
 		},
 		{
-			"Failure", injectedErr,
+			"Failure", constants.ErrInjected,
 			&options4.TagOptions{
 				RootOptions:  rootOpts,
 				TagsToAdd:    make(map[string]string),
@@ -736,7 +726,7 @@ func TestSetBucketTags(t *testing.T) {
 					Value: aws.String("bar2"),
 				},
 			},
-			injectedErr,
+			constants.ErrInjected,
 		},
 	}
 
@@ -771,11 +761,11 @@ func TestDeleteAllBucketTags(t *testing.T) {
 			}, nil,
 		},
 		{
-			"Failure", injectedErr,
+			"Failure", constants.ErrInjected,
 			&options4.TagOptions{
 				RootOptions: rootOpts,
 			},
-			injectedErr,
+			constants.ErrInjected,
 		},
 	}
 
@@ -806,11 +796,11 @@ func TestGetBucketPolicy(t *testing.T) {
 			}, nil,
 		},
 		{
-			"Failure", injectedErr,
+			"Failure", constants.ErrInjected,
 			&options6.BucketPolicyOptions{
 				RootOptions: rootOpts,
 			},
-			injectedErr,
+			constants.ErrInjected,
 		},
 	}
 
@@ -842,12 +832,12 @@ func TestSetBucketPolicy(t *testing.T) {
 			}, nil,
 		},
 		{
-			"Failure", injectedErr,
+			"Failure", constants.ErrInjected,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
 				BucketPolicyContent: bucketPolicyStr,
 			},
-			injectedErr,
+			constants.ErrInjected,
 		},
 	}
 
@@ -883,12 +873,12 @@ func TestGetBucketPolicyString(t *testing.T) {
 			}, nil,
 		},
 		{
-			"Failure", injectedErr,
+			"Failure", constants.ErrInjected,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
 				BucketPolicyContent: bucketPolicyStr,
 			},
-			nil, injectedErr,
+			nil, constants.ErrInjected,
 		},
 	}
 
@@ -925,11 +915,11 @@ func TestDeleteBucketPolicy(t *testing.T) {
 			}, nil,
 		},
 		{
-			"Failure", injectedErr,
+			"Failure", constants.ErrInjected,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
 				BucketPolicyContent: bucketPolicyStr,
-			}, injectedErr,
+			}, constants.ErrInjected,
 		},
 	}
 
@@ -960,10 +950,10 @@ func TestGetTransferAcceleration(t *testing.T) {
 			}, nil,
 		},
 		{
-			"Failure", injectedErr,
+			"Failure", constants.ErrInjected,
 			&options5.TransferAccelerationOptions{
 				RootOptions: rootOpts,
-			}, injectedErr,
+			}, constants.ErrInjected,
 		},
 	}
 
@@ -1046,19 +1036,20 @@ func TestSetTransferAcceleration(t *testing.T) {
 			},
 		},
 		{
-			"Failure caused by get transfer acceleration error", injectedErr,
+			"Failure caused by get transfer acceleration error", constants.ErrInjected,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
-			nil, injectedErr, nil, false, false,
+			nil, constants.ErrInjected, nil,
+			false, false,
 			promptMock{
 				msg: "y",
 				err: nil,
 			},
 		},
 		{
-			"Failure caused by unknown status returned by get transfer acceleration", injectedErr,
+			"Failure caused by unknown status returned by get transfer acceleration", constants.ErrInjected,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
@@ -1072,21 +1063,21 @@ func TestSetTransferAcceleration(t *testing.T) {
 			},
 		},
 		{
-			"Failure caused by put transfer acceleration error", injectedErr,
+			"Failure caused by put transfer acceleration error", constants.ErrInjected,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
-			}, nil, injectedErr, false, false,
+			}, nil, constants.ErrInjected, false, false,
 			promptMock{
 				msg: "y",
 				err: nil,
 			},
 		},
 		{
-			"Failure caused by prompt error", injectedErr,
+			"Failure caused by prompt error", constants.ErrInvalidInput,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
@@ -1096,11 +1087,11 @@ func TestSetTransferAcceleration(t *testing.T) {
 			}, nil, nil, false, false,
 			promptMock{
 				msg: "dkslfa",
-				err: injectedErr,
+				err: constants.ErrInjected,
 			},
 		},
 		{
-			"Failure caused by user terminated the process", errors.New("user terminated the process"),
+			"Failure caused by user terminated the process", constants.ErrUserTerminated,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
@@ -1110,7 +1101,7 @@ func TestSetTransferAcceleration(t *testing.T) {
 			}, nil, nil, false, false,
 			promptMock{
 				msg: "n",
-				err: nil,
+				err: constants.ErrInjected,
 			},
 		},
 	}
