@@ -18,7 +18,7 @@ var (
 	BucketPolicyCmd = &cobra.Command{
 		Use:           "bucketpolicy",
 		Short:         "shows/sets the bucket policy configuration of the target bucket",
-		SilenceUsage:  true,
-		SilenceErrors: true,
+		SilenceUsage:  false,
+		SilenceErrors: false,
 	}
 )

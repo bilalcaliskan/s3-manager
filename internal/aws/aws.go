@@ -3,10 +3,11 @@ package aws
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
@@ -35,6 +36,9 @@ import (
 )
 
 // createSession initializes session with provided credentials
+//
+// It returns a pointer to session.Session along with the error that encountered during
+// session initialization process.
 func createSession(accessKey, secretKey, region string) (*session.Session, error) {
 	return session.NewSession(&aws.Config{
 		Region:      aws.String(region),
@@ -43,12 +47,11 @@ func createSession(accessKey, secretKey, region string) (*session.Session, error
 }
 
 func CreateAwsService(opts *options.RootOptions) (svc *s3.S3, err error) {
-	var sess *session.Session
-
 	if opts.AccessKey == "" || opts.SecretKey == "" || opts.Region == "" {
 		return svc, errors.New("missing required fields")
 	}
 
+	var sess *session.Session
 	sess, err = createSession(opts.AccessKey, opts.SecretKey, opts.Region)
 	if err != nil {
 		return svc, err
@@ -117,11 +120,11 @@ func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerat
 	if !opts.AutoApprove {
 		var res string
 		if res, err = confirmRunner.Run(); err != nil {
-			return err
-		}
+			if strings.ToLower(res) == "n" {
+				return constants.ErrUserTerminated
+			}
 
-		if strings.ToLower(res) == "n" {
-			return errors.New("user terminated the process")
+			return constants.ErrInvalidInput
 		}
 	}
 
@@ -204,31 +207,31 @@ func GetBucketVersioning(svc s3iface.S3API, opts *options.RootOptions) (res *s3.
 }
 
 // SetBucketVersioning sets the target bucket
-func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningOptions, confirmRunner prompt.PromptRunner, logger zerolog.Logger) error {
+func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningOptions, confirmRunner prompt.PromptRunner, logger zerolog.Logger) (err error) {
 	if versioningOpts.DryRun {
 		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
 		return nil
 	}
 
-	var err error
 	if !versioningOpts.AutoApprove {
 		var res string
 		if res, err = confirmRunner.Run(); err != nil {
-			return err
-		}
+			if strings.ToLower(res) == "n" {
+				return constants.ErrUserTerminated
+			}
 
-		if strings.ToLower(res) == "n" {
-			return errors.New("user terminated the process")
+			return constants.ErrInvalidInput
 		}
 	}
 
-	versioning, err := GetBucketVersioning(svc, versioningOpts.RootOptions)
+	var versioning *s3.GetBucketVersioningOutput
+	versioning, err = GetBucketVersioning(svc, versioningOpts.RootOptions)
 	if err != nil {
 		logger.Error().Msg(err.Error())
 		return err
 	}
 
-	if err := utils.DecideActualState(versioning, versioningOpts); err != nil {
+	if err = utils.DecideActualState(versioning, versioningOpts); err != nil {
 		logger.Error().Msg(err.Error())
 		return err
 	}
@@ -251,16 +254,18 @@ func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningO
 		str = "Suspended"
 	}
 
-	_, err = svc.PutBucketVersioning(&s3.PutBucketVersioningInput{
+	if _, err = svc.PutBucketVersioning(&s3.PutBucketVersioningInput{
 		Bucket: aws.String(versioningOpts.BucketName),
 		VersioningConfiguration: &s3.VersioningConfiguration{
 			Status: aws.String(str),
 		},
-	})
+	}); err != nil {
+		logger.Error().Msg(err.Error())
+		return err
+	}
 
 	logger.Info().Msgf(utils.InfSuccess, versioningOpts.DesiredState)
-
-	return err
+	return nil
 }
 
 // DeleteFiles deletes the slice of []*s3.Object objects in the target bucket
@@ -270,16 +275,13 @@ func DeleteFiles(svc s3iface.S3API, bucketName string, slice []*s3.Object, dryRu
 			Float64("size", float64(*v.Size)/1000000).Msg("will try to delete file")
 
 		if !dryRun {
-			_, err := svc.DeleteObject(&s3.DeleteObjectInput{
+			if _, err := svc.DeleteObject(&s3.DeleteObjectInput{
 				Bucket: aws.String(bucketName),
 				Key:    aws.String(*v.Key),
-			})
-
-			if err != nil {
+			}); err != nil {
 				return err
 			}
 
-			log.Printf("successfully deleted file %s", *v.Key)
 			logger.Info().Str("key", *v.Key).Msg("successfully deleted file")
 		}
 	}
@@ -307,31 +309,12 @@ func GetDesiredFiles(svc s3iface.S3API, opts *options2.SearchOptions) (matchedFi
 }
 
 // SearchString does the heavy lifting, communicates with the S3 and finds the files
-func SearchString(svc s3iface.S3API, opts *options2.SearchOptions) ([]string, []error) {
-	var errs []error
-	var matchedFiles []string
-	mu := &sync.Mutex{}
-
-	// fetch all the objects in target bucket
-	/*listResult, err := svc.ListObjects(&s3.ListObjectsInput{
-		Bucket: aws.String(opts.BucketName),
-	})
-	if err != nil {
-		errs = append(errs, err)
-		return matchedFiles, errs
-	}*/
-
+//
+// It returns the string array that contains keys of matched files, along with the error array
+// that contains errors during search process for each individual file.
+func SearchString(svc s3iface.S3API, opts *options2.SearchOptions) (matchedFiles []string, errs []error) {
 	var wg sync.WaitGroup
-
-	//extensions := strings.Split(opts.FileExtensions, ",")
-
-	// separate the txt files from all of the fetched objects from bucket
-	/*for _, v := range listResult.Contents {
-		if *v.Key == opts.FileName || (strings.HasSuffix(*v.Key, opts.FileNameSuffix) || strings.HasPrefix(*v.Key, opts.FileNamePrefix)) {
-			logger.Debug().Str("fileName", *v.Key).Msg("found file")
-			resultArr = append(resultArr, v)
-		}
-	}*/
+	mu := &sync.Mutex{}
 
 	resultArr, err := GetDesiredFiles(svc, opts)
 	if err != nil {
@@ -379,8 +362,6 @@ func SearchString(svc s3iface.S3API, opts *options2.SearchOptions) ([]string, []
 		}(obj, &wg)
 	}
 
-	// wait for all the goroutines to complete
 	wg.Wait()
-
 	return matchedFiles, errs
 }

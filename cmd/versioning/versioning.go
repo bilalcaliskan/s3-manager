@@ -15,8 +15,8 @@ var (
 	VersioningCmd = &cobra.Command{
 		Use:           "versioning",
 		Short:         "shows/sets the versioning configuration of the target bucket",
-		SilenceUsage:  true,
-		SilenceErrors: true,
+		SilenceUsage:  false,
+		SilenceErrors: false,
 		// we should not define PreRunE since it will override the PreRunE which is inherited from RootCmd
 	}
 )

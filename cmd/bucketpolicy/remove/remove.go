@@ -1,13 +1,17 @@
 package remove
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
+	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
+
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	options "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
-	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/utils"
+	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
+	"github.com/bilalcaliskan/s3-manager/internal/utils"
+
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
+
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/rs/zerolog"
@@ -27,15 +31,17 @@ var (
 	RemoveCmd        = &cobra.Command{
 		Use:           "remove",
 		Short:         "removes the current bucket policy configuration of the target bucket",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Example: `# remove the current bucket policy configuration onto target bucket
 s3-manager bucketpolicy remove
 		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			svc, bucketPolicyOpts, logger = utils.PrepareConstants(cmd, options.GetBucketPolicyOptions())
+			var rootOpts *rootopts.RootOptions
+			svc, rootOpts, logger = utils.PrepareConstants(cmd)
+			bucketPolicyOpts.RootOptions = rootOpts
 
-			if err := utils.CheckArgs(args); err != nil {
+			if err := utils.CheckArgs(args, 0); err != nil {
 				logger.Error().
 					Msg(err.Error())
 				return err
@@ -62,11 +68,11 @@ s3-manager bucketpolicy remove
 			if !bucketPolicyOpts.AutoApprove {
 				var res string
 				if res, err = confirmRunner.Run(); err != nil {
-					return err
-				}
+					if strings.ToLower(res) == "n" {
+						return constants.ErrUserTerminated
+					}
 
-				if strings.ToLower(res) == "n" {
-					return errors.New("user terminated the process")
+					return constants.ErrInvalidInput
 				}
 			}
 

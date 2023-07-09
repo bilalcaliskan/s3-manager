@@ -14,8 +14,6 @@ type CleanOptions struct {
 	FileExtensions  string
 	FileNamePrefix  string
 	KeepLastNFiles  int
-	DryRun          bool
-	AutoApprove     bool
 	SortBy          string
 	*options.RootOptions
 }
@@ -33,9 +31,6 @@ func (opts *CleanOptions) InitFlags(cmd *cobra.Command) {
 		"defines how many of the files to skip deletion in specified criteria, 0 means clean them all")
 	cmd.Flags().StringVarP(&opts.SortBy, "sort-by", "", "lastModificationDate",
 		"defines the ascending order in the specified criteria, valid options are \"lastModificationDate\" and \"size\"")
-	cmd.Flags().BoolVarP(&opts.AutoApprove, "auto-approve", "", false, "Skip interactive approval (default false)")
-	cmd.Flags().BoolVarP(&opts.DryRun, "dry-run", "", false, "specifies that if you "+
-		"just want to see what to delete or completely delete them all (default false)")
 }
 
 // GetCleanOptions returns the pointer of CleanOptions
@@ -48,8 +43,6 @@ func (opts *CleanOptions) SetZeroValues() {
 	opts.MaxFileSizeInMb = 0
 	opts.FileExtensions = ""
 	opts.KeepLastNFiles = 2
-	opts.DryRun = false
-	opts.AutoApprove = false
 	opts.SortBy = "lastModificationDate"
 	opts.RootOptions.SetZeroValues()
 }

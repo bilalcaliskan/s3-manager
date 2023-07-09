@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	"github.com/bilalcaliskan/s3-manager/internal/utils"
 
-	"github.com/bilalcaliskan/s3-manager/cmd/tags/utils"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/tags/options"
@@ -28,15 +29,17 @@ var (
 	AddCmd        = &cobra.Command{
 		Use:           "add",
 		Short:         "adds the tagging configuration for the target bucket",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Example: `# add comma separated tagging configuration into bucket
 s3-manager tags add foo1=bar1,foo2=bar2
 		`,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-			svc, tagOpts, logger = utils.PrepareConstants(cmd, options.GetTagOptions())
+			var rootOpts *rootopts.RootOptions
+			svc, rootOpts, logger = utils.PrepareConstants(cmd)
+			tagOpts.RootOptions = rootOpts
 
-			if err := utils.CheckArgs(cmd, args); err != nil {
+			if err := utils.CheckArgs(args, 1); err != nil {
 				logger.Error().Msg(err.Error())
 				return err
 			}

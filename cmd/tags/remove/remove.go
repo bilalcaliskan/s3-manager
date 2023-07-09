@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
-	utils2 "github.com/bilalcaliskan/s3-manager/cmd/tags/utils"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
@@ -32,15 +32,17 @@ var (
 	RemoveCmd     = &cobra.Command{
 		Use:           "remove",
 		Short:         "removes the tagging configuration for the target bucket",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Example: `# remove comma separated tagging configuration from bucket
 s3-manager tags remove foo1=bar1,foo2=bar2
 		`,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
-			svc, tagOpts, logger = utils2.PrepareConstants(cmd, options.GetTagOptions())
+			var rootOpts *rootopts.RootOptions
+			svc, rootOpts, logger = utils.PrepareConstants(cmd)
+			tagOpts.RootOptions = rootOpts
 
-			if err := utils2.CheckArgs(cmd, args); err != nil {
+			if err := utils.CheckArgs(args, 1); err != nil {
 				logger.Error().Msg(err.Error())
 				return err
 			}

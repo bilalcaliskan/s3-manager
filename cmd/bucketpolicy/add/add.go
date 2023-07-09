@@ -7,11 +7,13 @@ import (
 	"os"
 	"strings"
 
+	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
+
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
-	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/utils"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -28,28 +30,20 @@ var (
 	AddCmd           = &cobra.Command{
 		Use:           "add",
 		Short:         "adds a bucket policy configuration for the target bucket by specifying a valid policy file",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Example: `# add a bucket policy configuration onto target bucket
 s3-manager bucketpolicy add my_custom_policy.json
 		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			svc, bucketPolicyOpts, logger = utils.PrepareConstants(cmd, options.GetBucketPolicyOptions())
+			var rootOpts *rootopts.RootOptions
+			svc, rootOpts, logger = utils.PrepareConstants(cmd)
+			bucketPolicyOpts.RootOptions = rootOpts
 
-			if len(args) < 1 {
-				err = errors.New("no argument provided, you should provide bucket policy path on your filesystem")
-				logger.Error().Msg(err.Error())
-				return err
-			} else if len(args) > 1 {
-				err = errors.New("too many argument provided, just provide bucket policy path on your filesystem")
+			if err := utils.CheckArgs(args, 1); err != nil {
 				logger.Error().Msg(err.Error())
 				return err
 			}
-
-			/*if err := utils.CheckArgs(cmd, args); err != nil {
-				logger.Error().Msg(err.Error())
-				return err
-			}*/
 
 			logger = logger.With().Str("policyFilePath", args[0]).Logger()
 

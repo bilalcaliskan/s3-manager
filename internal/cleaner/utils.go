@@ -1,16 +1,15 @@
 package cleaner
 
 import (
-	"errors"
 	"sort"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/s3"
-	start "github.com/bilalcaliskan/s3-manager/cmd/clean/options"
+	"github.com/bilalcaliskan/s3-manager/cmd/clean/options"
 	"github.com/rs/zerolog"
 )
 
-func getProperObjects(cleanOpts *start.CleanOptions, allFiles *s3.ListObjectsOutput, logger zerolog.Logger) (res []*s3.Object) {
+func getProperObjects(cleanOpts *options.CleanOptions, allFiles *s3.ListObjectsOutput, logger zerolog.Logger) (res []*s3.Object) {
 	extensions := strings.Split(cleanOpts.FileExtensions, ",")
 
 	for _, v := range allFiles.Contents {
@@ -29,22 +28,22 @@ func getProperObjects(cleanOpts *start.CleanOptions, allFiles *s3.ListObjectsOut
 	return res
 }
 
-func makeDecisionBySize(startOpts *start.CleanOptions, res []*s3.Object, object *s3.Object) []*s3.Object {
-	if (startOpts.MinFileSizeInMb == 0 && startOpts.MaxFileSizeInMb != 0) && *object.Size < startOpts.MaxFileSizeInMb*1000000 {
+func makeDecisionBySize(opts *options.CleanOptions, res []*s3.Object, object *s3.Object) []*s3.Object {
+	if (opts.MinFileSizeInMb == 0 && opts.MaxFileSizeInMb != 0) && *object.Size < opts.MaxFileSizeInMb*1000000 {
 		res = append(res, object)
-	} else if (startOpts.MinFileSizeInMb != 0 && startOpts.MaxFileSizeInMb == 0) && *object.Size >= startOpts.MinFileSizeInMb*1000000 {
+	} else if (opts.MinFileSizeInMb != 0 && opts.MaxFileSizeInMb == 0) && *object.Size >= opts.MinFileSizeInMb*1000000 {
 		res = append(res, object)
-	} else if startOpts.MinFileSizeInMb == 0 && startOpts.MaxFileSizeInMb == 0 {
+	} else if opts.MinFileSizeInMb == 0 && opts.MaxFileSizeInMb == 0 {
 		res = append(res, object)
-	} else if startOpts.MinFileSizeInMb != 0 && startOpts.MaxFileSizeInMb != 0 && (*object.Size >= startOpts.MinFileSizeInMb*1000000 && *object.Size < startOpts.MaxFileSizeInMb*1000000) {
+	} else if opts.MinFileSizeInMb != 0 && opts.MaxFileSizeInMb != 0 && (*object.Size >= opts.MinFileSizeInMb*1000000 && *object.Size < opts.MaxFileSizeInMb*1000000) {
 		res = append(res, object)
 	}
 
 	return res
 }
 
-func sortObjects(slice []*s3.Object, startOpts *start.CleanOptions) {
-	switch startOpts.SortBy {
+func sortObjects(slice []*s3.Object, opts *options.CleanOptions) {
+	switch opts.SortBy {
 	case "lastModificationDate":
 		sort.Slice(slice, func(i, j int) bool {
 			return slice[i].LastModified.Before(*slice[j].LastModified)
@@ -54,14 +53,6 @@ func sortObjects(slice []*s3.Object, startOpts *start.CleanOptions) {
 			return *slice[i].Size < *slice[j].Size
 		})
 	}
-}
-
-func checkLength(targetObjects []*s3.Object) error {
-	if len(targetObjects) == 0 {
-		return errors.New("no deletable file found on the target bucket")
-	}
-
-	return nil
 }
 
 func arrayContains(sl []string, name string) bool {

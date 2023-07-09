@@ -3,7 +3,9 @@ package show
 import (
 	"fmt"
 
-	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/utils"
+	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
+
+	"github.com/bilalcaliskan/s3-manager/internal/utils"
 
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
@@ -24,15 +26,17 @@ var (
 	ShowCmd          = &cobra.Command{
 		Use:           "show",
 		Short:         "shows the bucket policy configuration of the target bucket",
-		SilenceUsage:  true,
+		SilenceUsage:  false,
 		SilenceErrors: true,
 		Example: `# show the current bucket policy configuration for target bucket
 s3-manager bucketpolicy show
 		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			svc, bucketPolicyOpts, logger = utils.PrepareConstants(cmd, options2.GetBucketPolicyOptions())
+			var rootOpts *rootopts.RootOptions
+			svc, rootOpts, logger = utils.PrepareConstants(cmd)
+			bucketPolicyOpts.RootOptions = rootOpts
 
-			if err := utils.CheckArgs(args); err != nil {
+			if err := utils.CheckArgs(args, 0); err != nil {
 				logger.Error().
 					Msg(err.Error())
 				return err

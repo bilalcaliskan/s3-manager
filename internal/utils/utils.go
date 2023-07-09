@@ -2,6 +2,13 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
+
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	"github.com/bilalcaliskan/s3-manager/internal/logging"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -50,4 +57,21 @@ func BeautifyJSON(jsonString string) (string, error) {
 	}
 
 	return string(beautifiedBytes), nil
+}
+
+func PrepareConstants(cmd *cobra.Command) (s3iface.S3API, *options.RootOptions, zerolog.Logger) {
+	svc := cmd.Context().Value(options.S3SvcKey{}).(s3iface.S3API)
+	rootOpts := cmd.Context().Value(options.OptsKey{}).(*options.RootOptions)
+
+	return svc, rootOpts, logging.GetLogger(rootOpts)
+}
+
+func CheckArgs(args []string, allowed int) error {
+	if len(args) > allowed {
+		return errors.New("too many arguments provided")
+	} else if len(args) < allowed {
+		return errors.New("too few arguments provided")
+	}
+
+	return nil
 }
