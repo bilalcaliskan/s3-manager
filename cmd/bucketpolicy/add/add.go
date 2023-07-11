@@ -1,11 +1,12 @@
 package add
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
@@ -60,7 +61,6 @@ s3-manager bucketpolicy add my_custom_policy.json
 				}
 			}()
 
-			// Read the file's content
 			content, err := io.ReadAll(file)
 			if err != nil {
 				logger.Error().Msg(err.Error())
@@ -80,11 +80,11 @@ s3-manager bucketpolicy add my_custom_policy.json
 			if !bucketPolicyOpts.AutoApprove {
 				var res string
 				if res, err = confirmRunner.Run(); err != nil {
-					return err
-				}
+					if strings.ToLower(res) == "n" {
+						return constants.ErrUserTerminated
+					}
 
-				if strings.ToLower(res) == "n" {
-					return errors.New("user terminated the process")
+					return constants.ErrInvalidInput
 				}
 			}
 

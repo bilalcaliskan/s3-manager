@@ -46,14 +46,6 @@ s3-manager search text "catch me if you can" --file-name=".*.txt"
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			// TODO: uncomment when interactivity enabled again
-			/*if searchOpts.Interactive {
-				if err := searchOpts.PromptInteractiveValues(); err != nil {
-					logger.Error().Str("error", err.Error()).Msg("an error occurred while prompting values")
-					return err
-				}
-			}*/
-
 			logger.Info().
 				Str("fileName", searchOpts.FileName).
 				Msg("trying to search files on target bucket")

@@ -7,14 +7,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	rootOptions = &RootOptions{}
-	/*SelectRunner    prompt.SelectRunner = prompt.GetSelectRunner("Select operation", []string{"search", "clean"})
-	AccessKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Access Key", nil)
-	SecretKeyRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Secret Key", nil)
-	RegionRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Region", nil)
-	BucketRunner    prompt.PromptRunner = prompt.GetPromptRunner("Provide AWS Bucket Name", nil)*/
-)
+var rootOptions = &RootOptions{}
 
 type (
 	OptsKey   struct{}
@@ -34,14 +27,12 @@ type RootOptions struct {
 	Region string
 	// VerboseLog is the verbosity of the logging library
 	VerboseLog bool
-	// Interactive is the decision of that if you want to use interactive feature
-	// TODO: uncomment when interactivity enabled again
-	//Interactive bool
 	// BannerFilePath is the relative path to the banner file
 	BannerFilePath string
-
+	// AutoApprove is the boolean flag that lets you bypass approval before non read only operations
 	AutoApprove bool
-	DryRun      bool
+	// DryRun is the boolean flag that lets you see what will be changed before non read only operations
+	DryRun bool
 }
 
 func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
@@ -58,14 +49,12 @@ func (opts *RootOptions) InitFlags(cmd *cobra.Command) {
 			"variable (default \"\")")
 	cmd.PersistentFlags().BoolVarP(&opts.VerboseLog, "verbose", "", false,
 		"verbose output of the logging library (default false)")
-	// TODO: uncomment when interactivity enabled again
-	/*cmd.PersistentFlags().BoolVarP(&opts.Interactive, "interactive", "i", false,
-	"decision of that if you want to use interactive feature (default false)")*/
 	cmd.PersistentFlags().StringVarP(&opts.BannerFilePath, "banner-file-path", "", "banner.txt",
 		"relative path of the banner file")
-	cmd.PersistentFlags().BoolVarP(&opts.AutoApprove, "auto-approve", "", false, "Skip interactive approval (default false)")
-	cmd.PersistentFlags().BoolVarP(&opts.DryRun, "dry-run", "", false, "specifies that if you "+
-		"just want to see on what content to take action (default false)")
+	cmd.PersistentFlags().BoolVarP(&opts.AutoApprove, "auto-approve", "", false, "boolean flag "+
+		"that lets you bypass approval before non read only operations")
+	cmd.PersistentFlags().BoolVarP(&opts.DryRun, "dry-run", "", false, "boolean flag that lets "+
+		"you see what will be changed before non read only operations")
 }
 
 func (opts *RootOptions) SetAccessFlagsRequired(cmd *cobra.Command) {
@@ -112,7 +101,6 @@ func (opts *RootOptions) SetAccessCredentialsFromEnv() error {
 	return nil
 }
 
-// GetRootOptions returns the pointer of S3CleanerOptions
 func GetRootOptions() *RootOptions {
 	return rootOptions
 }
@@ -132,50 +120,7 @@ func (opts *RootOptions) SetZeroValues() {
 	opts.SecretKey = ""
 	opts.Region = ""
 	opts.VerboseLog = false
-	// TODO: uncomment when interactivity enabled again
-	//opts.Interactive = false
 	opts.BannerFilePath = "banner.txt"
 	opts.DryRun = false
 	opts.AutoApprove = false
 }
-
-// TODO: uncomment when interactivity enabled again
-/*func (opts *RootOptions) PromptAccessCredentials(accessKeyRunner, secretKeyRunner, bucketRunner, regionRunner prompt.PromptRunner) error {
-	if opts.AccessKey == "" {
-		res, err := accessKeyRunner.Run()
-		if err != nil {
-			return err
-		}
-
-		opts.AccessKey = res
-	}
-
-	if opts.SecretKey == "" {
-		res, err := secretKeyRunner.Run()
-		if err != nil {
-			return err
-		}
-
-		opts.SecretKey = res
-	}
-
-	if opts.Region == "" {
-		res, err := regionRunner.Run()
-		if err != nil {
-			return err
-		}
-
-		opts.Region = res
-	}
-
-	if opts.BucketName == "" {
-		res, err := bucketRunner.Run()
-		if err != nil {
-			return err
-		}
-
-		opts.BucketName = res
-	}
-
-	return nil
-}*/

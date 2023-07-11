@@ -7,11 +7,13 @@ import (
 	"errors"
 	"testing"
 
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
+
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,21 +22,15 @@ var (
 	defaultPutBucketPolicyErr    error
 )
 
-func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
-	return internalaws.CreateAwsService(rootOpts)
-}
-
 type promptMock struct {
 	msg string
 	err error
 }
 
 func (p promptMock) Run() (string, error) {
-	// return expected result
 	return p.msg, p.err
 }
 
-// Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
 	s3iface.S3API
 }
@@ -48,65 +44,120 @@ func TestExecuteAddCmd(t *testing.T) {
 	AddCmd.SetContext(ctx)
 
 	rootOpts := options.GetMockedRootOptions()
+	svc, err := internalaws.CreateAwsService(rootOpts)
+	assert.NotNil(t, svc)
+	assert.Nil(t, err)
+
 	cases := []struct {
 		caseName              string
 		args                  []string
 		shouldPass            bool
-		shouldMock            bool
+		svc                   s3iface.S3API
 		putBucketPolicyErr    error
 		putBucketPolicyOutput *s3.PutBucketPolicyOutput
 		promptMock            *promptMock
 		dryRun                bool
 		autoApprove           bool
 	}{
-		{"Success", []string{"../../../testdata/bucketpolicy.json"},
-			true, true,
-			nil, &s3.PutBucketPolicyOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
-			}, false, false,
-		},
-		{"Success with dry-run",
+		{
+			"Success",
 			[]string{"../../../testdata/bucketpolicy.json"},
-			true, true,
-			nil, &s3.PutBucketPolicyOutput{},
+			true,
+			&mockS3Client{},
+			nil,
+			&s3.PutBucketPolicyOutput{},
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, true, false,
+			},
+			false,
+			false,
 		},
-		{"Failure", []string{"../../../testdata/bucketpolicy.json"},
-			false, true,
+		{
+			"Success with dry-run",
+			[]string{"../../../testdata/bucketpolicy.json"},
+			true,
+			&mockS3Client{},
+			nil,
+			&s3.PutBucketPolicyOutput{},
+			&promptMock{
+				msg: "y",
+				err: nil,
+			},
+			true,
+			false,
+		},
+		{
+			"Failure",
+			[]string{"../../../testdata/bucketpolicy.json"},
+			false,
+			&mockS3Client{},
 			errors.New("dummy error"),
-			&s3.PutBucketPolicyOutput{}, nil, false, false,
+			&s3.PutBucketPolicyOutput{},
+			nil,
+			false,
+			false,
 		},
-		{"Failure caused by user terminated process", []string{"../../../testdata/bucketpolicy.json"},
-			false, true,
-			nil, &s3.PutBucketPolicyOutput{},
+		{
+			"Failure caused by user terminated process",
+			[]string{"../../../testdata/bucketpolicy.json"},
+			false,
+			&mockS3Client{},
+			nil,
+			&s3.PutBucketPolicyOutput{},
 			&promptMock{
 				msg: "n",
-				err: nil,
-			}, false, false,
+				err: constants.ErrInjected,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by prompt error", []string{"../../../testdata/bucketpolicy.json"},
-			false, true,
-			nil, &s3.PutBucketPolicyOutput{},
+		{
+			"Failure caused by prompt error",
+			[]string{"../../../testdata/bucketpolicy.json"},
+			false,
+			&mockS3Client{},
+			nil,
+			&s3.PutBucketPolicyOutput{},
 			&promptMock{
 				msg: "nasdasd",
-				err: errors.New("injected error"),
-			}, false, false,
+				err: constants.ErrInjected,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by target file not found", []string{"../../../testdata/bucketpolicy.jsonnnn"},
-			false, true, nil,
-			&s3.PutBucketPolicyOutput{}, nil, false, false,
+		{
+			"Failure caused by target file not found",
+			[]string{"../../../testdata/bucketpolicy.jsonnnn"},
+			false,
+			&mockS3Client{},
+			nil,
+			&s3.PutBucketPolicyOutput{},
+			nil,
+			false,
+			false,
 		},
-		{"Failure caused by too many arguments error", []string{"enabled", "foo"},
-			false, false, nil, &s3.PutBucketPolicyOutput{},
-			nil, false, false,
+		{
+			"Failure caused by too many arguments error",
+			[]string{"enabled", "foo"},
+			false,
+			svc,
+			nil,
+			&s3.PutBucketPolicyOutput{},
+			nil,
+			false,
+			false,
 		},
-		{"Failure caused by no arguments provided error", []string{}, false, false,
-			nil, &s3.PutBucketPolicyOutput{}, nil, false, false,
+		{
+			"Failure caused by no arguments provided error",
+			[]string{},
+			false,
+			svc,
+			nil,
+			&s3.PutBucketPolicyOutput{},
+			nil,
+			false,
+			false,
 		},
 	}
 
@@ -119,23 +170,11 @@ func TestExecuteAddCmd(t *testing.T) {
 		defaultPutBucketPolicyErr = tc.putBucketPolicyErr
 		defaultPutBucketPolicyOutput = tc.putBucketPolicyOutput
 
-		var err error
-
-		if tc.shouldMock {
-			mockSvc := &mockS3Client{}
-			svc = mockSvc
-			assert.NotNil(t, mockSvc)
-		} else {
-			svc, err = createSvc(rootOpts)
-			assert.NotNil(t, svc)
-			assert.Nil(t, err)
-		}
-
 		if tc.promptMock != nil {
 			confirmRunner = tc.promptMock
 		}
 
-		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
+		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, tc.svc))
 		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
 		AddCmd.SetArgs(tc.args)
 
