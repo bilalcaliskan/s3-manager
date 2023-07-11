@@ -20,7 +20,6 @@ import (
 
 func init() {
 	bucketPolicyOpts = options.GetBucketPolicyOptions()
-	//bucketPolicyOpts.InitFlags(RemoveCmd)
 }
 
 var (

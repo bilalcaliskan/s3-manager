@@ -4,8 +4,9 @@ package clean
 
 import (
 	"context"
-	"errors"
 	"testing"
+
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 
@@ -18,6 +19,39 @@ import (
 )
 
 var (
+	dummyListObjectsOutput = &s3.ListObjectsOutput{
+		CommonPrefixes: nil,
+		Contents: []*s3.Object{
+			{
+				ChecksumAlgorithm: nil,
+				ETag:              nil,
+				Key:               aws.String("foo.json"),
+				LastModified:      nil,
+				Owner:             nil,
+				Size:              aws.Int64(500),
+				StorageClass:      nil,
+			},
+			{
+				ChecksumAlgorithm: nil,
+				ETag:              nil,
+				Key:               aws.String("bar.json"),
+				LastModified:      nil,
+				Owner:             nil,
+				Size:              aws.Int64(600),
+				StorageClass:      nil,
+			},
+		},
+		Delimiter:      nil,
+		EncodingType:   nil,
+		IsTruncated:    nil,
+		Marker:         nil,
+		MaxKeys:        nil,
+		Name:           nil,
+		NextMarker:     nil,
+		Prefix:         nil,
+		RequestCharged: nil,
+	}
+
 	defaultListObjectsErr    error
 	defaultListObjectsOutput = &s3.ListObjectsOutput{}
 
@@ -38,7 +72,7 @@ func (m *mockS3Client) ListObjects(*s3.ListObjectsInput) (*s3.ListObjectsOutput,
 	return defaultListObjectsOutput, defaultListObjectsErr
 }
 
-func TestExecuteShowCmd(t *testing.T) {
+func TestExecuteCleanCmd(t *testing.T) {
 	ctx := context.Background()
 	CleanCmd.SetContext(ctx)
 
@@ -46,102 +80,49 @@ func TestExecuteShowCmd(t *testing.T) {
 	cases := []struct {
 		caseName           string
 		args               []string
+		svc                s3iface.S3API
 		shouldPass         bool
 		listObjectsErr     error
 		listObjectsOutput  *s3.ListObjectsOutput
 		deleteObjectErr    error
 		deleteObjectOutput *s3.DeleteObjectOutput
 	}{
-		{"Success",
+		{
+			"Success",
 			[]string{},
+			&mockS3Client{},
 			true,
 			nil,
 			&s3.ListObjectsOutput{},
 			nil,
 			&s3.DeleteObjectOutput{},
 		},
-		{"Failure caused by invalid 'sortBy' flag",
+		{
+			"Failure caused by invalid 'sortBy' flag",
 			[]string{"--sort-by=asldkfjalsdkf"},
+			&mockS3Client{},
 			false,
 			nil,
-			&s3.ListObjectsOutput{
-				CommonPrefixes: nil,
-				Contents: []*s3.Object{
-					{
-						ChecksumAlgorithm: nil,
-						ETag:              nil,
-						Key:               aws.String("foo.json"),
-						LastModified:      nil,
-						Owner:             nil,
-						Size:              aws.Int64(500),
-						StorageClass:      nil,
-					},
-					{
-						ChecksumAlgorithm: nil,
-						ETag:              nil,
-						Key:               aws.String("bar.json"),
-						LastModified:      nil,
-						Owner:             nil,
-						Size:              aws.Int64(600),
-						StorageClass:      nil,
-					},
-				},
-				Delimiter:      nil,
-				EncodingType:   nil,
-				IsTruncated:    nil,
-				Marker:         nil,
-				MaxKeys:        nil,
-				Name:           nil,
-				NextMarker:     nil,
-				Prefix:         nil,
-				RequestCharged: nil,
-			},
+			dummyListObjectsOutput,
 			nil,
 			&s3.DeleteObjectOutput{},
 		},
-		{"Failure caused by wrong size flags",
+		{
+			"Failure caused by wrong size flags",
 			[]string{"--max-size-mb=10", "--min-size-mb=20"},
+			&mockS3Client{},
 			false,
 			nil,
-			&s3.ListObjectsOutput{
-				CommonPrefixes: nil,
-				Contents: []*s3.Object{
-					{
-						ChecksumAlgorithm: nil,
-						ETag:              nil,
-						Key:               aws.String("foo.json"),
-						LastModified:      nil,
-						Owner:             nil,
-						Size:              aws.Int64(500),
-						StorageClass:      nil,
-					},
-					{
-						ChecksumAlgorithm: nil,
-						ETag:              nil,
-						Key:               aws.String("bar.json"),
-						LastModified:      nil,
-						Owner:             nil,
-						Size:              aws.Int64(600),
-						StorageClass:      nil,
-					},
-				},
-				Delimiter:      nil,
-				EncodingType:   nil,
-				IsTruncated:    nil,
-				Marker:         nil,
-				MaxKeys:        nil,
-				Name:           nil,
-				NextMarker:     nil,
-				Prefix:         nil,
-				RequestCharged: nil,
-			},
+			dummyListObjectsOutput,
 			nil,
 			&s3.DeleteObjectOutput{},
 		},
-		{"Failure caused by ListObjects error",
+		{
+			"Failure caused by ListObjects error",
 			[]string{},
+			&mockS3Client{},
 			false,
-			errors.New("injected error"),
+			constants.ErrInjected,
 			&s3.ListObjectsOutput{},
 			nil,
 			&s3.DeleteObjectOutput{},
@@ -150,7 +131,6 @@ func TestExecuteShowCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Logf("starting case '%s'", tc.caseName)
-		t.Logf("following variables provided: %v", tc)
 
 		defaultListObjectsErr = tc.listObjectsErr
 		defaultListObjectsOutput = tc.listObjectsOutput
@@ -158,21 +138,11 @@ func TestExecuteShowCmd(t *testing.T) {
 		defaultDeleteObjectErr = tc.deleteObjectErr
 		defaultDeleteObjectOutput = tc.deleteObjectOutput
 
-		mockSvc := &mockS3Client{}
-		svc = mockSvc
-		assert.NotNil(t, mockSvc)
-
 		CleanCmd.SetArgs(tc.args)
-		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, svc))
+		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, tc.svc))
 		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
 
-		var err error
-		t.Log(cleanOpts.MinFileSizeInMb)
-		t.Log(cleanOpts.SortBy)
-		if err = CleanCmd.Execute(); err != nil {
-			t.Logf("an error occurred while running command: %s", err.Error())
-		}
-
+		err := CleanCmd.Execute()
 		if tc.shouldPass {
 			assert.Nil(t, err)
 		} else {
@@ -180,6 +150,5 @@ func TestExecuteShowCmd(t *testing.T) {
 		}
 
 		cleanOpts.SetZeroValues()
-		t.Logf("ending case '%s'", tc.caseName)
 	}
 }

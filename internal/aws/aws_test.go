@@ -394,7 +394,7 @@ func TestSearchString(t *testing.T) {
 				Text:        "pvRRTaigmb",
 				FileName:    "",
 				RootOptions: nil,
-			}, false, errors.New("injected error"),
+			}, false, constants.ErrInjected,
 			nil, nil, 0,
 		},
 		{"Failure caused by get object error",
@@ -421,7 +421,7 @@ func TestSearchString(t *testing.T) {
 						StorageClass: aws.String("STANDARD"),
 					},
 				},
-			}, errors.New("injected error"), 0,
+			}, constants.ErrInjected, 0,
 		},
 	}
 

@@ -4,51 +4,28 @@ package text
 
 import (
 	"context"
-	"errors"
 	"io"
 	"strings"
 	"sync"
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
 	defaultListObjectsErr    error
-	defaultListObjectsOutput = &s3.ListObjectsOutput{
-		Contents: []*s3.Object{
-			{
-				ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-				Key:          aws.String("../../../testdata/file1.txt"),
-				StorageClass: aws.String("STANDARD"),
-			},
-			{
-				ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-				Key:          aws.String("../../../testdata/file2.txt"),
-				StorageClass: aws.String("STANDARD"),
-			},
-			{
-				ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-				Key:          aws.String("../../../testdata/file3.txt"),
-				StorageClass: aws.String("STANDARD"),
-			},
-		},
-	}
-	defaultGetObjectErr    error
-	defaultGetObjectOutput = &s3.GetObjectOutput{}
-	lock                   sync.Mutex
+	defaultListObjectsOutput = &s3.ListObjectsOutput{}
+	defaultGetObjectErr      error
+	defaultGetObjectOutput   = &s3.GetObjectOutput{}
+	mu                       sync.Mutex
 )
 
-func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
-	return internalaws.CreateAwsService(rootOpts)
-}
-
-// Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
 	s3iface.S3API
 }
@@ -71,25 +48,24 @@ func TestExecuteTextCmd(t *testing.T) {
 	cases := []struct {
 		caseName          string
 		args              []string
-		shouldMock        bool
 		shouldPass        bool
 		listObjectsErr    error
 		listObjectsOutput *s3.ListObjectsOutput
 		getObjectErr      error
 		getObjectOutput   *s3.GetObjectOutput
 	}{
-		{"Success no matching files",
+		{
+			"Success no matching files",
 			[]string{"text1", "--file-name=text2.txt"},
-			true,
 			true,
 			nil,
 			&s3.ListObjectsOutput{},
 			nil,
 			&s3.GetObjectOutput{},
 		},
-		{"Success matching files",
+		{
+			"Success matching files",
 			[]string{"BrYKzqcTqn", "--file-name=../../../testdata/.*"},
-			true,
 			true,
 			nil,
 			&s3.ListObjectsOutput{
@@ -116,18 +92,18 @@ func TestExecuteTextCmd(t *testing.T) {
 				Body: getMockBody("BrYKzqcTqn"),
 			},
 		},
-		{"Failure caused by ListObjects error",
+		{
+			"Failure caused by ListObjects error",
 			[]string{"text1", "--file-name=text2.txt"},
-			true,
 			false,
-			errors.New("injected error"),
+			constants.ErrInjected,
 			&s3.ListObjectsOutput{},
 			nil,
 			&s3.GetObjectOutput{},
 		},
-		{"Failure caused by no arguments",
+		{
+			"Failure caused by no arguments",
 			[]string{"--file-name=text2.txt"},
-			true,
 			false,
 			nil,
 			&s3.ListObjectsOutput{},
@@ -143,30 +119,21 @@ func TestExecuteTextCmd(t *testing.T) {
 		defaultGetObjectErr = tc.getObjectErr
 		defaultGetObjectOutput = tc.getObjectOutput
 
-		var err error
-		if tc.shouldMock {
-			mockSvc := &mockS3Client{}
-			svc = mockSvc
-			assert.NotNil(t, mockSvc)
-		} else {
-			svc, err = createSvc(rootOpts)
-			assert.NotNil(t, svc)
-			assert.Nil(t, err)
-		}
-
-		TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.S3SvcKey{}, svc))
+		TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.S3SvcKey{}, &mockS3Client{}))
 		TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.OptsKey{}, rootOpts))
 		TextCmd.SetArgs(tc.args)
 
-		lock.Lock()
-		err = TextCmd.Execute()
-		lock.Unlock()
+		mu.Lock()
+		err := TextCmd.Execute()
+		mu.Unlock()
 
 		if tc.shouldPass {
 			assert.Nil(t, err)
 		} else {
 			assert.NotNil(t, err)
 		}
+
+		searchOpts.SetZeroValues()
 	}
 }
 

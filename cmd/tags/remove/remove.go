@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
+
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
@@ -105,11 +107,11 @@ s3-manager tags remove foo1=bar1,foo2=bar2
 			if !tagOpts.AutoApprove {
 				var res string
 				if res, err = confirmRunner.Run(); err != nil {
-					return err
-				}
+					if strings.ToLower(res) == "n" {
+						return constants.ErrUserTerminated
+					}
 
-				if strings.ToLower(res) == "n" {
-					return errors.New("user terminated the process")
+					return constants.ErrInvalidInput
 				}
 			}
 

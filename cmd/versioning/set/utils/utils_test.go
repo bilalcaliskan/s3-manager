@@ -8,15 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 	"github.com/stretchr/testify/assert"
 )
-
-// Define a testdata struct to be used in your unit tests
-type mockS3Client struct {
-	s3iface.S3API
-}
 
 func TestDecideActualState(t *testing.T) {
 	tests := []struct {

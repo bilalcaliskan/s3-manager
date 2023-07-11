@@ -6,9 +6,6 @@ import (
 )
 
 var (
-	// TODO: uncomment when interactivity enabled again
-	/*substringRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide text to search", nil)
-	extensionRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide target file extensions (comma seperated)", nil)*/
 	searchOptions = &SearchOptions{}
 )
 
@@ -39,20 +36,3 @@ func (opts *SearchOptions) SetZeroValues() {
 	opts.FileName = ""
 	opts.RootOptions.SetZeroValues()
 }
-
-// TODO: uncomment when interactivity enabled again
-/*func (opts *SearchOptions) PromptInteractiveValues() error {
-	res, err := substringRunner.Run()
-	if err != nil {
-		return err
-	}
-	opts.Text = res
-
-	res, err = extensionRunner.Run()
-	if err != nil {
-		return err
-	}
-	opts.FileExtensions = res
-
-	return nil
-}*/

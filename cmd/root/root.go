@@ -53,25 +53,7 @@ var (
 		SilenceUsage:  false,
 		SilenceErrors: false,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// TODO: uncomment when interactivity enabled again
-			/*if !opts.Interactive {
-				opts.SetAccessFlagsRequired(cmd)
-			}*/
-			// TODO: remove when interactivity enabled again
 			opts.SetAccessFlagsRequired(cmd)
-
-			// TODO: fail if credentials are expired (meaning wrong credentials provided)
-
-			// TODO: uncomment when interactivity enabled again
-			/*if opts.Interactive {
-				if err := opts.PromptAccessCredentials(options.AccessKeyRunner, options.SecretKeyRunner,
-					options.BucketRunner, options.RegionRunner); err != nil {
-					logger.Error().
-						Str("error", err.Error()).
-						Msg("an error occurred while creating aws service")
-					return err
-				}
-			}*/
 
 			svc, err := aws.CreateAwsService(opts)
 			if err != nil {
@@ -104,35 +86,6 @@ var (
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},
-		// TODO: uncomment when interactivity enabled again
-		/*RunE: func(cmd *cobra.Command, args []string) error {
-			if !opts.Interactive {
-				return nil
-			}
-
-			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
-
-			_, result, err := options.SelectRunner.Run()
-			if err != nil {
-				logger.Error().Str("error", err.Error()).Msg("unknown error occurred while prompting user")
-				return err
-			}
-
-			switch result {
-			case "search":
-				if err := search.SearchCmd.RunE(cmd, args); err != nil {
-					logger.Error().Str("error", err.Error()).Msg("an error occurred while running search subcommand")
-					return err
-				}
-			case "clean":
-				if err := clean.CleanCmd.RunE(cmd, args); err != nil {
-					logger.Error().Str("error", err.Error()).Msg("an error occurred while running clean subcommand")
-					return err
-				}
-			}
-
-			return nil
-		},*/
 	}
 )
 

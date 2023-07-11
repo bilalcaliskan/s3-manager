@@ -21,11 +21,6 @@ var (
 	defaultGetBucketPolicyErr error
 )
 
-func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
-	return internalaws.CreateAwsService(rootOpts)
-}
-
-// Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
 	s3iface.S3API
 }
@@ -39,30 +34,54 @@ func TestExecuteShowCmd(t *testing.T) {
 	ctx := context.Background()
 	ShowCmd.SetContext(ctx)
 
+	svc, err := internalaws.CreateAwsService(rootOpts)
+	assert.NotNil(t, svc)
+	assert.Nil(t, err)
+
 	cases := []struct {
 		caseName              string
 		args                  []string
+		svc                   s3iface.S3API
 		shouldPass            bool
-		shouldMock            bool
 		getBucketPolicyErr    error
 		getBucketPolicyOutput *s3.GetBucketPolicyOutput
 	}{
-		{"Too many arguments", []string{"enabled", "foo"}, false, false,
-			nil, &s3.GetBucketPolicyOutput{
-				Policy: aws.String("{}"),
-			},
-		},
-		{"No argument", []string{}, false, false, nil,
+		{
+			"Too many arguments",
+			[]string{"enabled", "foo"},
+			svc,
+			false,
+			nil,
 			&s3.GetBucketPolicyOutput{
 				Policy: aws.String("{}"),
 			},
 		},
-		{"Success", []string{}, true, true, nil,
+		{
+			"No argument",
+			[]string{},
+			svc,
+			false,
+			nil,
 			&s3.GetBucketPolicyOutput{
 				Policy: aws.String("{}"),
 			},
 		},
-		{"Json failure", []string{}, false, true, nil,
+		{
+			"Success",
+			[]string{},
+			&mockS3Client{},
+			true,
+			nil,
+			&s3.GetBucketPolicyOutput{
+				Policy: aws.String("{}"),
+			},
+		},
+		{
+			"Json failure",
+			[]string{},
+			&mockS3Client{},
+			false,
+			nil,
 			&s3.GetBucketPolicyOutput{
 				Policy: aws.String(""),
 			},
@@ -73,18 +92,7 @@ func TestExecuteShowCmd(t *testing.T) {
 		defaultGetBucketPolicyErr = tc.getBucketPolicyErr
 		defaultGetBucketPolicyOutput = tc.getBucketPolicyOutput
 
-		var err error
-		if tc.shouldMock {
-			mockSvc := &mockS3Client{}
-			svc = mockSvc
-			assert.NotNil(t, mockSvc)
-		} else {
-			svc, err = createSvc(rootOpts)
-			assert.NotNil(t, svc)
-			assert.Nil(t, err)
-		}
-
-		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
+		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, tc.svc))
 		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
 		ShowCmd.SetArgs(tc.args)
 
