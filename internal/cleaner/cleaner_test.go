@@ -106,7 +106,7 @@ func TestStartCleaning(t *testing.T) {
 		caseName string
 		expected error
 		*options.CleanOptions
-		promptMock prompt.PromptRunner
+		prompt.PromptRunner
 		*s3.ListObjectsOutput
 		listObjectsErr  error
 		deleteObjectErr error
@@ -114,7 +114,8 @@ func TestStartCleaning(t *testing.T) {
 		autoApprove     bool
 	}{
 		{
-			"Success while sorting by lastModificationDate", nil,
+			"Success while sorting by lastModificationDate",
+			nil,
 			&options.CleanOptions{
 				MinFileSizeInMb: 0,
 				MaxFileSizeInMb: 0,
@@ -158,10 +159,14 @@ func TestStartCleaning(t *testing.T) {
 					},
 				},
 			},
-			nil, nil, false, false,
+			nil,
+			nil,
+			false,
+			false,
 		},
 		{
-			"Success while specifying minfilesizeinmb", nil,
+			"Success while specifying minfilesizeinmb",
+			nil,
 			&options.CleanOptions{
 				MinFileSizeInMb: 100,
 				MaxFileSizeInMb: 0,
@@ -212,10 +217,14 @@ func TestStartCleaning(t *testing.T) {
 					},
 				},
 			},
-			nil, nil, false, false,
+			nil,
+			nil,
+			false,
+			false,
 		},
 		{
-			"Success while specifying both minfilesizeinmb and maxfilesizeinmb", nil,
+			"Success while specifying both minfilesizeinmb and maxfilesizeinmb",
+			nil,
 			&options.CleanOptions{
 				MinFileSizeInMb: 100,
 				MaxFileSizeInMb: 500,
@@ -266,10 +275,14 @@ func TestStartCleaning(t *testing.T) {
 					},
 				},
 			},
-			nil, nil, false, false,
+			nil,
+			nil,
+			false,
+			false,
 		},
 		{
-			"Success while sorting by size", nil,
+			"Success while sorting by size",
+			nil,
 			&options.CleanOptions{
 				MinFileSizeInMb: 0,
 				MaxFileSizeInMb: 10000,
@@ -313,10 +326,14 @@ func TestStartCleaning(t *testing.T) {
 					},
 				},
 			},
-			nil, nil, false, false,
+			nil,
+			nil,
+			false,
+			false,
 		},
 		{
-			"Success when dry-run enabled", nil,
+			"Success when dry-run enabled",
+			nil,
 			&options.CleanOptions{
 				MinFileSizeInMb: 0,
 				MaxFileSizeInMb: 0,
@@ -360,10 +377,14 @@ func TestStartCleaning(t *testing.T) {
 					},
 				},
 			},
-			nil, nil, true, false,
+			nil,
+			nil,
+			true,
+			false,
 		},
 		{
-			"Failure caused by get all files error", constants.ErrInjected,
+			"Failure caused by get all files error",
+			constants.ErrInjected,
 			&options.CleanOptions{
 				MinFileSizeInMb: 0,
 				MaxFileSizeInMb: 0,
@@ -377,10 +398,15 @@ func TestStartCleaning(t *testing.T) {
 				msg: "y",
 				err: nil,
 			},
-			nil, constants.ErrInjected, nil, false, false,
+			nil,
+			constants.ErrInjected,
+			nil,
+			false,
+			false,
 		},
 		{
-			"Warning caused by no file to remove caused by --keep-last-n-file flag 1", nil,
+			"Warning caused by no file to remove caused by --keep-last-n-file flag 1",
+			nil,
 			&options.CleanOptions{
 				MinFileSizeInMb: 0,
 				MaxFileSizeInMb: 0,
@@ -424,10 +450,14 @@ func TestStartCleaning(t *testing.T) {
 					},
 				},
 			},
-			nil, nil, false, false,
+			nil,
+			nil,
+			false,
+			false,
 		},
 		{
-			"Warning caused by no file to remove caused by --keep-last-n-file flag 2", nil,
+			"Warning caused by no file to remove caused by --keep-last-n-file flag 2",
+			nil,
 			&options.CleanOptions{
 				MinFileSizeInMb: 0,
 				MaxFileSizeInMb: 0,
@@ -471,10 +501,14 @@ func TestStartCleaning(t *testing.T) {
 					},
 				},
 			},
-			nil, nil, false, false,
+			nil,
+			nil,
+			false,
+			false,
 		},
 		{
-			"Failure caused by user terminated the process", constants.ErrUserTerminated,
+			"Failure caused by user terminated the process",
+			constants.ErrUserTerminated,
 			&options.CleanOptions{
 				MinFileSizeInMb: 0,
 				MaxFileSizeInMb: 0,
@@ -518,10 +552,14 @@ func TestStartCleaning(t *testing.T) {
 					},
 				},
 			},
-			nil, nil, false, false,
+			nil,
+			nil,
+			false,
+			false,
 		},
 		{
-			"Failure caused by prompt error", constants.ErrInvalidInput,
+			"Failure caused by prompt error",
+			constants.ErrInvalidInput,
 			&options.CleanOptions{
 				MinFileSizeInMb: 0,
 				MaxFileSizeInMb: 0,
@@ -565,10 +603,14 @@ func TestStartCleaning(t *testing.T) {
 					},
 				},
 			},
-			nil, nil, false, false,
+			nil,
+			nil,
+			false,
+			false,
 		},
 		{
-			"Failure caused by delete files error", constants.ErrInjected,
+			"Failure caused by delete files error",
+			constants.ErrInjected,
 			&options.CleanOptions{
 				MinFileSizeInMb: 0,
 				MaxFileSizeInMb: 0,
@@ -612,13 +654,14 @@ func TestStartCleaning(t *testing.T) {
 					},
 				},
 			},
-			nil, constants.ErrInjected, false, true,
+			nil,
+			constants.ErrInjected,
+			false,
+			true,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
@@ -630,7 +673,7 @@ func TestStartCleaning(t *testing.T) {
 		mockSvc := &mockS3Client{}
 		assert.NotNil(t, mockSvc)
 
-		err := StartCleaning(mockSvc, tc.promptMock, tc.CleanOptions, logging.GetLogger(tc.CleanOptions.RootOptions))
+		err := StartCleaning(mockSvc, tc.PromptRunner, tc.CleanOptions, logging.GetLogger(tc.CleanOptions.RootOptions))
 		assert.Equal(t, tc.expected, err)
 	}
 }
