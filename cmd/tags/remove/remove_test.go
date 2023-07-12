@@ -4,8 +4,9 @@ package remove
 
 import (
 	"context"
-	"errors"
 	"testing"
+
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -25,10 +26,6 @@ var (
 	defaultDeleteBucketTaggingErr    error
 	defaultDeleteBucketTaggingOutput = &s3.DeleteBucketTaggingOutput{}
 )
-
-func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
-	return internalaws.CreateAwsService(rootOpts)
-}
 
 type promptMock struct {
 	msg string
@@ -58,11 +55,10 @@ func (m *mockS3Client) DeleteBucketTagging(input *s3.DeleteBucketTaggingInput) (
 }
 
 func TestExecuteRemoveCmd(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
+	rootOpts := options.GetMockedRootOptions()
+	svc, err := internalaws.CreateAwsService(rootOpts)
+	assert.NotNil(t, svc)
+	assert.Nil(t, err)
 
 	ctx := context.Background()
 	RemoveCmd.SetContext(ctx)
@@ -71,7 +67,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 		caseName                  string
 		args                      []string
 		shouldPass                bool
-		shouldMock                bool
+		svc                       s3iface.S3API
 		getBucketTaggingErr       error
 		getBucketTaggingOutput    *s3.GetBucketTaggingOutput
 		putBucketTaggingErr       error
@@ -82,16 +78,26 @@ func TestExecuteRemoveCmd(t *testing.T) {
 		dryRun                    bool
 		autoApprove               bool
 	}{
-		{"No arguments provided", []string{}, false, false,
+		{
+			"No arguments provided",
+			[]string{},
+			false,
+			svc,
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
 			nil,
 			&s3.DeleteBucketTaggingOutput{},
-			nil, false, false,
+			nil,
+			false,
+			false,
 		},
-		{"Success while has single tag", []string{"foo=bar,foo2=bar2"}, true, true,
+		{
+			"Success while has single tag",
+			[]string{"foo=bar,foo2=bar2"},
+			true,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -108,9 +114,14 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Success when dry-run enabled", []string{"foo=bar,foo2=bar2"}, true, true,
+		{
+			"Success when dry-run enabled",
+			[]string{"foo=bar,foo2=bar2"},
+			true, &mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -124,9 +135,15 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&s3.PutBucketTaggingOutput{},
 			nil,
 			&s3.DeleteBucketTaggingOutput{},
-			nil, true, false,
+			nil,
+			true,
+			false,
 		},
-		{"Success when auto-approve enabled", []string{"foo=bar,foo2=bar2"}, true, true,
+		{
+			"Success when auto-approve enabled",
+			[]string{"foo=bar,foo2=bar2"},
+			true,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -140,9 +157,14 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&s3.PutBucketTaggingOutput{},
 			nil,
 			&s3.DeleteBucketTaggingOutput{},
-			nil, false, true,
+			nil,
+			false,
+			true,
 		},
-		{"Success while has multiple tags", []string{"foo=bar,foo2=bar2"}, true, true,
+		{
+			"Success while has multiple tags",
+			[]string{"foo=bar,foo2=bar2"},
+			true, &mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -171,9 +193,15 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by wrong argument provided", []string{"foo=bar=bar3,foo2=bar2"}, false, true,
+		{
+			"Failure caused by wrong argument provided",
+			[]string{"foo=bar=bar3,foo2=bar2"},
+			false,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
@@ -183,9 +211,15 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Warn while has no tags to remove", []string{"foo3=bar3,foo4=bar4"}, true, true,
+		{
+			"Warn while has no tags to remove",
+			[]string{"foo3=bar3,foo4=bar4"},
+			true,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -206,21 +240,33 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by GetBucketTags error", []string{"foo=bar,foo2=bar2"}, false, true,
-			errors.New("injected error"),
+		{
+			"Failure caused by GetBucketTags error",
+			[]string{"foo=bar,foo2=bar2"},
+			false,
+			&mockS3Client{},
+			constants.ErrInjected,
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
-			errors.New("injected error"),
+			constants.ErrInjected,
 			&s3.DeleteBucketTaggingOutput{},
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by DeleteAllBucketTags error", []string{"foo=bar,foo2=bar2"}, false, true,
+		{
+			"Failure caused by DeleteAllBucketTags error",
+			[]string{"foo=bar,foo2=bar2"},
+			false,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -236,14 +282,20 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketTaggingOutput{},
-			errors.New("injected error"),
+			constants.ErrInjected,
 			&s3.DeleteBucketTaggingOutput{},
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by prompt error", []string{"foo=bar,foo2=bar2"}, false, true,
+		{
+			"Failure caused by prompt error",
+			[]string{"foo=bar,foo2=bar2"},
+			false,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -263,10 +315,16 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&s3.DeleteBucketTaggingOutput{},
 			&promptMock{
 				msg: "yasdfas",
-				err: errors.New("injected error"),
-			}, false, false,
+				err: constants.ErrInjected,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by user terminated the process", []string{"foo=bar,foo2=bar2"}, false, true,
+		{
+			"Failure caused by user terminated the process",
+			[]string{"foo=bar,foo2=bar2"},
+			false,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -286,10 +344,16 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&s3.DeleteBucketTaggingOutput{},
 			&promptMock{
 				msg: "n",
-				err: nil,
-			}, false, false,
+				err: constants.ErrInjected,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by DeleteAllBucketTags error", []string{"foo=bar,foo2=bar2"}, false, true,
+		{
+			"Failure caused by DeleteAllBucketTags error",
+			[]string{"foo=bar,foo2=bar2"},
+			false,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -303,14 +367,16 @@ func TestExecuteRemoveCmd(t *testing.T) {
 					},
 				},
 			},
-			errors.New("injected error"),
+			constants.ErrInjected,
 			&s3.PutBucketTaggingOutput{},
 			nil,
 			&s3.DeleteBucketTaggingOutput{},
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
 	}
 
@@ -327,22 +393,11 @@ func TestExecuteRemoveCmd(t *testing.T) {
 		defaultDeleteBucketTaggingErr = tc.deleteBucketTaggingErr
 		defaultDeleteBucketTaggingOutput = tc.deleteBucketTaggingOutput
 
-		var err error
-		if tc.shouldMock {
-			mockSvc := &mockS3Client{}
-			svc = mockSvc
-			assert.NotNil(t, mockSvc)
-		} else {
-			svc, err = createSvc(rootOpts)
-			assert.NotNil(t, svc)
-			assert.Nil(t, err)
-		}
-
 		if tc.promptMock != nil {
 			confirmRunner = tc.promptMock
 		}
 
-		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, svc))
+		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, tc.svc))
 		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
 		RemoveCmd.SetArgs(tc.args)
 
@@ -355,6 +410,5 @@ func TestExecuteRemoveCmd(t *testing.T) {
 		}
 	}
 
-	rootOpts.SetZeroValues()
 	tagOpts.SetZeroValues()
 }

@@ -22,11 +22,6 @@ var (
 	defaultGetBucketAccelerationErr error
 )
 
-func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
-	return internalaws.CreateAwsService(rootOpts)
-}
-
-// Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
 	s3iface.S3API
 }
@@ -36,11 +31,10 @@ func (m *mockS3Client) GetBucketAccelerateConfiguration(input *s3.GetBucketAccel
 }
 
 func TestExecuteShowCmd(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
+	rootOpts := options.GetMockedRootOptions()
+	svc, err := internalaws.CreateAwsService(rootOpts)
+	assert.NotNil(t, svc)
+	assert.Nil(t, err)
 
 	ctx := context.Background()
 	ShowCmd.SetContext(ctx)
@@ -49,31 +43,56 @@ func TestExecuteShowCmd(t *testing.T) {
 		caseName                    string
 		args                        []string
 		shouldPass                  bool
-		shouldMock                  bool
+		svc                         s3iface.S3API
 		getBucketAccelerationErr    error
 		getBucketAccelerationOutput *s3.GetBucketAccelerateConfigurationOutput
 	}{
-		{"Too many arguments", []string{"enabled", "foo"}, false, false, nil,
+		{
+			"Too many arguments",
+			[]string{"enabled", "foo"},
+			false,
+			svc,
+			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
 			},
 		},
-		{"Success enabled", []string{}, true, true, nil,
+		{
+			"Success enabled",
+			[]string{},
+			true,
+			&mockS3Client{},
+			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
 			},
 		},
-		{"Success suspended", []string{}, true, true, nil,
+		{
+			"Success suspended",
+			[]string{},
+			true,
+			&mockS3Client{},
+			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Suspended"),
 			},
 		},
-		{"Failure get bucket acceleration", []string{}, false, true,
-			errors.New("dummy error"), &s3.GetBucketAccelerateConfigurationOutput{
+		{
+			"Failure get bucket acceleration",
+			[]string{},
+			false,
+			&mockS3Client{},
+			errors.New("dummy error"),
+			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
 			},
 		},
-		{"Failure unknown status", []string{}, false, true, nil,
+		{
+			"Failure unknown status",
+			[]string{},
+			false,
+			&mockS3Client{},
+			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enableddd"),
 			},
@@ -84,18 +103,7 @@ func TestExecuteShowCmd(t *testing.T) {
 		defaultGetBucketAccelerationErr = tc.getBucketAccelerationErr
 		defaultGetBucketAccelerationOutput = tc.getBucketAccelerationOutput
 
-		var err error
-		if tc.shouldMock {
-			mockSvc := &mockS3Client{}
-			svc = mockSvc
-			assert.NotNil(t, mockSvc)
-		} else {
-			svc, err = createSvc(rootOpts)
-			assert.NotNil(t, svc)
-			assert.Nil(t, err)
-		}
-
-		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, svc))
+		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, tc.svc))
 		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
 		ShowCmd.SetArgs(tc.args)
 
@@ -108,6 +116,5 @@ func TestExecuteShowCmd(t *testing.T) {
 		}
 	}
 
-	rootOpts.SetZeroValues()
 	transferAccelerationOpts.SetZeroValues()
 }

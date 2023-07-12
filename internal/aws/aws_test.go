@@ -172,8 +172,10 @@ func TestGetAllFiles(t *testing.T) {
 		listObjectsErr    error
 		listObjectsOutput *s3.ListObjectsOutput
 	}{
-		{"Success with non-empty file list",
-			nil, nil,
+		{
+			"Success with non-empty file list",
+			nil,
+			nil,
 			&s3.ListObjectsOutput{
 				Contents: []*s3.Object{
 					{
@@ -194,15 +196,15 @@ func TestGetAllFiles(t *testing.T) {
 				},
 			},
 		},
-		{"Failure caused by List objects error",
-			constants.ErrInjected, constants.ErrInjected,
+		{
+			"Failure caused by List objects error",
+			constants.ErrInjected,
+			constants.ErrInjected,
 			nil,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		defaultListObjectsErr = tc.listObjectsErr
 		defaultListObjectsOutput = tc.listObjectsOutput
 
@@ -223,8 +225,11 @@ func TestDeleteFiles(t *testing.T) {
 		dryRun          bool
 		objects         []*s3.Object
 	}{
-		{"Success with non-empty file list",
-			nil, nil, false,
+		{
+			"Success with non-empty file list",
+			nil,
+			nil,
+			false,
 			[]*s3.Object{
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
@@ -249,8 +254,11 @@ func TestDeleteFiles(t *testing.T) {
 				},
 			},
 		},
-		{"Failure caused by delete object err",
-			constants.ErrInjected, constants.ErrInjected, false,
+		{
+			"Failure caused by delete object err",
+			constants.ErrInjected,
+			constants.ErrInjected,
+			false,
 			[]*s3.Object{
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
@@ -278,8 +286,6 @@ func TestDeleteFiles(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		defaultDeleteObjectErr = tc.deleteObjectErr
 
 		mockSvc := &mockS3Client{}
@@ -295,27 +301,29 @@ func TestCreateAwsService(t *testing.T) {
 		opts       *options.RootOptions
 		shouldPass bool
 	}{
-		{"Success",
+		{
+			"Success",
 			&options.RootOptions{
 				AccessKey:  "thisisaccesskey",
 				SecretKey:  "thisissecretkey",
 				BucketName: "thisisbucketname",
 				Region:     "thisisregion",
-			}, true,
+			},
+			true,
 		},
-		{"Failure caused by missing required field",
+		{
+			"Failure caused by missing required field",
 			&options.RootOptions{
 				AccessKey:  "thisisaccesskey",
 				SecretKey:  "thisissecretkey",
 				BucketName: "thisisbucketname",
 				Region:     "",
-			}, false,
+			},
+			false,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		_, err := CreateAwsService(tc.opts)
 
 		if tc.shouldPass {
@@ -337,12 +345,15 @@ func TestSearchString(t *testing.T) {
 		getObjectErr      error
 		matchCount        int
 	}{
-		{"Success with specific text",
+		{
+			"Success with specific text",
 			&options2.SearchOptions{
 				Text:        "pvRRTaigmb",
 				FileName:    "",
 				RootOptions: nil,
-			}, true, nil,
+			},
+			true,
+			nil,
 			&s3.ListObjectsOutput{
 				Contents: []*s3.Object{
 					{
@@ -361,14 +372,19 @@ func TestSearchString(t *testing.T) {
 						StorageClass: aws.String("STANDARD"),
 					},
 				},
-			}, nil, 2,
+			},
+			nil,
+			2,
 		},
-		{"Success with file name regex",
+		{
+			"Success with file name regex",
 			&options2.SearchOptions{
 				Text:        "pvRRTaigmb",
 				FileName:    "file2.*.",
 				RootOptions: nil,
-			}, true, nil,
+			},
+			true,
+			nil,
 			&s3.ListObjectsOutput{
 				Contents: []*s3.Object{
 					{
@@ -387,22 +403,32 @@ func TestSearchString(t *testing.T) {
 						StorageClass: aws.String("STANDARD"),
 					},
 				},
-			}, nil, 1,
+			},
+			nil,
+			1,
 		},
-		{"Failure caused by list objects error",
+		{
+			"Failure caused by list objects error",
 			&options2.SearchOptions{
 				Text:        "pvRRTaigmb",
 				FileName:    "",
 				RootOptions: nil,
-			}, false, errors.New("injected error"),
-			nil, nil, 0,
+			},
+			false,
+			constants.ErrInjected,
+			nil,
+			nil,
+			0,
 		},
-		{"Failure caused by get object error",
+		{
+			"Failure caused by get object error",
 			&options2.SearchOptions{
 				Text:        "pvRRTaigmb",
 				FileName:    "",
 				RootOptions: nil,
-			}, false, nil,
+			},
+			false,
+			nil,
 			&s3.ListObjectsOutput{
 				Contents: []*s3.Object{
 					{
@@ -421,13 +447,13 @@ func TestSearchString(t *testing.T) {
 						StorageClass: aws.String("STANDARD"),
 					},
 				},
-			}, errors.New("injected error"), 0,
+			},
+			constants.ErrInjected,
+			0,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		tc.searchOpts.RootOptions = rootOpts
 		defaultListObjectsErr = tc.listObjectsErr
 		defaultListObjectsOutput = tc.listObjectsOutput
@@ -470,7 +496,13 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil, nil, false, true, nil,
+			},
+			nil,
+			nil,
+			nil,
+			false,
+			true,
+			nil,
 		},
 		{
 			"Successfully enabled when already enabled",
@@ -481,7 +513,12 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
-			}, nil, nil, nil, false, false,
+			},
+			nil,
+			nil,
+			nil,
+			false,
+			false,
 			promptMock{
 				msg: "y",
 				err: nil,
@@ -496,7 +533,12 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
-			}, nil, nil, nil, false, false,
+			},
+			nil,
+			nil,
+			nil,
+			false,
+			false,
 			promptMock{
 				msg: "y",
 				err: nil,
@@ -509,8 +551,12 @@ func TestSetBucketVersioning(t *testing.T) {
 				DesiredState: "disabled",
 				RootOptions:  rootOpts,
 			},
-			nil, constants.ErrInjected, nil,
-			constants.ErrInjected, false, false,
+			nil,
+			constants.ErrInjected,
+			nil,
+			constants.ErrInjected,
+			false,
+			false,
 			promptMock{
 				msg: "y",
 				err: nil,
@@ -525,8 +571,12 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enableddddd"),
-			}, nil, nil, errors.New("unknown status 'Enableddddd' returned from AWS SDK"),
-			false, false,
+			},
+			nil,
+			nil,
+			errors.New("unknown status 'Enableddddd' returned from AWS SDK"),
+			false,
+			false,
 			promptMock{
 				msg: "y",
 				err: nil,
@@ -541,7 +591,12 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil, nil, true, false,
+			},
+			nil,
+			nil,
+			nil,
+			true,
+			false,
 			nil,
 		},
 		{
@@ -553,7 +608,12 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil, constants.ErrUserTerminated, false, false,
+			},
+			nil,
+			nil,
+			constants.ErrUserTerminated,
+			false,
+			false,
 			promptMock{
 				msg: "n",
 				err: constants.ErrInjected,
@@ -568,7 +628,12 @@ func TestSetBucketVersioning(t *testing.T) {
 			},
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil, constants.ErrInvalidInput, false, false,
+			},
+			nil,
+			nil,
+			constants.ErrInvalidInput,
+			false,
+			false,
 			promptMock{
 				msg: "nasdf",
 				err: constants.ErrInjected,
@@ -577,8 +642,6 @@ func TestSetBucketVersioning(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
@@ -607,20 +670,22 @@ func TestGetBucketVersioning(t *testing.T) {
 		getBucketVersioningErr error
 	}{
 		{
-			"Success", nil,
+			"Success",
+			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enableddddd"),
-			}, nil,
+			},
+			nil,
 		},
 		{
-			"Failure", constants.ErrInjected,
-			nil, constants.ErrInjected,
+			"Failure",
+			constants.ErrInjected,
+			nil,
+			constants.ErrInjected,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		defaultGetBucketVersioningOutput = tc.GetBucketVersioningOutput
 		defaultGetBucketVersioningErr = tc.getBucketVersioningErr
 
@@ -642,7 +707,8 @@ func TestGetBucketTags(t *testing.T) {
 		getBucketTaggingErr error
 	}{
 		{
-			"Success", nil,
+			"Success",
+			nil,
 			&options4.TagOptions{
 				RootOptions: rootOpts,
 			},
@@ -657,20 +723,21 @@ func TestGetBucketTags(t *testing.T) {
 						Value: aws.String("bar2"),
 					},
 				},
-			}, nil,
+			},
+			nil,
 		},
 		{
-			"Failure", constants.ErrInjected,
+			"Failure",
+			constants.ErrInjected,
 			&options4.TagOptions{
 				RootOptions: rootOpts,
 			},
-			nil, constants.ErrInjected,
+			nil,
+			constants.ErrInjected,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		defaultGetBucketTaggingOutput = tc.GetBucketTaggingOutput
 		defaultGetBucketTaggingErr = tc.getBucketTaggingErr
 
@@ -692,7 +759,8 @@ func TestSetBucketTags(t *testing.T) {
 		putBucketTaggingErr error
 	}{
 		{
-			"Success", nil,
+			"Success",
+			nil,
 			&options4.TagOptions{
 				RootOptions:  rootOpts,
 				TagsToAdd:    make(map[string]string),
@@ -707,10 +775,12 @@ func TestSetBucketTags(t *testing.T) {
 					Key:   aws.String("foo2"),
 					Value: aws.String("bar2"),
 				},
-			}, nil,
+			},
+			nil,
 		},
 		{
-			"Failure", constants.ErrInjected,
+			"Failure",
+			constants.ErrInjected,
 			&options4.TagOptions{
 				RootOptions:  rootOpts,
 				TagsToAdd:    make(map[string]string),
@@ -731,8 +801,6 @@ func TestSetBucketTags(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		mockSvc := &mockS3Client{}
 
 		for _, v := range tc.tags {
@@ -755,13 +823,16 @@ func TestDeleteAllBucketTags(t *testing.T) {
 		deleteBucketTaggingErr error
 	}{
 		{
-			"Success", nil,
+			"Success",
+			nil,
 			&options4.TagOptions{
 				RootOptions: rootOpts,
-			}, nil,
+			},
+			nil,
 		},
 		{
-			"Failure", constants.ErrInjected,
+			"Failure",
+			constants.ErrInjected,
 			&options4.TagOptions{
 				RootOptions: rootOpts,
 			},
@@ -770,8 +841,6 @@ func TestDeleteAllBucketTags(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		mockSvc := &mockS3Client{}
 
 		defaultDeleteBucketTaggingErr = tc.deleteBucketTaggingErr
@@ -790,13 +859,16 @@ func TestGetBucketPolicy(t *testing.T) {
 		getBucketPolicyErr error
 	}{
 		{
-			"Success", nil,
+			"Success",
+			nil,
 			&options6.BucketPolicyOptions{
 				RootOptions: rootOpts,
-			}, nil,
+			},
+			nil,
 		},
 		{
-			"Failure", constants.ErrInjected,
+			"Failure",
+			constants.ErrInjected,
 			&options6.BucketPolicyOptions{
 				RootOptions: rootOpts,
 			},
@@ -805,8 +877,6 @@ func TestGetBucketPolicy(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		mockSvc := &mockS3Client{}
 
 		defaultGetBucketPolicyErr = tc.getBucketPolicyErr
@@ -825,14 +895,17 @@ func TestSetBucketPolicy(t *testing.T) {
 		putBucketPolicyErr error
 	}{
 		{
-			"Success", nil,
+			"Success",
+			nil,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
 				BucketPolicyContent: bucketPolicyStr,
-			}, nil,
+			},
+			nil,
 		},
 		{
-			"Failure", constants.ErrInjected,
+			"Failure",
+			constants.ErrInjected,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
 				BucketPolicyContent: bucketPolicyStr,
@@ -842,8 +915,6 @@ func TestSetBucketPolicy(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		mockSvc := &mockS3Client{}
 
 		defaultPutBucketPolicyErr = tc.putBucketPolicyErr
@@ -863,28 +934,30 @@ func TestGetBucketPolicyString(t *testing.T) {
 		getBucketPolicyErr error
 	}{
 		{
-			"Success", nil,
+			"Success",
+			nil,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
 				BucketPolicyContent: bucketPolicyStr,
 			},
 			&s3.GetBucketPolicyOutput{
 				Policy: aws.String(bucketPolicyStr),
-			}, nil,
+			},
+			nil,
 		},
 		{
-			"Failure", constants.ErrInjected,
+			"Failure",
+			constants.ErrInjected,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
 				BucketPolicyContent: bucketPolicyStr,
 			},
-			nil, constants.ErrInjected,
+			nil,
+			constants.ErrInjected,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		mockSvc := &mockS3Client{}
 
 		defaultGetBucketPolicyOutput = tc.GetBucketPolicyOutput
@@ -908,24 +981,26 @@ func TestDeleteBucketPolicy(t *testing.T) {
 		deleteBucketPolicyErr error
 	}{
 		{
-			"Success", nil,
+			"Success",
+			nil,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
 				BucketPolicyContent: bucketPolicyStr,
-			}, nil,
+			},
+			nil,
 		},
 		{
-			"Failure", constants.ErrInjected,
+			"Failure",
+			constants.ErrInjected,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
 				BucketPolicyContent: bucketPolicyStr,
-			}, constants.ErrInjected,
+			},
+			constants.ErrInjected,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		mockSvc := &mockS3Client{}
 
 		defaultDeleteBucketPolicyErr = tc.deleteBucketPolicyErr
@@ -944,22 +1019,24 @@ func TestGetTransferAcceleration(t *testing.T) {
 		getBucketAccelerationErr error
 	}{
 		{
-			"Success", nil,
+			"Success",
+			nil,
 			&options5.TransferAccelerationOptions{
 				RootOptions: rootOpts,
-			}, nil,
+			},
+			nil,
 		},
 		{
-			"Failure", constants.ErrInjected,
+			"Failure",
+			constants.ErrInjected,
 			&options5.TransferAccelerationOptions{
 				RootOptions: rootOpts,
-			}, constants.ErrInjected,
+			},
+			constants.ErrInjected,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		mockSvc := &mockS3Client{}
 
 		defaultGetBucketAccelerationErr = tc.getBucketAccelerationErr
@@ -983,122 +1060,166 @@ func TestSetTransferAcceleration(t *testing.T) {
 		prompt.PromptRunner
 	}{
 		{
-			"Success", nil,
+			"Success",
+			nil,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "enabled",
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil, false, true,
+			},
+			nil,
+			nil,
+			false,
+			true,
 			nil,
 		},
 		{
-			"Success when already enabled", nil,
+			"Success when already enabled",
+			nil,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "enabled",
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
-			}, nil, nil, false, false,
+			},
+			nil,
+			nil,
+			false,
+			false,
 			promptMock{
 				msg: "y",
 				err: nil,
 			},
 		},
 		{
-			"Success when already disabled", nil,
+			"Success when already disabled",
+			nil,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil, false, false,
+			},
+			nil,
+			nil,
+			false,
+			false,
 			promptMock{
 				msg: "y",
 				err: nil,
 			},
 		},
 		{
-			"Success when dry-run enabled", nil,
+			"Success when dry-run enabled",
+			nil,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Suspended"),
-			}, nil, nil, true, false,
+			},
+			nil,
+			nil,
+			true,
+			false,
 			promptMock{
 				msg: "y",
 				err: nil,
 			},
 		},
 		{
-			"Failure caused by get transfer acceleration error", constants.ErrInjected,
+			"Failure caused by get transfer acceleration error",
+			constants.ErrInjected,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
-			nil, constants.ErrInjected, nil,
-			false, false,
+			nil,
+			constants.ErrInjected,
+			nil,
+			false,
+			false,
 			promptMock{
 				msg: "y",
 				err: nil,
 			},
 		},
 		{
-			"Failure caused by unknown status returned by get transfer acceleration", constants.ErrInjected,
+			"Failure caused by unknown status returned by get transfer acceleration",
+			constants.ErrInjected,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Suspendedddd"),
-			}, nil, nil, false, false,
+			},
+			nil,
+			nil,
+			false,
+			false,
 			promptMock{
 				msg: "y",
 				err: nil,
 			},
 		},
 		{
-			"Failure caused by put transfer acceleration error", constants.ErrInjected,
+			"Failure caused by put transfer acceleration error",
+			constants.ErrInjected,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
-			}, nil, constants.ErrInjected, false, false,
+			},
+			nil,
+			constants.ErrInjected,
+			false,
+			false,
 			promptMock{
 				msg: "y",
 				err: nil,
 			},
 		},
 		{
-			"Failure caused by prompt error", constants.ErrInvalidInput,
+			"Failure caused by prompt error",
+			constants.ErrInvalidInput,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
-			}, nil, nil, false, false,
+			},
+			nil,
+			nil,
+			false,
+			false,
 			promptMock{
 				msg: "dkslfa",
 				err: constants.ErrInjected,
 			},
 		},
 		{
-			"Failure caused by user terminated the process", constants.ErrUserTerminated,
+			"Failure caused by user terminated the process",
+			constants.ErrUserTerminated,
 			&options5.TransferAccelerationOptions{
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
-			}, nil, nil, false, false,
+			},
+			nil,
+			nil,
+			false,
+			false,
 			promptMock{
 				msg: "n",
 				err: constants.ErrInjected,
@@ -1107,8 +1228,6 @@ func TestSetTransferAcceleration(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Logf("starting case %s", tc.caseName)
-
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 

@@ -4,8 +4,9 @@ package add
 
 import (
 	"context"
-	"errors"
 	"testing"
+
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -22,10 +23,6 @@ var (
 	defaultGetBucketTaggingErr    error
 	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{}
 )
-
-func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
-	return internalaws.CreateAwsService(rootOpts)
-}
 
 type promptMock struct {
 	msg string
@@ -51,11 +48,10 @@ func (m *mockS3Client) GetBucketTagging(input *s3.GetBucketTaggingInput) (*s3.Ge
 }
 
 func TestExecuteAddCmd(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
+	rootOpts := options.GetMockedRootOptions()
+	svc, err := internalaws.CreateAwsService(rootOpts)
+	assert.Nil(t, err)
+	assert.NotNil(t, svc)
 
 	ctx := context.Background()
 	AddCmd.SetContext(ctx)
@@ -64,7 +60,7 @@ func TestExecuteAddCmd(t *testing.T) {
 		caseName               string
 		args                   []string
 		shouldPass             bool
-		shouldMock             bool
+		svc                    s3iface.S3API
 		getBucketTaggingErr    error
 		getBucketTaggingOutput *s3.GetBucketTaggingOutput
 		putBucketTaggingErr    error
@@ -73,14 +69,24 @@ func TestExecuteAddCmd(t *testing.T) {
 		dryRun                 bool
 		autoApprove            bool
 	}{
-		{"No arguments provided", []string{}, false, false,
+		{
+			"No arguments provided",
+			[]string{},
+			false,
+			svc,
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
-			nil, false, false,
+			nil,
+			false,
+			false,
 		},
-		{"Success when auto-approve disabled", []string{"foo=bar,foo2=bar2"}, true, true,
+		{
+			"Success when auto-approve disabled",
+			[]string{"foo=bar,foo2=bar2"},
+			true,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -99,9 +105,15 @@ func TestExecuteAddCmd(t *testing.T) {
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Success when auto-approve enabled", []string{"foo=bar,foo2=bar2"}, true, true,
+		{
+			"Success when auto-approve enabled",
+			[]string{"foo=bar,foo2=bar2"},
+			true,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -117,9 +129,15 @@ func TestExecuteAddCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketTaggingOutput{},
-			nil, false, true,
+			nil,
+			false,
+			true,
 		},
-		{"Success when dry run enabled", []string{"foo=bar,foo2=bar2"}, true, true,
+		{
+			"Success when dry run enabled",
+			[]string{"foo=bar,foo2=bar2"},
+			true,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -135,9 +153,15 @@ func TestExecuteAddCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketTaggingOutput{},
-			nil, true, false,
+			nil,
+			true,
+			false,
 		},
-		{"Success", []string{"foo=bar,foo2=bar2"}, true, true,
+		{
+			"Success",
+			[]string{"foo=bar,foo2=bar2"},
+			true,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -156,39 +180,63 @@ func TestExecuteAddCmd(t *testing.T) {
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by GetBucketTags error", []string{"foo=bar,foo2=bar2"}, false, true,
-			errors.New("injected error"),
+		{
+			"Failure caused by GetBucketTags error",
+			[]string{"foo=bar,foo2=bar2"},
+			false,
+			&mockS3Client{},
+			constants.ErrInjected,
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by prompt error", []string{"foo=bar,foo2=bar2"}, false, true,
+		{
+			"Failure caused by prompt error",
+			[]string{"foo=bar,foo2=bar2"},
+			false,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
 			&promptMock{
 				msg: "asdfasdf",
-				err: errors.New("injected error"),
-			}, false, false,
+				err: constants.ErrInjected,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by user terminated the process", []string{"foo=bar,foo2=bar2"}, false, true,
+		{
+			"Failure caused by user terminated the process",
+			[]string{"foo=bar,foo2=bar2"},
+			false,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
 			&promptMock{
 				msg: "n",
-				err: nil,
-			}, false, false,
+				err: constants.ErrInjected,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by wrong provided arg", []string{"foo=bar=barX,foo2=bar2"}, false, true,
+		{
+			"Failure caused by wrong provided arg",
+			[]string{"foo=bar=barX,foo2=bar2"},
+			false,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
@@ -196,17 +244,25 @@ func TestExecuteAddCmd(t *testing.T) {
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by SetBucketTags error", []string{"foo=bar,foo2=bar2"}, false, true,
+		{
+			"Failure caused by SetBucketTags error",
+			[]string{"foo=bar,foo2=bar2"},
+			false,
+			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{},
-			errors.New("injected error"),
+			constants.ErrInjected,
 			&s3.PutBucketTaggingOutput{},
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
 	}
 
@@ -219,22 +275,11 @@ func TestExecuteAddCmd(t *testing.T) {
 		defaultGetBucketTaggingOutput = tc.getBucketTaggingOutput
 		defaultPutBucketTaggingOutput = tc.putBucketTaggingOutput
 
-		var err error
-		if tc.shouldMock {
-			mockSvc := &mockS3Client{}
-			svc = mockSvc
-			assert.NotNil(t, mockSvc)
-		} else {
-			svc, err = createSvc(rootOpts)
-			assert.NotNil(t, svc)
-			assert.Nil(t, err)
-		}
-
 		if tc.promptMock != nil {
 			confirmRunner = tc.promptMock
 		}
 
-		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, svc))
+		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, tc.svc))
 		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
 		AddCmd.SetArgs(tc.args)
 
@@ -247,6 +292,5 @@ func TestExecuteAddCmd(t *testing.T) {
 		}
 	}
 
-	rootOpts.SetZeroValues()
 	tagOpts.SetZeroValues()
 }

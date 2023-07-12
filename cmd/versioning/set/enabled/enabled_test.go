@@ -25,21 +25,15 @@ var (
 	defaultPutBucketVersioningErr    error
 )
 
-func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
-	return internalaws.CreateAwsService(rootOpts)
-}
-
 type promptMock struct {
 	msg string
 	err error
 }
 
 func (p promptMock) Run() (string, error) {
-	// return expected result
 	return p.msg, p.err
 }
 
-// Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
 	s3iface.S3API
 }
@@ -53,11 +47,10 @@ func (m *mockS3Client) PutBucketVersioning(input *s3.PutBucketVersioningInput) (
 }
 
 func TestExecuteEnabledCmd(t *testing.T) {
-	rootOpts := options.GetRootOptions()
-	rootOpts.AccessKey = "thisisaccesskey"
-	rootOpts.SecretKey = "thisissecretkey"
-	rootOpts.Region = "thisisregion"
-	rootOpts.BucketName = "thisisbucketname"
+	rootOpts := options.GetMockedRootOptions()
+	svc, err := internalaws.CreateAwsService(rootOpts)
+	assert.Nil(t, err)
+	assert.NotNil(t, svc)
 
 	ctx := context.Background()
 	EnabledCmd.SetContext(ctx)
@@ -66,7 +59,7 @@ func TestExecuteEnabledCmd(t *testing.T) {
 		caseName                  string
 		args                      []string
 		shouldPass                bool
-		shouldMock                bool
+		svc                       s3iface.S3API
 		getBucketVersioningErr    error
 		getBucketVersioningOutput *s3.GetBucketVersioningOutput
 		putBucketVersioningErr    error
@@ -75,68 +68,140 @@ func TestExecuteEnabledCmd(t *testing.T) {
 		dryRun                    bool
 		autoApprove               bool
 	}{
-		{"Too many arguments", []string{"enabled", "foo"}, false, false, nil,
+		{
+			"Too many arguments",
+			[]string{"enabled", "foo"},
+			false,
+			svc,
+			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
-			}, nil, &s3.PutBucketVersioningOutput{},
-			nil, false, false,
+			},
+			nil,
+			&s3.PutBucketVersioningOutput{},
+			nil,
+			false,
+			false,
 		},
-		{"Success", []string{}, true, true, nil,
+		{
+			"Success",
+			[]string{},
+			true,
+			&mockS3Client{},
+			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
-			}, nil, &s3.PutBucketVersioningOutput{},
+			},
+			nil,
+			&s3.PutBucketVersioningOutput{},
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Success when dry-run enabled", []string{}, true, true, nil,
+		{
+			"Success when dry-run enabled",
+			[]string{},
+			true,
+			&mockS3Client{},
+			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
-			}, nil, &s3.PutBucketVersioningOutput{},
-			nil, true, false,
+			},
+			nil,
+			&s3.PutBucketVersioningOutput{},
+			nil,
+			true,
+			false,
 		},
-		{"Success when auto-approve enabled", []string{}, true, true, nil,
+		{
+			"Success when auto-approve enabled",
+			[]string{},
+			true,
+			&mockS3Client{},
+			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
-			}, nil, &s3.PutBucketVersioningOutput{},
-			nil, false, true,
+			},
+			nil,
+			&s3.PutBucketVersioningOutput{},
+			nil,
+			false,
+			true,
 		},
-		{"Success while already enabled", []string{}, true, true,
-			nil, &s3.GetBucketVersioningOutput{
+		{
+			"Success while already enabled",
+			[]string{},
+			true,
+			&mockS3Client{},
+			nil,
+			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
-			}, nil, &s3.PutBucketVersioningOutput{},
+			},
+			nil,
+			&s3.PutBucketVersioningOutput{},
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by unknown status returned by external call", []string{}, false, true, nil,
+		{
+			"Failure caused by unknown status returned by external call",
+			[]string{},
+			false,
+			&mockS3Client{},
+			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enableddd"),
-			}, nil, &s3.PutBucketVersioningOutput{},
+			},
+			nil,
+			&s3.PutBucketVersioningOutput{},
 			&promptMock{
 				msg: "y",
 				err: nil,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by prompt error", []string{}, false, true, nil,
+		{
+			"Failure caused by prompt error",
+			[]string{},
+			false,
+			&mockS3Client{},
+			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
-			}, nil, &s3.PutBucketVersioningOutput{},
+			},
+			nil,
+			&s3.PutBucketVersioningOutput{},
 			&promptMock{
 				msg: "asdfafj",
 				err: constants.ErrInjected,
-			}, false, false,
+			},
+			false,
+			false,
 		},
-		{"Failure caused by user terminated the process", []string{}, false, true, nil,
+		{
+			"Failure caused by user terminated the process",
+			[]string{},
+			false,
+			&mockS3Client{},
+			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
-			}, nil, &s3.PutBucketVersioningOutput{},
+			},
+			nil,
+			&s3.PutBucketVersioningOutput{},
 			&promptMock{
 				msg: "n",
 				err: constants.ErrInjected,
-			}, false, false,
+			},
+			false,
+			false,
 		},
 	}
 
@@ -147,22 +212,11 @@ func TestExecuteEnabledCmd(t *testing.T) {
 		defaultGetBucketVersioningErr = tc.getBucketVersioningErr
 		defaultGetBucketVersioningOutput = tc.getBucketVersioningOutput
 
-		var err error
-		if tc.shouldMock {
-			mockSvc := &mockS3Client{}
-			svc = mockSvc
-			assert.NotNil(t, mockSvc)
-		} else {
-			svc, err = createSvc(rootOpts)
-			assert.NotNil(t, svc)
-			assert.Nil(t, err)
-		}
-
 		if tc.promptMock != nil {
 			confirmRunner = tc.promptMock
 		}
 
-		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, svc))
+		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, tc.svc))
 		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
 		EnabledCmd.SetArgs(tc.args)
 
@@ -175,6 +229,5 @@ func TestExecuteEnabledCmd(t *testing.T) {
 		}
 	}
 
-	rootOpts.SetZeroValues()
 	versioningOpts.SetZeroValues()
 }
