@@ -6,11 +6,11 @@ import (
 	"context"
 	"testing"
 
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+
 	"github.com/stretchr/testify/mock"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
-
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 
@@ -54,24 +54,6 @@ var (
 		RequestCharged: nil,
 	}
 )
-
-// Define a testdata struct to be used in your unit tests
-type mockS3Client struct {
-	mock.Mock
-	s3iface.S3API
-}
-
-func (m *mockS3Client) DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.DeleteObjectOutput), args.Error(1)
-}
-
-func (m *mockS3Client) ListObjects(input *s3.ListObjectsInput) (*s3.ListObjectsOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.ListObjectsOutput), args.Error(1)
-}
 
 func TestExecuteCleanCmd(t *testing.T) {
 	ctx := context.Background()
@@ -128,7 +110,7 @@ func TestExecuteCleanCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case '%s'", tc.caseName)
 
-		mockS3 := new(mockS3Client)
+		mockS3 := new(internalaws.MockS3Client)
 		mockS3.On("DeleteObject", mock.AnythingOfType("*s3.DeleteObjectInput")).Return(tc.deleteObjectOutput, tc.deleteObjectErr)
 		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.listObjectsOutput, tc.listObjectsErr)
 

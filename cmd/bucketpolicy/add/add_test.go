@@ -12,8 +12,6 @@ import (
 	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
@@ -28,17 +26,6 @@ type promptMock struct {
 
 func (p promptMock) Run() (string, error) {
 	return p.msg, p.err
-}
-
-type mockS3Client struct {
-	mock.Mock
-	s3iface.S3API
-}
-
-func (m *mockS3Client) PutBucketPolicy(input *s3.PutBucketPolicyInput) (*s3.PutBucketPolicyOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.PutBucketPolicyOutput), args.Error(1)
 }
 
 func TestExecuteAddCmd(t *testing.T) {
@@ -169,7 +156,7 @@ func TestExecuteAddCmd(t *testing.T) {
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		mockS3 := new(mockS3Client)
+		mockS3 := new(internalaws.MockS3Client)
 		mockS3.On("PutBucketPolicy", mock.AnythingOfType("*s3.PutBucketPolicyInput")).Return(tc.putBucketPolicyOutput, tc.putBucketPolicyErr)
 
 		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, mockS3))

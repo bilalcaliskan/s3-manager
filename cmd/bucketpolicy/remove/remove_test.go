@@ -12,8 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
@@ -52,32 +50,11 @@ func (p promptMock) Run() (string, error) {
 	return p.msg, p.err
 }
 
-type mockS3Client struct {
-	mock.Mock
-	s3iface.S3API
-}
-
-func (m *mockS3Client) GetBucketPolicy(input *s3.GetBucketPolicyInput) (*s3.GetBucketPolicyOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.GetBucketPolicyOutput), args.Error(1)
-}
-
-func (m *mockS3Client) DeleteBucketPolicy(input *s3.DeleteBucketPolicyInput) (*s3.DeleteBucketPolicyOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.DeleteBucketPolicyOutput), args.Error(1)
-}
-
 func TestExecuteRemoveCmd(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+
 	ctx := context.Background()
 	RemoveCmd.SetContext(ctx)
-
-	rootOpts := options.GetMockedRootOptions()
-	svc, err := internalaws.CreateAwsService(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
-
 	cases := []struct {
 		caseName                 string
 		args                     []string
@@ -223,7 +200,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(mockS3Client)
+		mockS3 := new(internalaws.MockS3Client)
 		mockS3.On("GetBucketPolicy", mock.AnythingOfType("*s3.GetBucketPolicyInput")).Return(tc.getBucketPolicyOutput, tc.getBucketPolicyErr)
 		mockS3.On("DeleteBucketPolicy", mock.AnythingOfType("*s3.DeleteBucketPolicyInput")).Return(tc.deleteBucketPolicyOutput, tc.deleteBucketPolicyErr)
 
@@ -235,7 +212,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.ConfirmRunnerKey{}, tc.promptMock))
 		RemoveCmd.SetArgs(tc.args)
 
-		err = RemoveCmd.Execute()
+		err := RemoveCmd.Execute()
 
 		if tc.shouldPass {
 			assert.Nil(t, err)

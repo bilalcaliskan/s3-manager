@@ -6,13 +6,14 @@ import (
 	"context"
 	"testing"
 
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+
 	"github.com/stretchr/testify/mock"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,33 +26,6 @@ type promptMock struct {
 func (p promptMock) Run() (string, error) {
 	// return expected result
 	return p.msg, p.err
-}
-
-// Define a testdata struct to be used in your unit tests
-type mockS3Client struct {
-	mock.Mock
-	s3iface.S3API
-}
-
-// PutBucketTagging mocks the PutBucketTagging method of s3iface.S3API
-func (m *mockS3Client) PutBucketTagging(input *s3.PutBucketTaggingInput) (*s3.PutBucketTaggingOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.PutBucketTaggingOutput), args.Error(1)
-}
-
-// GetBucketTagging mocks the GetBucketTagging method of s3iface.S3API
-func (m *mockS3Client) GetBucketTagging(input *s3.GetBucketTaggingInput) (*s3.GetBucketTaggingOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.GetBucketTaggingOutput), args.Error(1)
-}
-
-// DeleteBucketTagging mocks the DeleteBucketTagging method of s3iface.S3API
-func (m *mockS3Client) DeleteBucketTagging(input *s3.DeleteBucketTaggingInput) (*s3.DeleteBucketTaggingOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.DeleteBucketTaggingOutput), args.Error(1)
 }
 
 func TestExecuteRemoveCmd(t *testing.T) {
@@ -369,7 +343,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(mockS3Client)
+		mockS3 := new(internalaws.MockS3Client)
 		mockS3.On("GetBucketTagging", mock.AnythingOfType("*s3.GetBucketTaggingInput")).Return(tc.getBucketTaggingOutput, tc.getBucketTaggingErr)
 		mockS3.On("PutBucketTagging", mock.AnythingOfType("*s3.PutBucketTaggingInput")).Return(tc.putBucketTaggingOutput, tc.putBucketTaggingErr)
 		mockS3.On("DeleteBucketTagging", mock.AnythingOfType("*s3.DeleteBucketTaggingInput")).Return(tc.deleteBucketTaggingOutput, tc.deleteBucketTaggingErr)

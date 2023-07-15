@@ -6,13 +6,14 @@ import (
 	"context"
 	"testing"
 
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+
 	"github.com/stretchr/testify/mock"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,26 +26,6 @@ type promptMock struct {
 func (p promptMock) Run() (string, error) {
 	// return expected result
 	return p.msg, p.err
-}
-
-// Define a testdata struct to be used in your unit tests
-type mockS3Client struct {
-	mock.Mock
-	s3iface.S3API
-}
-
-// GetBucketVersioning mocks the GetBucketVersioning method of s3iface.S3API
-func (m *mockS3Client) GetBucketVersioning(input *s3.GetBucketVersioningInput) (*s3.GetBucketVersioningOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.GetBucketVersioningOutput), args.Error(1)
-}
-
-// PutBucketVersioning mocks the PutBucketVersioning method of s3iface.S3API
-func (m *mockS3Client) PutBucketVersioning(input *s3.PutBucketVersioningInput) (*s3.PutBucketVersioningOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.PutBucketVersioningOutput), args.Error(1)
 }
 
 func TestExecuteDisabledCmd(t *testing.T) {
@@ -200,7 +181,7 @@ func TestExecuteDisabledCmd(t *testing.T) {
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		mockS3 := new(mockS3Client)
+		mockS3 := new(internalaws.MockS3Client)
 		mockS3.On("GetBucketVersioning", mock.AnythingOfType("*s3.GetBucketVersioningInput")).Return(tc.getBucketVersioningOutput, tc.getBucketVersioningErr)
 		mockS3.On("PutBucketVersioning", mock.AnythingOfType("*s3.PutBucketVersioningInput")).Return(tc.putBucketVersioningOutput, tc.putBucketVersioningErr)
 

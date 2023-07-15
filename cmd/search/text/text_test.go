@@ -9,37 +9,19 @@ import (
 	"sync"
 	"testing"
 
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+
 	"github.com/stretchr/testify/mock"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
 
 var mu sync.Mutex
-
-type mockS3Client struct {
-	mock.Mock
-	s3iface.S3API
-}
-
-// ListObjects mocks the ListObjects method of s3iface.S3API
-func (m *mockS3Client) ListObjects(input *s3.ListObjectsInput) (*s3.ListObjectsOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.ListObjectsOutput), args.Error(1)
-}
-
-// GetObject mocks the GetObject method of s3iface.S3API
-func (m *mockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.GetObjectOutput), args.Error(1)
-}
 
 func TestExecuteTextCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
@@ -116,7 +98,7 @@ func TestExecuteTextCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(mockS3Client)
+		mockS3 := new(internalaws.MockS3Client)
 		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.listObjectsOutput, tc.listObjectsErr)
 		mockS3.On("GetObject", mock.AnythingOfType("*s3.GetObjectInput")).Return(tc.getObjectOutput, tc.getObjectErr)
 

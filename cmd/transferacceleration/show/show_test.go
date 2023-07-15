@@ -7,26 +7,15 @@ import (
 	"errors"
 	"testing"
 
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+
 	"github.com/stretchr/testify/mock"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
-
-type mockS3Client struct {
-	mock.Mock
-	s3iface.S3API
-}
-
-// GetBucketAccelerateConfiguration mocks the GetBucketAccelerateConfiguration method of s3iface.S3API
-func (m *mockS3Client) GetBucketAccelerateConfiguration(input *s3.GetBucketAccelerateConfigurationInput) (*s3.GetBucketAccelerateConfigurationOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.GetBucketAccelerateConfigurationOutput), args.Error(1)
-}
 
 func TestExecuteShowCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
@@ -91,7 +80,7 @@ func TestExecuteShowCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(mockS3Client)
+		mockS3 := new(internalaws.MockS3Client)
 		mockS3.On("GetBucketAccelerateConfiguration", mock.AnythingOfType("*s3.GetBucketAccelerateConfigurationInput")).Return(tc.getBucketAccelerationOutput, tc.getBucketAccelerationErr)
 
 		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, mockS3))

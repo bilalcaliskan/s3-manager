@@ -6,13 +6,14 @@ import (
 	"context"
 	"testing"
 
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+
 	"github.com/stretchr/testify/mock"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,26 +26,6 @@ type promptMock struct {
 func (p promptMock) Run() (string, error) {
 	// return expected result
 	return p.msg, p.err
-}
-
-// Define a testdata struct to be used in your unit tests
-type mockS3Client struct {
-	mock.Mock
-	s3iface.S3API
-}
-
-// GetBucketAccelerateConfiguration mocks the GetBucketAccelerateConfiguration method of s3iface.S3API
-func (m *mockS3Client) GetBucketAccelerateConfiguration(input *s3.GetBucketAccelerateConfigurationInput) (*s3.GetBucketAccelerateConfigurationOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.GetBucketAccelerateConfigurationOutput), args.Error(1)
-}
-
-// PutBucketAccelerateConfiguration mocks the PutBucketAccelerateConfiguration method of s3iface.S3API
-func (m *mockS3Client) PutBucketAccelerateConfiguration(input *s3.PutBucketAccelerateConfigurationInput) (*s3.PutBucketAccelerateConfigurationOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
-	args := m.Called(input)
-	return args.Get(0).(*s3.PutBucketAccelerateConfigurationOutput), args.Error(1)
 }
 
 func TestExecuteEnabledCmd(t *testing.T) {
@@ -200,7 +181,7 @@ func TestExecuteEnabledCmd(t *testing.T) {
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		mockS3 := new(mockS3Client)
+		mockS3 := new(internalaws.MockS3Client)
 		mockS3.On("GetBucketAccelerateConfiguration", mock.AnythingOfType("*s3.GetBucketAccelerateConfigurationInput")).Return(tc.getBucketAccelerationOutput, tc.getBucketAccelerationErr)
 		mockS3.On("PutBucketAccelerateConfiguration", mock.AnythingOfType("*s3.PutBucketAccelerateConfigurationInput")).Return(tc.putBucketAccelerationOutput, tc.putBucketAccelerationErr)
 
