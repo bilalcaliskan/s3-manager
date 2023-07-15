@@ -25,7 +25,7 @@ func init() {
 var (
 	svc              s3iface.S3API
 	logger           zerolog.Logger
-	confirmRunner    prompt.PromptRunner = prompt.GetConfirmRunner()
+	confirmRunner    prompt.PromptRunner
 	bucketPolicyOpts *options.BucketPolicyOptions
 	RemoveCmd        = &cobra.Command{
 		Use:           "remove",
@@ -37,7 +37,7 @@ s3-manager bucketpolicy remove
 		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			var rootOpts *rootopts.RootOptions
-			svc, rootOpts, logger = utils.PrepareConstants(cmd)
+			svc, rootOpts, logger, confirmRunner = utils.PrepareConstants(cmd)
 			bucketPolicyOpts.RootOptions = rootOpts
 
 			if err := utils.CheckArgs(args, 0); err != nil {

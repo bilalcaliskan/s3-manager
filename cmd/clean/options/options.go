@@ -25,8 +25,6 @@ func (opts *CleanOptions) InitFlags(cmd *cobra.Command) {
 		"minimum size in mb to clean from target bucket, 0 means no lower limit")
 	cmd.Flags().Int64VarP(&opts.MaxFileSizeInMb, "max-size-mb", "", 0,
 		"maximum size in mb to clean from target bucket, 0 means no upper limit")
-	/*cmd.Flags().StringVarP(&opts.FileExtensions, "fileExtensions", "", "",
-	"selects the files with defined extensions to clean from target bucket, \"\" means all files (default \"\")")*/
 	cmd.Flags().IntVarP(&opts.KeepLastNFiles, "keep-last-n-files", "", 2,
 		"defines how many of the files to skip deletion in specified criteria, 0 means clean them all")
 	cmd.Flags().StringVarP(&opts.SortBy, "sort-by", "", "lastModificationDate",

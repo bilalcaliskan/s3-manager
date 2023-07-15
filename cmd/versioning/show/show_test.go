@@ -7,35 +7,30 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
-)
-
-var (
-	defaultGetBucketVersioningOutput = &s3.GetBucketVersioningOutput{
-		Status: aws.String("Enabled"),
-	}
-	defaultGetBucketVersioningErr error
 )
 
 // Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
+	mock.Mock
 	s3iface.S3API
 }
 
+// GetBucketVersioning mocks the GetBucketVersioning method of s3iface.S3API
 func (m *mockS3Client) GetBucketVersioning(input *s3.GetBucketVersioningInput) (*s3.GetBucketVersioningOutput, error) {
-	return defaultGetBucketVersioningOutput, defaultGetBucketVersioningErr
+	// Return the mocked output values using the `On` method of testify/mock
+	args := m.Called(input)
+	return args.Get(0).(*s3.GetBucketVersioningOutput), args.Error(1)
 }
 
 func TestExecuteShowCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
-	svc, err := internalaws.CreateAwsService(rootOpts)
-	assert.Nil(t, err)
-	assert.NotNil(t, svc)
 
 	ctx := context.Background()
 	ShowCmd.SetContext(ctx)
@@ -44,7 +39,6 @@ func TestExecuteShowCmd(t *testing.T) {
 		caseName                  string
 		args                      []string
 		shouldPass                bool
-		svc                       s3iface.S3API
 		getBucketVersioningErr    error
 		getBucketVersioningOutput *s3.GetBucketVersioningOutput
 	}{
@@ -52,7 +46,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Too many arguments",
 			[]string{"enabled", "foo"},
 			false,
-			svc,
 			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
@@ -62,7 +55,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Success while already enabled",
 			[]string{},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enabled"),
@@ -72,7 +64,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Success while disabled",
 			[]string{},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
@@ -82,7 +73,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Failure caused by GetBucketVersioning error",
 			[]string{},
 			false,
-			&mockS3Client{},
 			errors.New("dummy error"), &s3.GetBucketVersioningOutput{
 				Status: aws.String("Suspended"),
 			},
@@ -91,7 +81,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Failure caused by unknown status returned by external call",
 			[]string{},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketVersioningOutput{
 				Status: aws.String("Enableddd"),
@@ -100,14 +89,16 @@ func TestExecuteShowCmd(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		defaultGetBucketVersioningErr = tc.getBucketVersioningErr
-		defaultGetBucketVersioningOutput = tc.getBucketVersioningOutput
+		t.Logf("starting case %s", tc.caseName)
 
-		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, tc.svc))
+		mockS3 := new(mockS3Client)
+		mockS3.On("GetBucketVersioning", mock.AnythingOfType("*s3.GetBucketVersioningInput")).Return(tc.getBucketVersioningOutput, tc.getBucketVersioningErr)
+
+		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, mockS3))
 		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
 		ShowCmd.SetArgs(tc.args)
 
-		err = ShowCmd.Execute()
+		err := ShowCmd.Execute()
 
 		if tc.shouldPass {
 			assert.Nil(t, err)

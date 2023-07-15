@@ -7,6 +7,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
@@ -15,11 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
-)
 
-var (
-	defaultPutBucketPolicyOutput = &s3.PutBucketPolicyOutput{}
-	defaultPutBucketPolicyErr    error
+	"github.com/stretchr/testify/mock"
 )
 
 type promptMock struct {
@@ -32,11 +31,14 @@ func (p promptMock) Run() (string, error) {
 }
 
 type mockS3Client struct {
+	mock.Mock
 	s3iface.S3API
 }
 
 func (m *mockS3Client) PutBucketPolicy(input *s3.PutBucketPolicyInput) (*s3.PutBucketPolicyOutput, error) {
-	return defaultPutBucketPolicyOutput, defaultPutBucketPolicyErr
+	// Return the mocked output values using the `On` method of testify/mock
+	args := m.Called(input)
+	return args.Get(0).(*s3.PutBucketPolicyOutput), args.Error(1)
 }
 
 func TestExecuteAddCmd(t *testing.T) {
@@ -48,11 +50,13 @@ func TestExecuteAddCmd(t *testing.T) {
 	assert.NotNil(t, svc)
 	assert.Nil(t, err)
 
+	confirmRunner := prompt.GetConfirmRunner()
+	assert.NotNil(t, confirmRunner)
+
 	cases := []struct {
 		caseName              string
 		args                  []string
 		shouldPass            bool
-		svc                   s3iface.S3API
 		putBucketPolicyErr    error
 		putBucketPolicyOutput *s3.PutBucketPolicyOutput
 		promptMock            *promptMock
@@ -63,7 +67,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Success",
 			[]string{"../../../testdata/bucketpolicy.json"},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.PutBucketPolicyOutput{},
 			&promptMock{
@@ -77,7 +80,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Success with dry-run",
 			[]string{"../../../testdata/bucketpolicy.json"},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.PutBucketPolicyOutput{},
 			&promptMock{
@@ -91,10 +93,12 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure",
 			[]string{"../../../testdata/bucketpolicy.json"},
 			false,
-			&mockS3Client{},
 			errors.New("dummy error"),
 			&s3.PutBucketPolicyOutput{},
-			nil,
+			&promptMock{
+				msg: "y",
+				err: nil,
+			},
 			false,
 			false,
 		},
@@ -102,7 +106,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure caused by user terminated process",
 			[]string{"../../../testdata/bucketpolicy.json"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.PutBucketPolicyOutput{},
 			&promptMock{
@@ -116,7 +119,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure caused by prompt error",
 			[]string{"../../../testdata/bucketpolicy.json"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.PutBucketPolicyOutput{},
 			&promptMock{
@@ -130,10 +132,12 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure caused by target file not found",
 			[]string{"../../../testdata/bucketpolicy.jsonnnn"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.PutBucketPolicyOutput{},
-			nil,
+			&promptMock{
+				msg: "y",
+				err: nil,
+			},
 			false,
 			false,
 		},
@@ -141,7 +145,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure caused by too many arguments error",
 			[]string{"enabled", "foo"},
 			false,
-			svc,
 			nil,
 			&s3.PutBucketPolicyOutput{},
 			nil,
@@ -152,7 +155,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure caused by no arguments provided error",
 			[]string{},
 			false,
-			svc,
 			nil,
 			&s3.PutBucketPolicyOutput{},
 			nil,
@@ -167,15 +169,13 @@ func TestExecuteAddCmd(t *testing.T) {
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		defaultPutBucketPolicyErr = tc.putBucketPolicyErr
-		defaultPutBucketPolicyOutput = tc.putBucketPolicyOutput
+		mockS3 := new(mockS3Client)
+		mockS3.On("PutBucketPolicy", mock.AnythingOfType("*s3.PutBucketPolicyInput")).Return(tc.putBucketPolicyOutput, tc.putBucketPolicyErr)
 
-		if tc.promptMock != nil {
-			confirmRunner = tc.promptMock
-		}
-
-		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, tc.svc))
+		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, mockS3))
 		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
+		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.ConfirmRunnerKey{}, tc.promptMock))
+
 		AddCmd.SetArgs(tc.args)
 
 		err = AddCmd.Execute()
@@ -184,6 +184,8 @@ func TestExecuteAddCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
+
+		//mockS3.AssertCalled(t, "PutBucketPolicy", mock.AnythingOfType("*s3.PutBucketPolicyInput"))
 	}
 
 	bucketPolicyOpts.SetZeroValues()

@@ -7,50 +7,45 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
 	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	defaultGetBucketTaggingErr    error
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{}
-)
-
 type mockS3Client struct {
+	mock.Mock
 	s3iface.S3API
 }
 
+// GetBucketTagging mocks the GetBucketTagging method of s3iface.S3API
 func (m *mockS3Client) GetBucketTagging(input *s3.GetBucketTaggingInput) (*s3.GetBucketTaggingOutput, error) {
-	return defaultGetBucketTaggingOutput, defaultGetBucketTaggingErr
+	// Return the mocked output values using the `On` method of testify/mock
+	args := m.Called(input)
+	return args.Get(0).(*s3.GetBucketTaggingOutput), args.Error(1)
 }
 
 func TestExecuteShowCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
-	svc, err := internalaws.CreateAwsService(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
 
 	ctx := context.Background()
 	ShowCmd.SetContext(ctx)
 
 	cases := []struct {
-		caseName                      string
-		args                          []string
-		shouldPass                    bool
-		svc                           s3iface.S3API
-		defaultGetBucketTaggingErr    error
-		defaultGetBucketTaggingOutput *s3.GetBucketTaggingOutput
+		caseName               string
+		args                   []string
+		shouldPass             bool
+		getBucketTaggingErr    error
+		getBucketTaggingOutput *s3.GetBucketTaggingOutput
 	}{
 		{
 			"Too many arguments",
 			[]string{"enabled", "foo"},
 			false,
-			svc,
 			nil,
 			&s3.GetBucketTaggingOutput{},
 		},
@@ -58,7 +53,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Success with empty TagSet",
 			[]string{},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{},
 		},
@@ -66,7 +60,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Success with non-empty TagSet",
 			[]string{},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -85,21 +78,22 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Failure",
 			[]string{},
 			false,
-			&mockS3Client{},
 			errors.New("dummy error"),
 			&s3.GetBucketTaggingOutput{},
 		},
 	}
 
 	for _, tc := range cases {
-		defaultGetBucketTaggingErr = tc.defaultGetBucketTaggingErr
-		defaultGetBucketTaggingOutput = tc.defaultGetBucketTaggingOutput
+		t.Logf("starting case %s", tc.caseName)
 
-		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, tc.svc))
+		mockS3 := new(mockS3Client)
+		mockS3.On("GetBucketTagging", mock.AnythingOfType("*s3.GetBucketTaggingInput")).Return(tc.getBucketTaggingOutput, tc.getBucketTaggingErr)
+
+		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, mockS3))
 		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
 		ShowCmd.SetArgs(tc.args)
 
-		err = ShowCmd.Execute()
+		err := ShowCmd.Execute()
 
 		if tc.shouldPass {
 			assert.Nil(t, err)
@@ -108,6 +102,5 @@ func TestExecuteShowCmd(t *testing.T) {
 		}
 	}
 
-	rootOpts.SetZeroValues()
 	tagOpts.SetZeroValues()
 }

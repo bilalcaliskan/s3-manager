@@ -7,34 +7,29 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	defaultGetBucketAccelerationOutput = &s3.GetBucketAccelerateConfigurationOutput{
-		Status: aws.String("Enabled"),
-	}
-	defaultGetBucketAccelerationErr error
-)
-
 type mockS3Client struct {
+	mock.Mock
 	s3iface.S3API
 }
 
+// GetBucketAccelerateConfiguration mocks the GetBucketAccelerateConfiguration method of s3iface.S3API
 func (m *mockS3Client) GetBucketAccelerateConfiguration(input *s3.GetBucketAccelerateConfigurationInput) (*s3.GetBucketAccelerateConfigurationOutput, error) {
-	return defaultGetBucketAccelerationOutput, defaultGetBucketAccelerationErr
+	// Return the mocked output values using the `On` method of testify/mock
+	args := m.Called(input)
+	return args.Get(0).(*s3.GetBucketAccelerateConfigurationOutput), args.Error(1)
 }
 
 func TestExecuteShowCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
-	svc, err := internalaws.CreateAwsService(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
 
 	ctx := context.Background()
 	ShowCmd.SetContext(ctx)
@@ -43,7 +38,6 @@ func TestExecuteShowCmd(t *testing.T) {
 		caseName                    string
 		args                        []string
 		shouldPass                  bool
-		svc                         s3iface.S3API
 		getBucketAccelerationErr    error
 		getBucketAccelerationOutput *s3.GetBucketAccelerateConfigurationOutput
 	}{
@@ -51,7 +45,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Too many arguments",
 			[]string{"enabled", "foo"},
 			false,
-			svc,
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
@@ -61,7 +54,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Success enabled",
 			[]string{},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
@@ -71,7 +63,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Success suspended",
 			[]string{},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Suspended"),
@@ -81,8 +72,7 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Failure get bucket acceleration",
 			[]string{},
 			false,
-			&mockS3Client{},
-			errors.New("dummy error"),
+			errors.New("injected error"),
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
 			},
@@ -91,7 +81,6 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Failure unknown status",
 			[]string{},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enableddd"),
@@ -100,14 +89,16 @@ func TestExecuteShowCmd(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		defaultGetBucketAccelerationErr = tc.getBucketAccelerationErr
-		defaultGetBucketAccelerationOutput = tc.getBucketAccelerationOutput
+		t.Logf("starting case %s", tc.caseName)
 
-		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, tc.svc))
+		mockS3 := new(mockS3Client)
+		mockS3.On("GetBucketAccelerateConfiguration", mock.AnythingOfType("*s3.GetBucketAccelerateConfigurationInput")).Return(tc.getBucketAccelerationOutput, tc.getBucketAccelerationErr)
+
+		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, mockS3))
 		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
 		ShowCmd.SetArgs(tc.args)
 
-		err = ShowCmd.Execute()
+		err := ShowCmd.Execute()
 
 		if tc.shouldPass {
 			assert.Nil(t, err)

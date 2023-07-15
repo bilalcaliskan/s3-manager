@@ -8,40 +8,35 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	defaultListObjectsErr    error
-	defaultListObjectsOutput = &s3.ListObjectsOutput{}
-	defaultGetObjectErr      error
-	defaultGetObjectOutput   = &s3.GetObjectOutput{}
-)
-
-func createSvc(rootOpts *options.RootOptions) (*s3.S3, error) {
-	return internalaws.CreateAwsService(rootOpts)
-}
-
 // Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
+	mock.Mock
 	s3iface.S3API
 }
 
-// ListObjects mocks the S3API ListObjects method
-func (m *mockS3Client) ListObjects(obj *s3.ListObjectsInput) (*s3.ListObjectsOutput, error) {
-	return defaultListObjectsOutput, defaultListObjectsErr
+// ListObjects mocks the ListObjects method of s3iface.S3API
+func (m *mockS3Client) ListObjects(input *s3.ListObjectsInput) (*s3.ListObjectsOutput, error) {
+	// Return the mocked output values using the `On` method of testify/mock
+	args := m.Called(input)
+	return args.Get(0).(*s3.ListObjectsOutput), args.Error(1)
 }
 
-// GetObject mocks the S3API GetObject method
+// GetObject mocks the GetObject method of s3iface.S3API
 func (m *mockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
-	return defaultGetObjectOutput, defaultGetObjectErr
+	// Return the mocked output values using the `On` method of testify/mock
+	args := m.Called(input)
+	return args.Get(0).(*s3.GetObjectOutput), args.Error(1)
 }
 
 func TestExecuteFileCmd(t *testing.T) {
@@ -137,13 +132,13 @@ func TestExecuteFileCmd(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		defaultListObjectsErr = tc.listObjectsErr
-		defaultListObjectsOutput = tc.listObjectsOutput
+		t.Logf("starting case %s", tc.caseName)
 
-		defaultGetObjectErr = tc.getObjectErr
-		defaultGetObjectOutput = tc.getObjectOutput
+		mockS3 := new(mockS3Client)
+		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.listObjectsOutput, tc.listObjectsErr)
+		mockS3.On("GetObject", mock.AnythingOfType("*s3.GetObjectInput")).Return(tc.getObjectOutput, tc.getObjectErr)
 
-		FileCmd.SetContext(context.WithValue(FileCmd.Context(), options.S3SvcKey{}, &mockS3Client{}))
+		FileCmd.SetContext(context.WithValue(FileCmd.Context(), options.S3SvcKey{}, mockS3))
 		FileCmd.SetContext(context.WithValue(FileCmd.Context(), options.OptsKey{}, rootOpts))
 		FileCmd.SetArgs(tc.args)
 

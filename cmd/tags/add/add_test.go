@@ -6,22 +6,15 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
-)
-
-var (
-	defaultPutBucketTaggingErr    error
-	defaultPutBucketTaggingOutput = &s3.PutBucketTaggingOutput{}
-
-	defaultGetBucketTaggingErr    error
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{}
 )
 
 type promptMock struct {
@@ -36,22 +29,26 @@ func (p promptMock) Run() (string, error) {
 
 // Define a testdata struct to be used in your unit tests
 type mockS3Client struct {
+	mock.Mock
 	s3iface.S3API
 }
 
+// PutBucketTagging mocks the PutBucketTagging method of s3iface.S3API
 func (m *mockS3Client) PutBucketTagging(input *s3.PutBucketTaggingInput) (*s3.PutBucketTaggingOutput, error) {
-	return defaultPutBucketTaggingOutput, defaultPutBucketTaggingErr
+	// Return the mocked output values using the `On` method of testify/mock
+	args := m.Called(input)
+	return args.Get(0).(*s3.PutBucketTaggingOutput), args.Error(1)
 }
 
+// GetBucketTagging mocks the GetBucketTagging method of s3iface.S3API
 func (m *mockS3Client) GetBucketTagging(input *s3.GetBucketTaggingInput) (*s3.GetBucketTaggingOutput, error) {
-	return defaultGetBucketTaggingOutput, defaultGetBucketTaggingErr
+	// Return the mocked output values using the `On` method of testify/mock
+	args := m.Called(input)
+	return args.Get(0).(*s3.GetBucketTaggingOutput), args.Error(1)
 }
 
 func TestExecuteAddCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
-	svc, err := internalaws.CreateAwsService(rootOpts)
-	assert.Nil(t, err)
-	assert.NotNil(t, svc)
 
 	ctx := context.Background()
 	AddCmd.SetContext(ctx)
@@ -60,7 +57,6 @@ func TestExecuteAddCmd(t *testing.T) {
 		caseName               string
 		args                   []string
 		shouldPass             bool
-		svc                    s3iface.S3API
 		getBucketTaggingErr    error
 		getBucketTaggingOutput *s3.GetBucketTaggingOutput
 		putBucketTaggingErr    error
@@ -73,7 +69,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"No arguments provided",
 			[]string{},
 			false,
-			svc,
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
@@ -86,7 +81,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Success when auto-approve disabled",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -113,7 +107,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Success when auto-approve enabled",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -137,7 +130,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Success when dry run enabled",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -161,7 +153,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Success",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -188,7 +179,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure caused by GetBucketTags error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			&mockS3Client{},
 			constants.ErrInjected,
 			&s3.GetBucketTaggingOutput{},
 			nil,
@@ -204,7 +194,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure caused by prompt error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
@@ -220,7 +209,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure caused by user terminated the process",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
@@ -236,7 +224,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure caused by wrong provided arg",
 			[]string{"foo=bar=barX,foo2=bar2"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
@@ -252,7 +239,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure caused by SetBucketTags error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			constants.ErrInjected,
@@ -267,23 +253,21 @@ func TestExecuteAddCmd(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		defaultGetBucketTaggingErr = tc.getBucketTaggingErr
-		defaultPutBucketTaggingErr = tc.putBucketTaggingErr
-		defaultGetBucketTaggingOutput = tc.getBucketTaggingOutput
-		defaultPutBucketTaggingOutput = tc.putBucketTaggingOutput
+		mockS3 := new(mockS3Client)
+		mockS3.On("GetBucketTagging", mock.AnythingOfType("*s3.GetBucketTaggingInput")).Return(tc.getBucketTaggingOutput, tc.getBucketTaggingErr)
+		mockS3.On("PutBucketTagging", mock.AnythingOfType("*s3.PutBucketTaggingInput")).Return(tc.putBucketTaggingOutput, tc.putBucketTaggingErr)
 
-		if tc.promptMock != nil {
-			confirmRunner = tc.promptMock
-		}
-
-		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, tc.svc))
+		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, mockS3))
+		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.ConfirmRunnerKey{}, tc.promptMock))
 		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
 		AddCmd.SetArgs(tc.args)
 
-		err = AddCmd.Execute()
+		err := AddCmd.Execute()
 
 		if tc.shouldPass {
 			assert.Nil(t, err)

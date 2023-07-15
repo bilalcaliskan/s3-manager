@@ -10,9 +10,10 @@ import (
 var rootOptions = &RootOptions{}
 
 type (
-	OptsKey   struct{}
-	LoggerKey struct{}
-	S3SvcKey  struct{}
+	OptsKey          struct{}
+	LoggerKey        struct{}
+	S3SvcKey         struct{}
+	ConfirmRunnerKey struct{}
 )
 
 // RootOptions contains frequent command line and application options.

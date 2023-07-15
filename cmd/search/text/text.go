@@ -33,7 +33,7 @@ s3-manager search text "catch me if you can" --file-name=".*.txt"
 		`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			var rootOpts *rootopts.RootOptions
-			svc, rootOpts, logger = utils.PrepareConstants(cmd)
+			svc, rootOpts, logger, _ = utils.PrepareConstants(cmd)
 			searchOpts.RootOptions = rootOpts
 
 			if err := utils.CheckArgs(args, 1); err != nil {

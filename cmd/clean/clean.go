@@ -10,7 +10,6 @@ import (
 	"github.com/bilalcaliskan/s3-manager/cmd/clean/options"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/internal/cleaner"
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -26,8 +25,8 @@ var (
 	ValidSortByOpts = []string{"size", "lastModificationDate"}
 	cleanOpts       *options.CleanOptions
 	svc             s3iface.S3API
-	confirmRunner   prompt.PromptRunner = prompt.GetConfirmRunner()
-	CleanCmd                            = &cobra.Command{
+	confirmRunner   prompt.PromptRunner
+	CleanCmd        = &cobra.Command{
 		Use:           "clean",
 		Short:         "finds and clears desired files by a pre-configured rule set",
 		SilenceUsage:  false,
@@ -36,10 +35,9 @@ var (
 s3-manager clean --min-size-mb=1 --max-size-mb=1000 --keep-last-n-files=2 --sort-by=lastModificationDate
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			svc = cmd.Context().Value(rootopts.S3SvcKey{}).(s3iface.S3API)
-			rootOpts := cmd.Context().Value(rootopts.OptsKey{}).(*rootopts.RootOptions)
+			var rootOpts *rootopts.RootOptions
+			svc, rootOpts, logger, confirmRunner = utils.PrepareConstants(cmd)
 			cleanOpts.RootOptions = rootOpts
-			logger = logging.GetLogger(rootOpts)
 
 			if err := utils.CheckArgs(args, 0); err != nil {
 				logger.Error().Msg(err.Error())

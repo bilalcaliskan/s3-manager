@@ -30,7 +30,7 @@ s3-manager versioning set enabled
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var rootOpts *rootopts.RootOptions
-			svc, rootOpts, logger = utils.PrepareConstants(cmd)
+			svc, rootOpts, logger, confirmRunner = utils.PrepareConstants(cmd)
 			versioningOpts.RootOptions = rootOpts
 
 			if err := utils.CheckArgs(args, 0); err != nil {

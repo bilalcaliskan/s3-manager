@@ -18,7 +18,7 @@ func init() {
 var (
 	svc                      s3iface.S3API
 	logger                   zerolog.Logger
-	confirmRunner            prompt.PromptRunner = prompt.GetConfirmRunner()
+	confirmRunner            prompt.PromptRunner
 	transferAccelerationOpts *options2.TransferAccelerationOptions
 	DisabledCmd              = &cobra.Command{
 		Use:           "disabled",
@@ -30,7 +30,7 @@ s3-manager transferacceleration set disabled
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var rootOpts *rootopts.RootOptions
-			svc, rootOpts, logger = utils.PrepareConstants(cmd)
+			svc, rootOpts, logger, confirmRunner = utils.PrepareConstants(cmd)
 			transferAccelerationOpts.RootOptions = rootOpts
 
 			if err := utils.CheckArgs(args, 0); err != nil {
