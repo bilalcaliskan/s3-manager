@@ -26,6 +26,11 @@ func (opts *SearchOptions) InitFlags(cmd *cobra.Command) {
 	}
 }
 
+func (opts *SearchOptions) SetZeroValues() {
+	opts.Text = ""
+	opts.FileName = ""
+}
+
 // GetSearchOptions returns the pointer of FindOptions
 func GetSearchOptions() *SearchOptions {
 	return searchOptions

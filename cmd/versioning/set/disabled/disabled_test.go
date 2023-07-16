@@ -189,5 +189,7 @@ func TestExecuteDisabledCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
+
+		versioningOpts.SetZeroValues()
 	}
 }

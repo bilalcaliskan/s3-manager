@@ -217,6 +217,8 @@ func TestCheckArgs(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
 		err := CheckArgs(args, tc.allowed)
 		assert.Equal(t, tc.expectedErr, err)
 	}

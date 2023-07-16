@@ -25,3 +25,8 @@ func TestSearchOptions_InitFlags(t *testing.T) {
 	opts.RootOptions = rootOpts
 	opts.InitFlags(&cmd)
 }
+
+func TestSearchOptions_SetZeroValues(t *testing.T) {
+	opts := GetSearchOptions()
+	opts.SetZeroValues()
+}

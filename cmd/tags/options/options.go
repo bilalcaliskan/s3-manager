@@ -23,3 +23,9 @@ type TagOptions struct {
 func GetTagOptions() *TagOptions {
 	return tagOpts
 }
+
+func (opts *TagOptions) SetZeroValues() {
+	opts.ActualTags = make(map[string]string)
+	opts.TagsToAdd = make(map[string]string)
+	opts.TagsToRemove = make(map[string]string)
+}

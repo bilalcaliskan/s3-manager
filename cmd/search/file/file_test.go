@@ -45,7 +45,7 @@ func TestExecuteFileCmd(t *testing.T) {
 		},
 		{
 			"Success matching files",
-			[]string{"file1.txt"},
+			[]string{"file3.txt"},
 			true,
 			nil,
 			&s3.ListObjectsOutput{
@@ -74,7 +74,7 @@ func TestExecuteFileCmd(t *testing.T) {
 		},
 		{
 			"Failure caused by ListObjects error",
-			[]string{"file1.txt"},
+			[]string{"file3.txt"},
 			false,
 			constants.ErrInjected,
 			&s3.ListObjectsOutput{},
@@ -83,7 +83,7 @@ func TestExecuteFileCmd(t *testing.T) {
 		},
 		{
 			"Success no matching files",
-			[]string{"file1.txt"},
+			[]string{"file3.txt"},
 			true,
 			nil,
 			&s3.ListObjectsOutput{
@@ -95,12 +95,12 @@ func TestExecuteFileCmd(t *testing.T) {
 					},
 					{
 						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("../../../testdata/file2.txt"),
+						Key:          aws.String("../../../testdata/file5.txt"),
 						StorageClass: aws.String("STANDARD"),
 					},
 					{
 						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("../../../testdata/file3.txt"),
+						Key:          aws.String("../../../testdata/file6.txt"),
 						StorageClass: aws.String("STANDARD"),
 					},
 				},
@@ -130,6 +130,8 @@ func TestExecuteFileCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
+
+		searchOpts.SetZeroValues()
 	}
 }
 

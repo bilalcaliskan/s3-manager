@@ -18,3 +18,8 @@ type VersioningOptions struct {
 func GetVersioningOptions() *VersioningOptions {
 	return versioningOpts
 }
+
+func (opts *VersioningOptions) SetZeroValues() {
+	opts.ActualState = ""
+	opts.DesiredState = ""
+}

@@ -212,5 +212,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
+
+		bucketPolicyOpts.SetZeroValues()
 	}
 }

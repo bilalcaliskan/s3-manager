@@ -12,3 +12,10 @@ func TestGetTransferAccelerationOptions(t *testing.T) {
 	opts := GetTransferAccelerationOptions()
 	assert.NotNil(t, opts)
 }
+
+func TestTransferAccelerationOptions_SetZeroValues(t *testing.T) {
+	opts := GetTransferAccelerationOptions()
+	assert.NotNil(t, opts)
+
+	opts.SetZeroValues()
+}

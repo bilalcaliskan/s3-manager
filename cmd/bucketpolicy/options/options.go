@@ -17,3 +17,7 @@ type BucketPolicyOptions struct {
 func GetBucketPolicyOptions() *BucketPolicyOptions {
 	return bucketPolicyOpts
 }
+
+func (opts *BucketPolicyOptions) SetZeroValues() {
+	opts.BucketPolicyContent = ""
+}
