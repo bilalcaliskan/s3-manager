@@ -27,3 +27,8 @@ func TestCleanOptions_InitFlags(t *testing.T) {
 
 	opts.InitFlags(&cmd)
 }
+
+func TestCleanOptions_SetZeroValues(t *testing.T) {
+	opts := GetCleanOptions()
+	opts.SetZeroValues()
+}

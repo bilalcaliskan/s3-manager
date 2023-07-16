@@ -45,7 +45,7 @@ s3-manager search file ".*.json"
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			files, err := aws.GetDesiredFiles(svc, searchOpts)
+			files, err := aws.GetDesiredObjects(svc, searchOpts.BucketName, searchOpts.FileName)
 			if err != nil {
 				logger.Error().
 					Str("fileName", searchOpts.FileName).
@@ -62,7 +62,7 @@ s3-manager search file ".*.json"
 			}
 
 			for _, v := range files {
-				fmt.Println(v)
+				fmt.Println(*v.Key)
 			}
 
 			return nil

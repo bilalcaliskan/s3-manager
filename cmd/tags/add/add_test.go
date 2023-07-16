@@ -247,5 +247,7 @@ func TestExecuteAddCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
+
+		tagOpts.SetZeroValues()
 	}
 }

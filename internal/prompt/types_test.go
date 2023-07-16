@@ -15,24 +15,26 @@ func TestGetPromptRunner(t *testing.T) {
 
 func TestGetConfirmRunner(t *testing.T) {
 	testCases := []struct {
-		name      string
+		caseName  string
 		input     string
 		expectErr bool
 	}{
 		{
-			name:      "Valid input",
+			caseName:  "Valid input",
 			input:     "y",
 			expectErr: false,
 		},
 		{
-			name:      "Invalid input",
+			caseName:  "Invalid input",
 			input:     "yy",
 			expectErr: true,
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.caseName, func(t *testing.T) {
+			t.Logf("starting case %s", tc.caseName)
+
 			prompt := GetConfirmRunner()
 
 			// Wrap prompt into PromptWrapper

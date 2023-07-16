@@ -74,5 +74,7 @@ func TestExecuteShowCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
+
+		bucketPolicyOpts.SetZeroValues()
 	}
 }

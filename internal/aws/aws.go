@@ -65,7 +65,6 @@ func GetAllFiles(svc s3iface.S3API, opts *options.RootOptions, prefix string) (r
 	// fetch all the objects in target bucket
 	return svc.ListObjects(&s3.ListObjectsInput{
 		Bucket: aws.String(opts.BucketName),
-		Prefix: aws.String(prefix),
 	})
 }
 
@@ -289,23 +288,23 @@ func DeleteFiles(svc s3iface.S3API, bucketName string, slice []*s3.Object, dryRu
 	return nil
 }
 
-func GetDesiredFiles(svc s3iface.S3API, opts *options2.SearchOptions) (matchedFiles []string, err error) {
+func GetDesiredObjects(svc s3iface.S3API, bucketName, regex string) (objects []*s3.Object, err error) {
 	// fetch all the objects in target bucket
 	listResult, err := svc.ListObjects(&s3.ListObjectsInput{
-		Bucket: aws.String(opts.BucketName),
+		Bucket: aws.String(bucketName),
 	})
 	if err != nil {
-		return matchedFiles, err
+		return objects, err
 	}
 
-	pattern := regexp.MustCompile(opts.FileName)
+	pattern := regexp.MustCompile(regex)
 	for _, v := range listResult.Contents {
 		if match := pattern.FindStringSubmatch(*v.Key); len(match) > 0 {
-			matchedFiles = append(matchedFiles, *v.Key)
+			objects = append(objects, v)
 		}
 	}
 
-	return matchedFiles, err
+	return objects, err
 }
 
 // SearchString does the heavy lifting, communicates with the S3 and finds the files
@@ -316,7 +315,7 @@ func SearchString(svc s3iface.S3API, opts *options2.SearchOptions) (matchedFiles
 	var wg sync.WaitGroup
 	mu := &sync.Mutex{}
 
-	resultArr, err := GetDesiredFiles(svc, opts)
+	resultArr, err := GetDesiredObjects(svc, opts.BucketName, opts.FileName)
 	if err != nil {
 		errs = append(errs, err)
 		return matchedFiles, errs
@@ -325,11 +324,11 @@ func SearchString(svc s3iface.S3API, opts *options2.SearchOptions) (matchedFiles
 	// check each txt file individually if it contains provided text
 	for _, obj := range resultArr {
 		wg.Add(1)
-		go func(fileName string, wg *sync.WaitGroup) {
+		go func(obj *s3.Object, wg *sync.WaitGroup) {
 			defer wg.Done()
 			getResult, err := svc.GetObject(&s3.GetObjectInput{
 				Bucket: aws.String(opts.BucketName),
-				Key:    aws.String(fileName),
+				Key:    obj.Key,
 			})
 
 			if err != nil {
@@ -349,7 +348,7 @@ func SearchString(svc s3iface.S3API, opts *options2.SearchOptions) (matchedFiles
 
 			if strings.Contains(buf.String(), opts.Text) {
 				mu.Lock()
-				matchedFiles = append(matchedFiles, fileName)
+				matchedFiles = append(matchedFiles, *obj.Key)
 				mu.Unlock()
 			}
 
@@ -358,7 +357,6 @@ func SearchString(svc s3iface.S3API, opts *options2.SearchOptions) (matchedFiles
 					panic(err)
 				}
 			}()
-
 		}(obj, &wg)
 	}
 

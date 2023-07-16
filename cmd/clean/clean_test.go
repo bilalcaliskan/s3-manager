@@ -88,6 +88,15 @@ func TestExecuteCleanCmd(t *testing.T) {
 			&s3.DeleteObjectOutput{},
 		},
 		{
+			"Failure caused by invalid 'order' flag",
+			[]string{"--order=asldkfjalsdkf"},
+			false,
+			nil,
+			dummyListObjectsOutput,
+			nil,
+			&s3.DeleteObjectOutput{},
+		},
+		{
 			"Failure caused by wrong size flags",
 			[]string{"--max-size-mb=10", "--min-size-mb=20"},
 			false,
@@ -101,6 +110,15 @@ func TestExecuteCleanCmd(t *testing.T) {
 			[]string{},
 			false,
 			constants.ErrInjected,
+			&s3.ListObjectsOutput{},
+			nil,
+			&s3.DeleteObjectOutput{},
+		},
+		{
+			"Failure caused by wrong number of arguments",
+			[]string{"foo", "bar"},
+			false,
+			nil,
 			&s3.ListObjectsOutput{},
 			nil,
 			&s3.DeleteObjectOutput{},
@@ -124,5 +142,7 @@ func TestExecuteCleanCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
+
+		cleanOpts.SetZeroValues()
 	}
 }

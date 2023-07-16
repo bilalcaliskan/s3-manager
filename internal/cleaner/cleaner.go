@@ -1,7 +1,7 @@
 package cleaner
 
 import (
-	"bytes"
+	"fmt"
 	"strings"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
@@ -17,19 +17,17 @@ import (
 )
 
 func StartCleaning(svc s3iface.S3API, runner prompt.PromptRunner, cleanOpts *start.CleanOptions, logger zerolog.Logger) error {
-	allFiles, err := aws.GetAllFiles(svc, cleanOpts.RootOptions, cleanOpts.FileNamePrefix)
+	res, err := aws.GetDesiredObjects(svc, cleanOpts.BucketName, cleanOpts.Regex)
 	if err != nil {
 		return err
 	}
 
-	res := getProperObjects(cleanOpts, allFiles, logger)
 	sortObjects(res, cleanOpts)
 
 	border := len(res) - cleanOpts.KeepLastNFiles
 	if border <= 0 {
 		logger.Warn().
 			Int("arrayLength", len(res)).
-			Int("keepLastNFiles", cleanOpts.KeepLastNFiles).
 			Msg("not enough file, length of array is smaller than --keepLastNFiles flag")
 		return nil
 	}
@@ -37,19 +35,19 @@ func StartCleaning(svc s3iface.S3API, runner prompt.PromptRunner, cleanOpts *sta
 	targetObjects := res[:len(res)-cleanOpts.KeepLastNFiles]
 
 	keys := utils.GetKeysOnly(targetObjects)
-	var buffer bytes.Buffer
-	for _, v := range keys {
-		buffer.WriteString(v)
+
+	logger.Info().Msg("will attempt to delete these files")
+	for _, key := range keys {
+		fmt.Println(key)
 	}
 
-	logger.Info().Any("files", keys).Msg("will attempt to delete these files")
 	if cleanOpts.DryRun {
 		logger.Info().Msg("skipping object deletion since --dryRun flag is passed")
 		return nil
 	}
 
 	if !cleanOpts.AutoApprove {
-		logger.Info().Any("files", keys).Msg("these files will be removed if you approve:")
+		logger.Info().Msg("above files will be removed if you approve")
 
 		if res, err := runner.Run(); err != nil {
 			if strings.ToLower(res) == "n" {

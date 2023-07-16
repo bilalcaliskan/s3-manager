@@ -12,3 +12,10 @@ func TestGetBucketPolicyOptions(t *testing.T) {
 	opts := GetBucketPolicyOptions()
 	assert.NotNil(t, opts)
 }
+
+func TestBucketPolicyOptions_SetZeroValues(t *testing.T) {
+	opts := GetBucketPolicyOptions()
+	assert.NotNil(t, opts)
+
+	opts.SetZeroValues()
+}

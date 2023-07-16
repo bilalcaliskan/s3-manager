@@ -69,17 +69,17 @@ func TestGetAllFiles(t *testing.T) {
 				Contents: []*s3.Object{
 					{
 						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("../../testdata/file1.txt"),
+						Key:          aws.String("../../testdata/file4.txt"),
 						StorageClass: aws.String("STANDARD"),
 					},
 					{
 						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("../../testdata/file2.txt"),
+						Key:          aws.String("../../testdata/file5.txt"),
 						StorageClass: aws.String("STANDARD"),
 					},
 					{
 						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("../../testdata/file3.txt"),
+						Key:          aws.String("../../testdata/file6.txt"),
 						StorageClass: aws.String("STANDARD"),
 					},
 				},
@@ -121,21 +121,21 @@ func TestDeleteFiles(t *testing.T) {
 			[]*s3.Object{
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-					Key:          aws.String("../../testdata/file1.txt"),
+					Key:          aws.String("../../testdata/file4.txt"),
 					StorageClass: aws.String("STANDARD"),
 					Size:         aws.Int64(500),
 					LastModified: aws.Time(time.Now().Add(-5 * time.Hour)),
 				},
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-					Key:          aws.String("../../testdata/file2.txt"),
+					Key:          aws.String("../../testdata/file5.txt"),
 					StorageClass: aws.String("STANDARD"),
 					Size:         aws.Int64(1000),
 					LastModified: aws.Time(time.Now().Add(-2 * time.Hour)),
 				},
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-					Key:          aws.String("../../testdata/file3.txt"),
+					Key:          aws.String("../../testdata/file6.txt"),
 					StorageClass: aws.String("STANDARD"),
 					Size:         aws.Int64(1500),
 					LastModified: aws.Time(time.Now().Add(-10 * time.Hour)),
@@ -150,21 +150,21 @@ func TestDeleteFiles(t *testing.T) {
 			[]*s3.Object{
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-					Key:          aws.String("../../testdata/file1.txt"),
+					Key:          aws.String("../../testdata/file4.txt"),
 					StorageClass: aws.String("STANDARD"),
 					Size:         aws.Int64(500),
 					LastModified: aws.Time(time.Now().Add(-5 * time.Hour)),
 				},
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-					Key:          aws.String("../../testdata/file2.txt"),
+					Key:          aws.String("../../testdata/file5.txt"),
 					StorageClass: aws.String("STANDARD"),
 					Size:         aws.Int64(1000),
 					LastModified: aws.Time(time.Now().Add(-2 * time.Hour)),
 				},
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-					Key:          aws.String("../../testdata/file3.txt"),
+					Key:          aws.String("../../testdata/file6.txt"),
 					StorageClass: aws.String("STANDARD"),
 					Size:         aws.Int64(1500),
 					LastModified: aws.Time(time.Now().Add(-10 * time.Hour)),
