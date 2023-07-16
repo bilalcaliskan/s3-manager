@@ -6,6 +6,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/stretchr/testify/mock"
@@ -17,16 +19,6 @@ import (
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
-
-type promptMock struct {
-	msg string
-	err error
-}
-
-func (p promptMock) Run() (string, error) {
-	// return expected result
-	return p.msg, p.err
-}
 
 func TestExecuteAddCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
@@ -42,9 +34,9 @@ func TestExecuteAddCmd(t *testing.T) {
 		getBucketTaggingOutput *s3.GetBucketTaggingOutput
 		putBucketTaggingErr    error
 		putBucketTaggingOutput *s3.PutBucketTaggingOutput
-		promptMock             *promptMock
-		dryRun                 bool
-		autoApprove            bool
+		prompt.PromptRunner
+		dryRun      bool
+		autoApprove bool
 	}{
 		{
 			"No arguments provided",
@@ -77,9 +69,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -149,9 +141,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -164,9 +156,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -179,9 +171,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
-			&promptMock{
-				msg: "asdfasdf",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "asdfasdf",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -194,9 +186,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
-			&promptMock{
-				msg: "n",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -209,9 +201,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -224,9 +216,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			&s3.GetBucketTaggingOutput{},
 			constants.ErrInjected,
 			&s3.PutBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -244,7 +236,7 @@ func TestExecuteAddCmd(t *testing.T) {
 		mockS3.On("PutBucketTagging", mock.AnythingOfType("*s3.PutBucketTaggingInput")).Return(tc.putBucketTaggingOutput, tc.putBucketTaggingErr)
 
 		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, mockS3))
-		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.ConfirmRunnerKey{}, tc.promptMock))
+		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
 		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
 		AddCmd.SetArgs(tc.args)
 
@@ -256,6 +248,4 @@ func TestExecuteAddCmd(t *testing.T) {
 			assert.NotNil(t, err)
 		}
 	}
-
-	tagOpts.SetZeroValues()
 }

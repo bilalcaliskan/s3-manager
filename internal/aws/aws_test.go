@@ -3,9 +3,10 @@
 package aws
 
 import (
-	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/mock"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
@@ -21,7 +22,6 @@ import (
 
 	options3 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -30,38 +30,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	defaultListObjectsErr            error
-	defaultGetObjectErr              error
-	defaultDeleteObjectErr           error
-	defaultListObjectsOutput         = &s3.ListObjectsOutput{}
-	defaultDeleteObjectOutput        = &s3.DeleteObjectOutput{}
-	defaultGetBucketVersioningOutput = &s3.GetBucketVersioningOutput{
-		Status: aws.String("Enabled"),
-	}
-	defaultGetBucketVersioningErr      error
-	defaultPutBucketVersioningOutput   = &s3.PutBucketVersioningOutput{}
-	defaultPutBucketVersioningErr      error
-	defaultGetBucketTaggingErr         error
-	defaultGetBucketTaggingOutput      = &s3.GetBucketTaggingOutput{}
-	defaultPutBucketTaggingErr         error
-	defaultPutBucketTaggingOutput      = &s3.PutBucketTaggingOutput{}
-	defaultDeleteBucketTaggingErr      error
-	defaultDeleteBucketTaggingOutput   = &s3.DeleteBucketTaggingOutput{}
-	defaultGetBucketAccelerationOutput = &s3.GetBucketAccelerateConfigurationOutput{
-		Status: aws.String("Enabled"),
-	}
-	defaultGetBucketAccelerationErr    error
-	defaultPutBucketAccelerationOutput = &s3.PutBucketAccelerateConfigurationOutput{}
-	defaultPutBucketAccelerationErr    error
-	defaultGetBucketPolicyErr          error
-	defaultGetBucketPolicyOutput       = &s3.GetBucketPolicyOutput{}
-	defaultPutBucketPolicyErr          error
-	defaultPutBucketPolicyOutput       = &s3.PutBucketPolicyOutput{}
-	defaultDeleteBucketPolicyErr       error
-	defaultDeleteBucketPolicyOutput    = &s3.DeleteBucketPolicyOutput{}
-
-	bucketPolicyStr = `
+var dummyBucketPolicyStr = `
 {
   "Statement": [
     {
@@ -83,86 +52,6 @@ var (
   "Version": "2012-10-17"
 }
 `
-)
-
-type promptMock struct {
-	msg string
-	err error
-}
-
-func (p promptMock) Run() (string, error) {
-	// return expected result
-	return p.msg, p.err
-}
-
-type mockS3Client struct {
-	s3iface.S3API
-}
-
-// ListObjects mocks the S3API ListObjects method
-func (m *mockS3Client) ListObjects(obj *s3.ListObjectsInput) (*s3.ListObjectsOutput, error) {
-	return defaultListObjectsOutput, defaultListObjectsErr
-}
-
-// GetObject mocks the S3API GetObject method
-func (m *mockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
-	bytes, err := os.Open(*input.Key)
-	if err != nil {
-		return nil, err
-	}
-
-	return &s3.GetObjectOutput{
-		AcceptRanges:  aws.String("bytes"),
-		Body:          bytes,
-		ContentLength: aws.Int64(1000),
-		ContentType:   aws.String("text/plain"),
-		ETag:          aws.String("d73a503d212d9279e6b2ed8ac6bb81f3"),
-	}, defaultGetObjectErr
-}
-
-func (m *mockS3Client) DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
-	return defaultDeleteObjectOutput, defaultDeleteObjectErr
-}
-
-func (m *mockS3Client) GetBucketAccelerateConfiguration(input *s3.GetBucketAccelerateConfigurationInput) (*s3.GetBucketAccelerateConfigurationOutput, error) {
-	return defaultGetBucketAccelerationOutput, defaultGetBucketAccelerationErr
-}
-
-func (m *mockS3Client) PutBucketAccelerateConfiguration(input *s3.PutBucketAccelerateConfigurationInput) (*s3.PutBucketAccelerateConfigurationOutput, error) {
-	return defaultPutBucketAccelerationOutput, defaultPutBucketAccelerationErr
-}
-
-func (m *mockS3Client) GetBucketVersioning(input *s3.GetBucketVersioningInput) (*s3.GetBucketVersioningOutput, error) {
-	return defaultGetBucketVersioningOutput, defaultGetBucketVersioningErr
-}
-
-func (m *mockS3Client) PutBucketVersioning(input *s3.PutBucketVersioningInput) (*s3.PutBucketVersioningOutput, error) {
-	return defaultPutBucketVersioningOutput, defaultPutBucketVersioningErr
-}
-
-func (m *mockS3Client) GetBucketTagging(input *s3.GetBucketTaggingInput) (*s3.GetBucketTaggingOutput, error) {
-	return defaultGetBucketTaggingOutput, defaultGetBucketTaggingErr
-}
-
-func (m *mockS3Client) PutBucketTagging(input *s3.PutBucketTaggingInput) (*s3.PutBucketTaggingOutput, error) {
-	return defaultPutBucketTaggingOutput, defaultPutBucketTaggingErr
-}
-
-func (m *mockS3Client) DeleteBucketTagging(input *s3.DeleteBucketTaggingInput) (*s3.DeleteBucketTaggingOutput, error) {
-	return defaultDeleteBucketTaggingOutput, defaultDeleteBucketTaggingErr
-}
-
-func (m *mockS3Client) GetBucketPolicy(input *s3.GetBucketPolicyInput) (*s3.GetBucketPolicyOutput, error) {
-	return defaultGetBucketPolicyOutput, defaultGetBucketPolicyErr
-}
-
-func (m *mockS3Client) PutBucketPolicy(input *s3.PutBucketPolicyInput) (*s3.PutBucketPolicyOutput, error) {
-	return defaultPutBucketPolicyOutput, defaultPutBucketPolicyErr
-}
-
-func (m *mockS3Client) DeleteBucketPolicy(input *s3.DeleteBucketPolicyInput) (*s3.DeleteBucketPolicyOutput, error) {
-	return defaultDeleteBucketPolicyOutput, defaultDeleteBucketPolicyErr
-}
 
 func TestGetAllFiles(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
@@ -205,13 +94,12 @@ func TestGetAllFiles(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		defaultListObjectsErr = tc.listObjectsErr
-		defaultListObjectsOutput = tc.listObjectsOutput
+		t.Logf("starting case %s", tc.caseName)
 
-		mockSvc := &mockS3Client{}
-		assert.NotNil(t, mockSvc)
+		mockS3 := new(MockS3Client)
+		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.listObjectsOutput, tc.listObjectsErr)
 
-		_, err := GetAllFiles(mockSvc, rootOpts, "")
+		_, err := GetAllFiles(mockS3, rootOpts, "")
 		assert.Equal(t, tc.expected, err)
 	}
 }
@@ -286,12 +174,12 @@ func TestDeleteFiles(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		defaultDeleteObjectErr = tc.deleteObjectErr
+		t.Logf("starting case %s", tc.caseName)
 
-		mockSvc := &mockS3Client{}
-		assert.NotNil(t, mockSvc)
+		mockS3 := new(MockS3Client)
+		mockS3.On("DeleteObject", mock.AnythingOfType("*s3.DeleteObjectInput")).Return(&s3.DeleteObjectOutput{}, tc.deleteObjectErr)
 
-		assert.Equal(t, tc.expected, DeleteFiles(mockSvc, "thisisdemobucket", tc.objects, tc.dryRun, logging.GetLogger(rootOpts)))
+		assert.Equal(t, tc.expected, DeleteFiles(mockS3, "thisisdemobucket", tc.objects, tc.dryRun, logging.GetLogger(rootOpts)))
 	}
 }
 
@@ -324,6 +212,8 @@ func TestCreateAwsService(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
 		_, err := CreateAwsService(tc.opts)
 
 		if tc.shouldPass {
@@ -454,15 +344,15 @@ func TestSearchString(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
 		tc.searchOpts.RootOptions = rootOpts
-		defaultListObjectsErr = tc.listObjectsErr
-		defaultListObjectsOutput = tc.listObjectsOutput
-		defaultGetObjectErr = tc.getObjectErr
 
-		mockSvc := &mockS3Client{}
-		assert.NotNil(t, mockSvc)
+		mockS3 := new(MockS3Client)
+		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.listObjectsOutput, tc.listObjectsErr)
+		mockS3.On("GetObject", mock.AnythingOfType("*s3.GetObjectInput")).Return(&s3.GetObjectOutput{}, tc.getObjectErr)
 
-		res, err := SearchString(mockSvc, tc.searchOpts)
+		res, err := SearchString(mockS3, tc.searchOpts)
 
 		if tc.shouldPass {
 			assert.Nil(t, err)
@@ -519,9 +409,9 @@ func TestSetBucketVersioning(t *testing.T) {
 			nil,
 			false,
 			false,
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 		},
 		{
@@ -539,9 +429,9 @@ func TestSetBucketVersioning(t *testing.T) {
 			nil,
 			false,
 			false,
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 		},
 		{
@@ -557,10 +447,27 @@ func TestSetBucketVersioning(t *testing.T) {
 			constants.ErrInjected,
 			false,
 			false,
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
+		},
+		{
+			"Failure caused by put error",
+			&options3.VersioningOptions{
+				ActualState:  "",
+				DesiredState: "enabled",
+				RootOptions:  rootOpts,
+			},
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Suspended"),
+			},
+			nil,
+			constants.ErrInjected,
+			constants.ErrInjected,
+			false,
+			true,
+			nil,
 		},
 		{
 			"Failure caused by unknown status",
@@ -577,9 +484,9 @@ func TestSetBucketVersioning(t *testing.T) {
 			errors.New("unknown status 'Enableddddd' returned from AWS SDK"),
 			false,
 			false,
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 		},
 		{
@@ -614,9 +521,9 @@ func TestSetBucketVersioning(t *testing.T) {
 			constants.ErrUserTerminated,
 			false,
 			false,
-			promptMock{
-				msg: "n",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrInjected,
 			},
 		},
 		{
@@ -634,25 +541,24 @@ func TestSetBucketVersioning(t *testing.T) {
 			constants.ErrInvalidInput,
 			false,
 			false,
-			promptMock{
-				msg: "nasdf",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "nasdf",
+				Err: constants.ErrInjected,
 			},
 		},
 	}
 
 	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
-		defaultGetBucketVersioningOutput = tc.GetBucketVersioningOutput
-		defaultGetBucketVersioningErr = tc.getBucketVersioningErr
-		defaultPutBucketVersioningErr = tc.putBucketVersioningErr
+		mockS3 := new(MockS3Client)
+		mockS3.On("GetBucketVersioning", mock.AnythingOfType("*s3.GetBucketVersioningInput")).Return(tc.GetBucketVersioningOutput, tc.getBucketVersioningErr)
+		mockS3.On("PutBucketVersioning", mock.AnythingOfType("*s3.PutBucketVersioningInput")).Return(&s3.PutBucketVersioningOutput{}, tc.putBucketVersioningErr)
 
-		mockSvc := &mockS3Client{}
-		assert.NotNil(t, mockSvc)
-
-		err := SetBucketVersioning(mockSvc, tc.VersioningOptions, tc.PromptRunner, logging.GetLogger(tc.VersioningOptions.RootOptions))
+		err := SetBucketVersioning(mockS3, tc.VersioningOptions, tc.PromptRunner, logging.GetLogger(tc.VersioningOptions.RootOptions))
 		if tc.expected != nil {
 			assert.NotNil(t, err)
 		} else {
@@ -686,13 +592,12 @@ func TestGetBucketVersioning(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		defaultGetBucketVersioningOutput = tc.GetBucketVersioningOutput
-		defaultGetBucketVersioningErr = tc.getBucketVersioningErr
+		t.Logf("starting case %s", tc.caseName)
 
-		mockSvc := &mockS3Client{}
-		assert.NotNil(t, mockSvc)
+		mockS3 := new(MockS3Client)
+		mockS3.On("GetBucketVersioning", mock.AnythingOfType("*s3.GetBucketVersioningInput")).Return(tc.GetBucketVersioningOutput, tc.getBucketVersioningErr)
 
-		_, err := GetBucketVersioning(mockSvc, rootOpts)
+		_, err := GetBucketVersioning(mockS3, rootOpts)
 		assert.Equal(t, tc.expected, err)
 	}
 }
@@ -738,13 +643,12 @@ func TestGetBucketTags(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		defaultGetBucketTaggingOutput = tc.GetBucketTaggingOutput
-		defaultGetBucketTaggingErr = tc.getBucketTaggingErr
+		t.Logf("starting case %s", tc.caseName)
 
-		mockSvc := &mockS3Client{}
-		assert.NotNil(t, mockSvc)
+		mockS3 := new(MockS3Client)
+		mockS3.On("GetBucketTagging", mock.AnythingOfType("*s3.GetBucketTaggingInput")).Return(tc.GetBucketTaggingOutput, tc.getBucketTaggingErr)
 
-		_, err := GetBucketTags(mockSvc, tc.TagOptions)
+		_, err := GetBucketTags(mockS3, tc.TagOptions)
 		assert.Equal(t, tc.expected, err)
 	}
 }
@@ -801,15 +705,16 @@ func TestSetBucketTags(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		mockSvc := &mockS3Client{}
+		t.Logf("starting case %s", tc.caseName)
+
+		mockS3 := new(MockS3Client)
+		mockS3.On("PutBucketTagging", mock.AnythingOfType("*s3.PutBucketTaggingInput")).Return(&s3.PutBucketTaggingOutput{}, tc.putBucketTaggingErr)
 
 		for _, v := range tc.tags {
 			tc.TagOptions.TagsToAdd[*v.Key] = *v.Value
 		}
 
-		defaultPutBucketTaggingErr = tc.putBucketTaggingErr
-
-		_, err := SetBucketTags(mockSvc, tc.TagOptions)
+		_, err := SetBucketTags(mockS3, tc.TagOptions)
 		assert.Equal(t, tc.expected, err)
 	}
 }
@@ -841,11 +746,12 @@ func TestDeleteAllBucketTags(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		mockSvc := &mockS3Client{}
+		t.Logf("starting case %s", tc.caseName)
 
-		defaultDeleteBucketTaggingErr = tc.deleteBucketTaggingErr
+		mockS3 := new(MockS3Client)
+		mockS3.On("DeleteBucketTagging", mock.AnythingOfType("*s3.DeleteBucketTaggingInput")).Return(&s3.DeleteBucketTaggingOutput{}, tc.deleteBucketTaggingErr)
 
-		_, err := DeleteAllBucketTags(mockSvc, tc.TagOptions)
+		_, err := DeleteAllBucketTags(mockS3, tc.TagOptions)
 		assert.Equal(t, tc.expected, err)
 	}
 }
@@ -877,11 +783,12 @@ func TestGetBucketPolicy(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		mockSvc := &mockS3Client{}
+		t.Logf("starting case %s", tc.caseName)
 
-		defaultGetBucketPolicyErr = tc.getBucketPolicyErr
+		mockS3 := new(MockS3Client)
+		mockS3.On("GetBucketPolicy", mock.AnythingOfType("*s3.GetBucketPolicyInput")).Return(&s3.GetBucketPolicyOutput{}, tc.getBucketPolicyErr)
 
-		_, err := GetBucketPolicy(mockSvc, tc.BucketPolicyOptions)
+		_, err := GetBucketPolicy(mockS3, tc.BucketPolicyOptions)
 		assert.Equal(t, tc.expected, err)
 	}
 }
@@ -899,7 +806,7 @@ func TestSetBucketPolicy(t *testing.T) {
 			nil,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
-				BucketPolicyContent: bucketPolicyStr,
+				BucketPolicyContent: dummyBucketPolicyStr,
 			},
 			nil,
 		},
@@ -908,18 +815,19 @@ func TestSetBucketPolicy(t *testing.T) {
 			constants.ErrInjected,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
-				BucketPolicyContent: bucketPolicyStr,
+				BucketPolicyContent: dummyBucketPolicyStr,
 			},
 			constants.ErrInjected,
 		},
 	}
 
 	for _, tc := range cases {
-		mockSvc := &mockS3Client{}
+		t.Logf("starting case %s", tc.caseName)
 
-		defaultPutBucketPolicyErr = tc.putBucketPolicyErr
+		mockS3 := new(MockS3Client)
+		mockS3.On("PutBucketPolicy", mock.AnythingOfType("*s3.PutBucketPolicyInput")).Return(&s3.PutBucketPolicyOutput{}, tc.putBucketPolicyErr)
 
-		_, err := SetBucketPolicy(mockSvc, tc.BucketPolicyOptions)
+		_, err := SetBucketPolicy(mockS3, tc.BucketPolicyOptions)
 		assert.Equal(t, tc.expected, err)
 	}
 }
@@ -938,10 +846,10 @@ func TestGetBucketPolicyString(t *testing.T) {
 			nil,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
-				BucketPolicyContent: bucketPolicyStr,
+				BucketPolicyContent: dummyBucketPolicyStr,
 			},
 			&s3.GetBucketPolicyOutput{
-				Policy: aws.String(bucketPolicyStr),
+				Policy: aws.String(dummyBucketPolicyStr),
 			},
 			nil,
 		},
@@ -950,7 +858,7 @@ func TestGetBucketPolicyString(t *testing.T) {
 			constants.ErrInjected,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
-				BucketPolicyContent: bucketPolicyStr,
+				BucketPolicyContent: dummyBucketPolicyStr,
 			},
 			nil,
 			constants.ErrInjected,
@@ -958,12 +866,12 @@ func TestGetBucketPolicyString(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		mockSvc := &mockS3Client{}
+		t.Logf("starting case %s", tc.caseName)
 
-		defaultGetBucketPolicyOutput = tc.GetBucketPolicyOutput
-		defaultGetBucketPolicyErr = tc.getBucketPolicyErr
+		mockS3 := new(MockS3Client)
+		mockS3.On("GetBucketPolicy", mock.AnythingOfType("*s3.GetBucketPolicyInput")).Return(tc.GetBucketPolicyOutput, tc.getBucketPolicyErr)
 
-		_, err := GetBucketPolicyString(mockSvc, tc.BucketPolicyOptions)
+		_, err := GetBucketPolicyString(mockS3, tc.BucketPolicyOptions)
 		if tc.expected == nil {
 			assert.Nil(t, err)
 		} else {
@@ -985,7 +893,7 @@ func TestDeleteBucketPolicy(t *testing.T) {
 			nil,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
-				BucketPolicyContent: bucketPolicyStr,
+				BucketPolicyContent: dummyBucketPolicyStr,
 			},
 			nil,
 		},
@@ -994,18 +902,19 @@ func TestDeleteBucketPolicy(t *testing.T) {
 			constants.ErrInjected,
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
-				BucketPolicyContent: bucketPolicyStr,
+				BucketPolicyContent: dummyBucketPolicyStr,
 			},
 			constants.ErrInjected,
 		},
 	}
 
 	for _, tc := range cases {
-		mockSvc := &mockS3Client{}
+		t.Logf("starting case %s", tc.caseName)
 
-		defaultDeleteBucketPolicyErr = tc.deleteBucketPolicyErr
+		mockS3 := new(MockS3Client)
+		mockS3.On("DeleteBucketPolicy", mock.AnythingOfType("*s3.DeleteBucketPolicyInput")).Return(&s3.DeleteBucketPolicyOutput{}, tc.deleteBucketPolicyErr)
 
-		_, err := DeleteBucketPolicy(mockSvc, tc.BucketPolicyOptions)
+		_, err := DeleteBucketPolicy(mockS3, tc.BucketPolicyOptions)
 		assert.Equal(t, tc.expected, err)
 	}
 }
@@ -1037,11 +946,12 @@ func TestGetTransferAcceleration(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		mockSvc := &mockS3Client{}
+		t.Logf("starting case %s", tc.caseName)
 
-		defaultGetBucketAccelerationErr = tc.getBucketAccelerationErr
+		mockS3 := new(MockS3Client)
+		mockS3.On("GetBucketAccelerateConfiguration", mock.AnythingOfType("*s3.GetBucketAccelerateConfigurationInput")).Return(&s3.GetBucketAccelerateConfigurationOutput{}, tc.getBucketAccelerationErr)
 
-		_, err := GetTransferAcceleration(mockSvc, tc.TransferAccelerationOptions)
+		_, err := GetTransferAcceleration(mockS3, tc.TransferAccelerationOptions)
 		assert.Equal(t, tc.expected, err)
 	}
 }
@@ -1089,9 +999,9 @@ func TestSetTransferAcceleration(t *testing.T) {
 			nil,
 			false,
 			false,
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 		},
 		{
@@ -1108,9 +1018,9 @@ func TestSetTransferAcceleration(t *testing.T) {
 			nil,
 			false,
 			false,
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 		},
 		{
@@ -1127,9 +1037,9 @@ func TestSetTransferAcceleration(t *testing.T) {
 			nil,
 			true,
 			false,
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 		},
 		{
@@ -1144,9 +1054,9 @@ func TestSetTransferAcceleration(t *testing.T) {
 			nil,
 			false,
 			false,
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 		},
 		{
@@ -1163,9 +1073,9 @@ func TestSetTransferAcceleration(t *testing.T) {
 			nil,
 			false,
 			false,
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 		},
 		{
@@ -1182,9 +1092,9 @@ func TestSetTransferAcceleration(t *testing.T) {
 			constants.ErrInjected,
 			false,
 			false,
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 		},
 		{
@@ -1201,9 +1111,9 @@ func TestSetTransferAcceleration(t *testing.T) {
 			nil,
 			false,
 			false,
-			promptMock{
-				msg: "dkslfa",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "dkslfa",
+				Err: constants.ErrInjected,
 			},
 		},
 		{
@@ -1220,24 +1130,24 @@ func TestSetTransferAcceleration(t *testing.T) {
 			nil,
 			false,
 			false,
-			promptMock{
-				msg: "n",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrInjected,
 			},
 		},
 	}
 
 	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
-		mockSvc := &mockS3Client{}
+		mockS3 := new(MockS3Client)
+		mockS3.On("GetBucketAccelerateConfiguration", mock.AnythingOfType("*s3.GetBucketAccelerateConfigurationInput")).Return(tc.GetBucketAccelerateConfigurationOutput, tc.getBucketAccelerationErr)
+		mockS3.On("PutBucketAccelerateConfiguration", mock.AnythingOfType("*s3.PutBucketAccelerateConfigurationInput")).Return(&s3.PutBucketAccelerateConfigurationOutput{}, tc.putBucketAccelerationErr)
 
-		defaultGetBucketAccelerationOutput = tc.GetBucketAccelerateConfigurationOutput
-		defaultGetBucketAccelerationErr = tc.getBucketAccelerationErr
-		defaultPutBucketAccelerationErr = tc.putBucketAccelerationErr
-
-		err := SetTransferAcceleration(mockSvc, tc.TransferAccelerationOptions, tc.PromptRunner, logging.GetLogger(tc.RootOptions))
+		err := SetTransferAcceleration(mockS3, tc.TransferAccelerationOptions, tc.PromptRunner, logging.GetLogger(tc.RootOptions))
 		if tc.expected == nil {
 			assert.Nil(t, err)
 		} else {

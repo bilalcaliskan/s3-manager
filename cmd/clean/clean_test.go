@@ -124,7 +124,5 @@ func TestExecuteCleanCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
-
-		cleanOpts.SetZeroValues()
 	}
 }

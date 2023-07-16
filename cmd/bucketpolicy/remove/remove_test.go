@@ -6,6 +6,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	"github.com/stretchr/testify/mock"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
@@ -41,15 +43,6 @@ var policyStr = `
 }
 `
 
-type promptMock struct {
-	msg string
-	err error
-}
-
-func (p promptMock) Run() (string, error) {
-	return p.msg, p.err
-}
-
 func TestExecuteRemoveCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 
@@ -63,9 +56,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 		getBucketPolicyErr       error
 		deleteBucketPolicyErr    error
 		deleteBucketPolicyOutput *s3.DeleteBucketPolicyOutput
-		promptMock               *promptMock
-		dryRun                   bool
-		autoApprove              bool
+		prompt.PromptRunner
+		dryRun      bool
+		autoApprove bool
 	}{
 		{
 			"Too many arguments",
@@ -89,9 +82,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			nil,
 			nil,
 			&s3.DeleteBucketPolicyOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -106,9 +99,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			nil,
 			nil,
 			&s3.DeleteBucketPolicyOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			true,
 			false,
@@ -137,9 +130,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			nil,
 			constants.ErrInjected,
 			&s3.DeleteBucketPolicyOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -154,9 +147,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			constants.ErrInjected,
 			nil,
 			&s3.DeleteBucketPolicyOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -171,9 +164,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			nil,
 			nil,
 			&s3.DeleteBucketPolicyOutput{},
-			&promptMock{
-				msg: "n",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -188,9 +181,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			nil,
 			nil,
 			&s3.DeleteBucketPolicyOutput{},
-			&promptMock{
-				msg: "nasdfadf",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "nasdfadf",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -209,7 +202,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 
 		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, mockS3))
 		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
-		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.ConfirmRunnerKey{}, tc.promptMock))
+		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
 		RemoveCmd.SetArgs(tc.args)
 
 		err := RemoveCmd.Execute()
@@ -220,6 +213,4 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			assert.NotNil(t, err)
 		}
 	}
-
-	bucketPolicyOpts.SetZeroValues()
 }

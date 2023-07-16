@@ -19,15 +19,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type promptMock struct {
-	msg string
-	err error
-}
-
-func (p promptMock) Run() (string, error) {
-	return p.msg, p.err
-}
-
 func TestExecuteAddCmd(t *testing.T) {
 	ctx := context.Background()
 	AddCmd.SetContext(ctx)
@@ -46,9 +37,9 @@ func TestExecuteAddCmd(t *testing.T) {
 		shouldPass            bool
 		putBucketPolicyErr    error
 		putBucketPolicyOutput *s3.PutBucketPolicyOutput
-		promptMock            *promptMock
-		dryRun                bool
-		autoApprove           bool
+		prompt.PromptRunner
+		dryRun      bool
+		autoApprove bool
 	}{
 		{
 			"Success",
@@ -56,9 +47,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			true,
 			nil,
 			&s3.PutBucketPolicyOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -69,9 +60,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			true,
 			nil,
 			&s3.PutBucketPolicyOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			true,
 			false,
@@ -82,9 +73,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			false,
 			errors.New("dummy error"),
 			&s3.PutBucketPolicyOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -95,9 +86,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			false,
 			nil,
 			&s3.PutBucketPolicyOutput{},
-			&promptMock{
-				msg: "n",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -108,9 +99,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			false,
 			nil,
 			&s3.PutBucketPolicyOutput{},
-			&promptMock{
-				msg: "nasdasd",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "nasdasd",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -121,9 +112,9 @@ func TestExecuteAddCmd(t *testing.T) {
 			false,
 			nil,
 			&s3.PutBucketPolicyOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -161,7 +152,7 @@ func TestExecuteAddCmd(t *testing.T) {
 
 		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.S3SvcKey{}, mockS3))
 		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.OptsKey{}, rootOpts))
-		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.ConfirmRunnerKey{}, tc.promptMock))
+		AddCmd.SetContext(context.WithValue(AddCmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
 
 		AddCmd.SetArgs(tc.args)
 
@@ -171,9 +162,5 @@ func TestExecuteAddCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
-
-		//mockS3.AssertCalled(t, "PutBucketPolicy", mock.AnythingOfType("*s3.PutBucketPolicyInput"))
 	}
-
-	bucketPolicyOpts.SetZeroValues()
 }

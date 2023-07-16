@@ -75,7 +75,4 @@ func TestExecuteShowCmd(t *testing.T) {
 			assert.NotNil(t, err)
 		}
 	}
-
-	rootOpts.SetZeroValues()
-	bucketPolicyOpts.SetZeroValues()
 }

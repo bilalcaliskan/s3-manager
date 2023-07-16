@@ -95,6 +95,4 @@ func TestExecuteShowCmd(t *testing.T) {
 			assert.NotNil(t, err)
 		}
 	}
-
-	transferAccelerationOpts.SetZeroValues()
 }

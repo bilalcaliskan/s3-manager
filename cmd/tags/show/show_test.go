@@ -90,6 +90,4 @@ func TestExecuteShowCmd(t *testing.T) {
 			assert.NotNil(t, err)
 		}
 	}
-
-	tagOpts.SetZeroValues()
 }

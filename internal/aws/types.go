@@ -1,6 +1,9 @@
 package aws
 
 import (
+	"os"
+
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/stretchr/testify/mock"
@@ -44,9 +47,20 @@ func (m *MockS3Client) ListObjects(input *s3.ListObjectsInput) (*s3.ListObjectsO
 
 // GetObject mocks the GetObject method of s3iface.S3API
 func (m *MockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
-	// Return the mocked output values using the `On` method of testify/mock
+	bytes, err := os.Open(*input.Key)
+	if err != nil {
+		return nil, err
+	}
+
 	args := m.Called(input)
-	return args.Get(0).(*s3.GetObjectOutput), args.Error(1)
+
+	return &s3.GetObjectOutput{
+		AcceptRanges:  aws.String("bytes"),
+		Body:          bytes,
+		ContentLength: aws.Int64(1000),
+		ContentType:   aws.String("text/plain"),
+		ETag:          aws.String("d73a503d212d9279e6b2ed8ac6bb81f3"),
+	}, args.Error(1)
 }
 
 // GetBucketTagging mocks the GetBucketTagging method of s3iface.S3API

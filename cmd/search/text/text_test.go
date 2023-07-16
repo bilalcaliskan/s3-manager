@@ -115,8 +115,6 @@ func TestExecuteTextCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
-
-		searchOpts.SetZeroValues()
 	}
 }
 

@@ -6,6 +6,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/stretchr/testify/mock"
@@ -17,15 +19,6 @@ import (
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
-
-type promptMock struct {
-	msg string
-	err error
-}
-
-func (p promptMock) Run() (string, error) {
-	return p.msg, p.err
-}
 
 func TestExecuteEnabledCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
@@ -41,9 +34,9 @@ func TestExecuteEnabledCmd(t *testing.T) {
 		getBucketVersioningOutput *s3.GetBucketVersioningOutput
 		putBucketVersioningErr    error
 		putBucketVersioningOutput *s3.PutBucketVersioningOutput
-		promptMock                *promptMock
-		dryRun                    bool
-		autoApprove               bool
+		prompt.PromptRunner
+		dryRun      bool
+		autoApprove bool
 	}{
 		{
 			"Too many arguments",
@@ -69,9 +62,9 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketVersioningOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -114,9 +107,9 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketVersioningOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -131,12 +124,26 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketVersioningOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
+		},
+		{
+			"Failure caused by put error",
+			[]string{},
+			false,
+			nil,
+			&s3.GetBucketVersioningOutput{
+				Status: aws.String("Suspended"),
+			},
+			constants.ErrInjected,
+			&s3.PutBucketVersioningOutput{},
+			nil,
+			false,
+			true,
 		},
 		{
 			"Failure caused by prompt error",
@@ -148,9 +155,9 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketVersioningOutput{},
-			&promptMock{
-				msg: "asdfafj",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "asdfafj",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -165,9 +172,9 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketVersioningOutput{},
-			&promptMock{
-				msg: "n",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -185,7 +192,7 @@ func TestExecuteEnabledCmd(t *testing.T) {
 		mockS3.On("PutBucketVersioning", mock.AnythingOfType("*s3.PutBucketVersioningInput")).Return(tc.putBucketVersioningOutput, tc.putBucketVersioningErr)
 
 		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, mockS3))
-		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.ConfirmRunnerKey{}, tc.promptMock))
+		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
 		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
 		EnabledCmd.SetArgs(tc.args)
 
@@ -197,6 +204,4 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			assert.NotNil(t, err)
 		}
 	}
-
-	versioningOpts.SetZeroValues()
 }

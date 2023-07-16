@@ -6,6 +6,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/stretchr/testify/mock"
@@ -17,16 +19,6 @@ import (
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
-
-type promptMock struct {
-	msg string
-	err error
-}
-
-func (p promptMock) Run() (string, error) {
-	// return expected result
-	return p.msg, p.err
-}
 
 func TestExecuteEnabledCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
@@ -42,9 +34,9 @@ func TestExecuteEnabledCmd(t *testing.T) {
 		getBucketAccelerationOutput *s3.GetBucketAccelerateConfigurationOutput
 		putBucketAccelerationErr    error
 		putBucketAccelerationOutput *s3.PutBucketAccelerateConfigurationOutput
-		promptMock                  *promptMock
-		dryRun                      bool
-		autoApprove                 bool
+		prompt.PromptRunner
+		dryRun      bool
+		autoApprove bool
 	}{
 		{
 			"Too many arguments",
@@ -70,9 +62,9 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketAccelerateConfigurationOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -87,9 +79,9 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketAccelerateConfigurationOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -132,9 +124,9 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketAccelerateConfigurationOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -149,9 +141,9 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketAccelerateConfigurationOutput{},
-			&promptMock{
-				msg: "asdfadsf",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "asdfadsf",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -166,9 +158,9 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			},
 			nil,
 			&s3.PutBucketAccelerateConfigurationOutput{},
-			&promptMock{
-				msg: "n",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -187,7 +179,7 @@ func TestExecuteEnabledCmd(t *testing.T) {
 
 		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, mockS3))
 		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
-		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.ConfirmRunnerKey{}, tc.promptMock))
+		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
 		EnabledCmd.SetArgs(tc.args)
 
 		err := EnabledCmd.Execute()
@@ -198,6 +190,4 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			assert.NotNil(t, err)
 		}
 	}
-
-	transferAccelerationOpts.SetZeroValues()
 }

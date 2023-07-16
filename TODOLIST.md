@@ -1,6 +1,6 @@
+- [x] keep s3 mock struct and its methods in aws package?
+- [x] keep prompt mock struct and its methods in prompt package?
 - [ ] is clean module working correctly? file name prefix is OK but extension is commented out
 - [ ] full refactoring of clean module. something looks broken
-- [ ] keep s3 mock struct and its methods in aws package?
-- [ ] keep prompt mock struct and its methods in prompt package?
 - [ ] fix code smells
 - [ ] github issues

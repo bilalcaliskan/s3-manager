@@ -35,12 +35,3 @@ func (opts *CleanOptions) InitFlags(cmd *cobra.Command) {
 func GetCleanOptions() *CleanOptions {
 	return cleanOptions
 }
-
-func (opts *CleanOptions) SetZeroValues() {
-	opts.MinFileSizeInMb = 0
-	opts.MaxFileSizeInMb = 0
-	opts.FileExtensions = ""
-	opts.KeepLastNFiles = 2
-	opts.SortBy = "lastModificationDate"
-	opts.RootOptions.SetZeroValues()
-}

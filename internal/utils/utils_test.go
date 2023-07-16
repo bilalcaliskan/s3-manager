@@ -3,8 +3,17 @@
 package utils
 
 import (
+	"context"
+	"errors"
 	"testing"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	"github.com/bilalcaliskan/s3-manager/internal/logging"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+	"github.com/spf13/cobra"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -65,4 +74,150 @@ func TestRemoveMapElements(t *testing.T) {
 	map2["foo"] = "bar"
 
 	RemoveMapElements(map1, map2)
+}
+
+func TestPrepareConstants(t *testing.T) {
+	cmd := &cobra.Command{}
+	ctx := context.Background()
+	cmd.SetContext(ctx)
+
+	rootOpts := options.GetMockedRootOptions()
+	sess, err := session.NewSession(&aws.Config{
+		Region:      aws.String(rootOpts.Region),
+		Credentials: credentials.NewStaticCredentials(rootOpts.AccessKey, rootOpts.SecretKey, ""),
+	})
+	assert.NotNil(t, sess)
+	assert.Nil(t, err)
+
+	cases := []struct {
+		caseName string
+		prompt.PromptRunner
+	}{
+		{
+			"Success with all passed",
+			prompt.GetConfirmRunner(),
+		},
+		{
+			"Success with not-passed confirm runner",
+			nil,
+		},
+	}
+
+	for _, tc := range cases {
+		cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logging.GetLogger(rootOpts)))
+		cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, rootOpts))
+		cmd.SetContext(context.WithValue(cmd.Context(), options.S3SvcKey{}, s3.New(sess)))
+		cmd.SetContext(context.WithValue(cmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
+
+		returnSvc, returnOpts, returnLogger, returnPrompt := PrepareConstants(cmd)
+		if tc.PromptRunner != nil {
+			assert.NotNil(t, returnSvc, returnOpts, returnLogger, returnPrompt)
+		} else {
+			assert.NotNil(t, returnSvc, returnOpts, returnLogger)
+			assert.Nil(t, returnPrompt)
+		}
+	}
+}
+
+func TestBeautifyJSON(t *testing.T) {
+	cases := []struct {
+		caseName   string
+		input      string
+		shouldPass bool
+	}{
+		{
+			"Success",
+			`
+{
+  "Statement": [
+    {
+      "Action": "s3:*",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      },
+      "Effect": "Deny",
+      "Principal": "*",
+      "Resource": [
+        "arn:aws:s3:::thevpnbeast-releases-1",
+        "arn:aws:s3:::thevpnbeast-releases-1/*"
+      ],
+      "Sid": "RestrictToTLSRequestsOnly"
+    }
+  ],
+  "Version": "2012-10-17"
+}
+`,
+			true,
+		},
+		{
+			"Failure caused by invalid json",
+			`
+{
+  "Statement": [
+    {
+      "Action": "s3:*",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      },
+      "Effect": "Deny",
+      "Principal": "*",
+      "Resource": [
+        "arn:aws:s3:::thevpnbeast-releases-1",
+        "arn:aws:s3:::thevpnbeast-releases-1/*"
+      ],
+      "Sid": "RestrictToTLSRequestsOnly"
+    }
+  ]
+  "Version": "2012-10-17"
+
+`,
+			false,
+		},
+	}
+
+	for _, tc := range cases {
+		res, err := BeautifyJSON(tc.input)
+
+		if tc.shouldPass {
+			assert.Nil(t, err)
+			assert.NotEqual(t, "", res)
+		} else {
+			assert.NotNil(t, err)
+			assert.Equal(t, "", res)
+		}
+	}
+}
+
+func TestCheckArgs(t *testing.T) {
+	args := []string{"foo", "bar"}
+	cases := []struct {
+		caseName    string
+		allowed     int
+		expectedErr error
+	}{
+		{
+			caseName:    "Success",
+			allowed:     2,
+			expectedErr: nil,
+		},
+		{
+			caseName:    "Failure caused by too much arguments",
+			allowed:     1,
+			expectedErr: errors.New("too many arguments provided"),
+		},
+		{
+			caseName:    "Failure caused by too few arguments",
+			allowed:     3,
+			expectedErr: errors.New("too few arguments provided"),
+		},
+	}
+
+	for _, tc := range cases {
+		err := CheckArgs(args, tc.allowed)
+		assert.Equal(t, tc.expectedErr, err)
+	}
 }
