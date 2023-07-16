@@ -18,9 +18,3 @@ type VersioningOptions struct {
 func GetVersioningOptions() *VersioningOptions {
 	return versioningOpts
 }
-
-func (opts *VersioningOptions) SetZeroValues() {
-	opts.ActualState = "Enabled"
-	opts.DesiredState = "enabled"
-	opts.RootOptions.SetZeroValues()
-}

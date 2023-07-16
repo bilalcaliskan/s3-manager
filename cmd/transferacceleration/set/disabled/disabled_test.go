@@ -6,53 +6,22 @@ import (
 	"context"
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+
+	"github.com/stretchr/testify/mock"
+
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	defaultGetBucketAccelerationOutput = &s3.GetBucketAccelerateConfigurationOutput{
-		Status: aws.String("Enabled"),
-	}
-	defaultGetBucketAccelerationErr    error
-	defaultPutBucketAccelerationOutput = &s3.PutBucketAccelerateConfigurationOutput{}
-	defaultPutBucketAccelerationErr    error
-)
-
-type promptMock struct {
-	msg string
-	err error
-}
-
-func (p promptMock) Run() (string, error) {
-	// return expected result
-	return p.msg, p.err
-}
-
-// Define a mock struct to be used in your unit tests
-type mockS3Client struct {
-	s3iface.S3API
-}
-
-func (m *mockS3Client) GetBucketAccelerateConfiguration(input *s3.GetBucketAccelerateConfigurationInput) (*s3.GetBucketAccelerateConfigurationOutput, error) {
-	return defaultGetBucketAccelerationOutput, defaultGetBucketAccelerationErr
-}
-
-func (m *mockS3Client) PutBucketAccelerateConfiguration(input *s3.PutBucketAccelerateConfigurationInput) (*s3.PutBucketAccelerateConfigurationOutput, error) {
-	return defaultPutBucketAccelerationOutput, defaultPutBucketAccelerationErr
-}
-
 func TestExecuteDisabledCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
-	svc, err := internalaws.CreateAwsService(rootOpts)
-	assert.Nil(t, err)
-	assert.NotNil(t, svc)
 
 	ctx := context.Background()
 	DisabledCmd.SetContext(ctx)
@@ -61,20 +30,18 @@ func TestExecuteDisabledCmd(t *testing.T) {
 		caseName                    string
 		args                        []string
 		shouldPass                  bool
-		svc                         s3iface.S3API
 		getBucketAccelerationErr    error
 		getBucketAccelerationOutput *s3.GetBucketAccelerateConfigurationOutput
 		putBucketAccelerationErr    error
 		putBucketAccelerationOutput *s3.PutBucketAccelerateConfigurationOutput
-		promptMock                  *promptMock
-		dryRun                      bool
-		autoApprove                 bool
+		prompt.PromptRunner
+		dryRun      bool
+		autoApprove bool
 	}{
 		{
 			"Too many arguments",
 			[]string{"enabled", "foo"},
 			false,
-			svc,
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
@@ -89,16 +56,15 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Success when enabled",
 			[]string{},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
 			},
 			nil,
 			&s3.PutBucketAccelerateConfigurationOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -107,16 +73,15 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Success already disabled",
 			[]string{},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Suspended"),
 			},
 			nil,
 			&s3.PutBucketAccelerateConfigurationOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -125,7 +90,6 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Success when auto-approve enabled",
 			[]string{},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
@@ -140,7 +104,6 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Success when dry-run enabled",
 			[]string{},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
@@ -155,16 +118,15 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Failure unknown status",
 			[]string{},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enableddd"),
 			},
 			nil,
 			&s3.PutBucketAccelerateConfigurationOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -173,16 +135,15 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Failure caused by user terminated the process",
 			[]string{},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
 			},
 			nil,
 			&s3.PutBucketAccelerateConfigurationOutput{},
-			&promptMock{
-				msg: "n",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -191,16 +152,15 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Failure caused by prompt error",
 			[]string{},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketAccelerateConfigurationOutput{
 				Status: aws.String("Enabled"),
 			},
 			nil,
 			&s3.PutBucketAccelerateConfigurationOutput{},
-			&promptMock{
-				msg: "nasdfasf",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "nasdfasf",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -208,21 +168,21 @@ func TestExecuteDisabledCmd(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
+
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		defaultGetBucketAccelerationErr = tc.getBucketAccelerationErr
-		defaultGetBucketAccelerationOutput = tc.getBucketAccelerationOutput
+		mockS3 := new(internalaws.MockS3Client)
+		mockS3.On("GetBucketAccelerateConfiguration", mock.AnythingOfType("*s3.GetBucketAccelerateConfigurationInput")).Return(tc.getBucketAccelerationOutput, tc.getBucketAccelerationErr)
+		mockS3.On("PutBucketAccelerateConfiguration", mock.AnythingOfType("*s3.PutBucketAccelerateConfigurationInput")).Return(tc.putBucketAccelerationOutput, tc.putBucketAccelerationErr)
 
-		if tc.promptMock != nil {
-			confirmRunner = tc.promptMock
-		}
-
-		DisabledCmd.SetContext(context.WithValue(DisabledCmd.Context(), options.S3SvcKey{}, tc.svc))
+		DisabledCmd.SetContext(context.WithValue(DisabledCmd.Context(), options.S3SvcKey{}, mockS3))
 		DisabledCmd.SetContext(context.WithValue(DisabledCmd.Context(), options.OptsKey{}, rootOpts))
+		DisabledCmd.SetContext(context.WithValue(DisabledCmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
 		DisabledCmd.SetArgs(tc.args)
 
-		err = DisabledCmd.Execute()
+		err := DisabledCmd.Execute()
 
 		if tc.shouldPass {
 			assert.Nil(t, err)
@@ -230,6 +190,4 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			assert.NotNil(t, err)
 		}
 	}
-
-	transferAccelerationOpts.SetZeroValues()
 }

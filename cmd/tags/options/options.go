@@ -6,11 +6,7 @@ import (
 
 type TagOptsKey struct{}
 
-var (
-	//substringRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide text to search", nil)
-	//extensionRunner prompt.PromptRunner = prompt.GetPromptRunner("Provide target file extensions (comma seperated)", nil)
-	tagOpts = &TagOptions{}
-)
+var tagOpts = &TagOptions{}
 
 // TagOptions contains frequent command line and application options.
 type TagOptions struct {
@@ -27,27 +23,3 @@ type TagOptions struct {
 func GetTagOptions() *TagOptions {
 	return tagOpts
 }
-
-func (opts *TagOptions) SetZeroValues() {
-	opts.ActualTags = make(map[string]string)
-	opts.TagsToRemove = make(map[string]string)
-	opts.TagsToAdd = make(map[string]string)
-	opts.RootOptions.SetZeroValues()
-}
-
-/*func (opts *ConfigureOptions) PromptInteractiveValues() error {
-	res, err := substringRunner.Run()
-	if err != nil {
-		return err
-	}
-	opts.Foo = res
-
-	res, err = extensionRunner.Run()
-	if err != nil {
-		return err
-	}
-	opts.FileExtensions = res
-
-	return nil
-}
-*/

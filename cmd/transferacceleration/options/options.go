@@ -19,9 +19,3 @@ type TransferAccelerationOptions struct {
 func GetTransferAccelerationOptions() *TransferAccelerationOptions {
 	return transferAccelerationOpts
 }
-
-func (opts *TransferAccelerationOptions) SetZeroValues() {
-	opts.ActualState = "Enabled"
-	opts.DesiredState = "enabled"
-	opts.RootOptions.SetZeroValues()
-}

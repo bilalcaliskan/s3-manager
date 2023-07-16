@@ -6,59 +6,22 @@ import (
 	"context"
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+
+	"github.com/stretchr/testify/mock"
+
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	defaultPutBucketTaggingErr    error
-	defaultPutBucketTaggingOutput = &s3.PutBucketTaggingOutput{}
-
-	defaultGetBucketTaggingErr    error
-	defaultGetBucketTaggingOutput = &s3.GetBucketTaggingOutput{}
-
-	defaultDeleteBucketTaggingErr    error
-	defaultDeleteBucketTaggingOutput = &s3.DeleteBucketTaggingOutput{}
-)
-
-type promptMock struct {
-	msg string
-	err error
-}
-
-func (p promptMock) Run() (string, error) {
-	// return expected result
-	return p.msg, p.err
-}
-
-// Define a testdata struct to be used in your unit tests
-type mockS3Client struct {
-	s3iface.S3API
-}
-
-func (m *mockS3Client) PutBucketTagging(input *s3.PutBucketTaggingInput) (*s3.PutBucketTaggingOutput, error) {
-	return defaultPutBucketTaggingOutput, defaultPutBucketTaggingErr
-}
-
-func (m *mockS3Client) GetBucketTagging(input *s3.GetBucketTaggingInput) (*s3.GetBucketTaggingOutput, error) {
-	return defaultGetBucketTaggingOutput, defaultGetBucketTaggingErr
-}
-
-func (m *mockS3Client) DeleteBucketTagging(input *s3.DeleteBucketTaggingInput) (*s3.DeleteBucketTaggingOutput, error) {
-	return defaultDeleteBucketTaggingOutput, defaultDeleteBucketTaggingErr
-}
-
 func TestExecuteRemoveCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
-	svc, err := internalaws.CreateAwsService(rootOpts)
-	assert.NotNil(t, svc)
-	assert.Nil(t, err)
 
 	ctx := context.Background()
 	RemoveCmd.SetContext(ctx)
@@ -67,22 +30,20 @@ func TestExecuteRemoveCmd(t *testing.T) {
 		caseName                  string
 		args                      []string
 		shouldPass                bool
-		svc                       s3iface.S3API
 		getBucketTaggingErr       error
 		getBucketTaggingOutput    *s3.GetBucketTaggingOutput
 		putBucketTaggingErr       error
 		putBucketTaggingOutput    *s3.PutBucketTaggingOutput
 		deleteBucketTaggingErr    error
 		deleteBucketTaggingOutput *s3.DeleteBucketTaggingOutput
-		promptMock                *promptMock
-		dryRun                    bool
-		autoApprove               bool
+		prompt.PromptRunner
+		dryRun      bool
+		autoApprove bool
 	}{
 		{
 			"No arguments provided",
 			[]string{},
 			false,
-			svc,
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
@@ -97,7 +58,6 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Success while has single tag",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -111,9 +71,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&s3.PutBucketTaggingOutput{},
 			nil,
 			&s3.DeleteBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -121,7 +81,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 		{
 			"Success when dry-run enabled",
 			[]string{"foo=bar,foo2=bar2"},
-			true, &mockS3Client{},
+			true,
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -143,7 +103,6 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Success when auto-approve enabled",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -164,7 +123,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 		{
 			"Success while has multiple tags",
 			[]string{"foo=bar,foo2=bar2"},
-			true, &mockS3Client{},
+			true,
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -190,9 +149,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&s3.PutBucketTaggingOutput{},
 			nil,
 			&s3.DeleteBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -201,16 +160,15 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by wrong argument provided",
 			[]string{"foo=bar=bar3,foo2=bar2"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
 			nil,
 			&s3.DeleteBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -219,7 +177,6 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Warn while has no tags to remove",
 			[]string{"foo3=bar3,foo4=bar4"},
 			true,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -237,9 +194,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&s3.PutBucketTaggingOutput{},
 			nil,
 			&s3.DeleteBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -248,16 +205,15 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by GetBucketTags error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			&mockS3Client{},
 			constants.ErrInjected,
 			&s3.GetBucketTaggingOutput{},
 			nil,
 			&s3.PutBucketTaggingOutput{},
 			constants.ErrInjected,
 			&s3.DeleteBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -266,7 +222,6 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by DeleteAllBucketTags error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -284,9 +239,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&s3.PutBucketTaggingOutput{},
 			constants.ErrInjected,
 			&s3.DeleteBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -295,7 +250,6 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by prompt error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -313,9 +267,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&s3.PutBucketTaggingOutput{},
 			nil,
 			&s3.DeleteBucketTaggingOutput{},
-			&promptMock{
-				msg: "yasdfas",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "yasdfas",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -324,7 +278,6 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by user terminated the process",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -342,9 +295,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&s3.PutBucketTaggingOutput{},
 			nil,
 			&s3.DeleteBucketTaggingOutput{},
-			&promptMock{
-				msg: "n",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrInjected,
 			},
 			false,
 			false,
@@ -353,7 +306,6 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by DeleteAllBucketTags error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			&mockS3Client{},
 			nil,
 			&s3.GetBucketTaggingOutput{
 				TagSet: []*s3.Tag{
@@ -371,9 +323,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			&s3.PutBucketTaggingOutput{},
 			nil,
 			&s3.DeleteBucketTaggingOutput{},
-			&promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			false,
 			false,
@@ -383,25 +335,20 @@ func TestExecuteRemoveCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
+		mockS3 := new(internalaws.MockS3Client)
+		mockS3.On("GetBucketTagging", mock.AnythingOfType("*s3.GetBucketTaggingInput")).Return(tc.getBucketTaggingOutput, tc.getBucketTaggingErr)
+		mockS3.On("PutBucketTagging", mock.AnythingOfType("*s3.PutBucketTaggingInput")).Return(tc.putBucketTaggingOutput, tc.putBucketTaggingErr)
+		mockS3.On("DeleteBucketTagging", mock.AnythingOfType("*s3.DeleteBucketTaggingInput")).Return(tc.deleteBucketTaggingOutput, tc.deleteBucketTaggingErr)
+
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		defaultGetBucketTaggingErr = tc.getBucketTaggingErr
-		defaultPutBucketTaggingErr = tc.putBucketTaggingErr
-		defaultGetBucketTaggingOutput = tc.getBucketTaggingOutput
-		defaultPutBucketTaggingOutput = tc.putBucketTaggingOutput
-		defaultDeleteBucketTaggingErr = tc.deleteBucketTaggingErr
-		defaultDeleteBucketTaggingOutput = tc.deleteBucketTaggingOutput
-
-		if tc.promptMock != nil {
-			confirmRunner = tc.promptMock
-		}
-
-		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, tc.svc))
+		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, mockS3))
 		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
+		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
 		RemoveCmd.SetArgs(tc.args)
 
-		err = RemoveCmd.Execute()
+		err := RemoveCmd.Execute()
 
 		if tc.shouldPass {
 			assert.Nil(t, err)
@@ -409,6 +356,4 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			assert.NotNil(t, err)
 		}
 	}
-
-	tagOpts.SetZeroValues()
 }

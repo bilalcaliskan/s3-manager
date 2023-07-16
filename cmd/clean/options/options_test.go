@@ -16,7 +16,6 @@ func TestGetCleanOptions(t *testing.T) {
 	rootOpts := options.GetRootOptions()
 	opts.RootOptions = rootOpts
 	assert.NotNil(t, opts)
-	opts.SetZeroValues()
 }
 
 func TestCleanOptions_InitFlags(t *testing.T) {
@@ -27,5 +26,4 @@ func TestCleanOptions_InitFlags(t *testing.T) {
 	opts.RootOptions = rootOpts
 
 	opts.InitFlags(&cmd)
-	opts.SetZeroValues()
 }

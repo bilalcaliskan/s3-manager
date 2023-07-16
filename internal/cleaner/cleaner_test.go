@@ -62,16 +62,6 @@ var (
 	}
 )
 
-type promptMock struct {
-	msg string
-	err error
-}
-
-func (p promptMock) Run() (string, error) {
-	// return expected result
-	return p.msg, p.err
-}
-
 type mockS3Client struct {
 	s3iface.S3API
 }
@@ -125,9 +115,9 @@ func TestStartCleaning(t *testing.T) {
 				SortBy:          "lastModificationDate",
 				RootOptions:     rootoptions.GetMockedRootOptions(),
 			},
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			&s3.ListObjectsOutput{
 				Name:        aws.String(""),
@@ -176,9 +166,9 @@ func TestStartCleaning(t *testing.T) {
 				SortBy:          "lastModificationDate",
 				RootOptions:     rootoptions.GetMockedRootOptions(),
 			},
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			&s3.ListObjectsOutput{
 				Name:        aws.String(""),
@@ -234,9 +224,9 @@ func TestStartCleaning(t *testing.T) {
 				SortBy:          "lastModificationDate",
 				RootOptions:     rootoptions.GetMockedRootOptions(),
 			},
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			&s3.ListObjectsOutput{
 				Name:        aws.String(""),
@@ -292,9 +282,9 @@ func TestStartCleaning(t *testing.T) {
 				SortBy:          "size",
 				RootOptions:     rootoptions.GetMockedRootOptions(),
 			},
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			&s3.ListObjectsOutput{
 				Name:        aws.String(""),
@@ -343,9 +333,9 @@ func TestStartCleaning(t *testing.T) {
 				SortBy:          "lastModificationDate",
 				RootOptions:     rootoptions.GetMockedRootOptions(),
 			},
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			&s3.ListObjectsOutput{
 				Name:        aws.String(""),
@@ -394,9 +384,9 @@ func TestStartCleaning(t *testing.T) {
 				SortBy:          "lastModificationDate",
 				RootOptions:     rootoptions.GetMockedRootOptions(),
 			},
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			nil,
 			constants.ErrInjected,
@@ -416,9 +406,9 @@ func TestStartCleaning(t *testing.T) {
 				SortBy:          "lastModificationDate",
 				RootOptions:     rootoptions.GetMockedRootOptions(),
 			},
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			&s3.ListObjectsOutput{
 				Name:        aws.String(""),
@@ -467,9 +457,9 @@ func TestStartCleaning(t *testing.T) {
 				SortBy:          "lastModificationDate",
 				RootOptions:     rootoptions.GetMockedRootOptions(),
 			},
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			&s3.ListObjectsOutput{
 				Name:        aws.String(""),
@@ -518,9 +508,9 @@ func TestStartCleaning(t *testing.T) {
 				SortBy:          "lastModificationDate",
 				RootOptions:     rootoptions.GetMockedRootOptions(),
 			},
-			promptMock{
-				msg: "n",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrInjected,
 			},
 			&s3.ListObjectsOutput{
 				Name:        aws.String(""),
@@ -569,9 +559,9 @@ func TestStartCleaning(t *testing.T) {
 				SortBy:          "lastModificationDate",
 				RootOptions:     rootoptions.GetMockedRootOptions(),
 			},
-			promptMock{
-				msg: "asdfadsf",
-				err: constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "asdfadsf",
+				Err: constants.ErrInjected,
 			},
 			&s3.ListObjectsOutput{
 				Name:        aws.String(""),
@@ -620,9 +610,9 @@ func TestStartCleaning(t *testing.T) {
 				SortBy:          "lastModificationDate",
 				RootOptions:     rootoptions.GetMockedRootOptions(),
 			},
-			promptMock{
-				msg: "y",
-				err: nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
 			},
 			&s3.ListObjectsOutput{
 				Name:        aws.String(""),

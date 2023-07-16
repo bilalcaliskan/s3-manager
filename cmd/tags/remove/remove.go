@@ -29,7 +29,7 @@ func init() {
 var (
 	svc           s3iface.S3API
 	logger        zerolog.Logger
-	confirmRunner prompt.PromptRunner = prompt.GetConfirmRunner()
+	confirmRunner prompt.PromptRunner
 	tagOpts       *options.TagOptions
 	RemoveCmd     = &cobra.Command{
 		Use:           "remove",
@@ -41,7 +41,7 @@ s3-manager tags remove foo1=bar1,foo2=bar2
 		`,
 		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
 			var rootOpts *rootopts.RootOptions
-			svc, rootOpts, logger = utils.PrepareConstants(cmd)
+			svc, rootOpts, logger, confirmRunner = utils.PrepareConstants(cmd)
 			tagOpts.RootOptions = rootOpts
 
 			if err := utils.CheckArgs(args, 1); err != nil {

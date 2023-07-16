@@ -33,7 +33,7 @@ s3-manager bucketpolicy show
 		`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			var rootOpts *rootopts.RootOptions
-			svc, rootOpts, logger = utils.PrepareConstants(cmd)
+			svc, rootOpts, logger, _ = utils.PrepareConstants(cmd)
 			bucketPolicyOpts.RootOptions = rootOpts
 
 			if err := utils.CheckArgs(args, 0); err != nil {

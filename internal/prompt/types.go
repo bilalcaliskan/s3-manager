@@ -27,3 +27,21 @@ func GetConfirmRunner() *promptui.Prompt {
 		return errors.New("invalid input")
 	})
 }
+
+type PromptMock struct {
+	Msg string
+	Err error
+}
+
+func (p PromptMock) Run() (string, error) {
+	return p.Msg, p.Err
+}
+
+type PromptWrapper struct {
+	Prompt    *promptui.Prompt
+	UserInput string
+}
+
+func (p *PromptWrapper) Run() (string, error) {
+	return p.UserInput, p.Prompt.Validate(p.UserInput)
+}

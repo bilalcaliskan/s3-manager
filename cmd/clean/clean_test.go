@@ -6,9 +6,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/stretchr/testify/mock"
+
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 
@@ -51,26 +53,7 @@ var (
 		Prefix:         nil,
 		RequestCharged: nil,
 	}
-
-	defaultListObjectsErr    error
-	defaultListObjectsOutput = &s3.ListObjectsOutput{}
-
-	defaultDeleteObjectErr    error
-	defaultDeleteObjectOutput = &s3.DeleteObjectOutput{}
 )
-
-// Define a testdata struct to be used in your unit tests
-type mockS3Client struct {
-	s3iface.S3API
-}
-
-func (m *mockS3Client) DeleteObject(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
-	return defaultDeleteObjectOutput, defaultDeleteObjectErr
-}
-
-func (m *mockS3Client) ListObjects(*s3.ListObjectsInput) (*s3.ListObjectsOutput, error) {
-	return defaultListObjectsOutput, defaultListObjectsErr
-}
 
 func TestExecuteCleanCmd(t *testing.T) {
 	ctx := context.Background()
@@ -80,7 +63,6 @@ func TestExecuteCleanCmd(t *testing.T) {
 	cases := []struct {
 		caseName           string
 		args               []string
-		svc                s3iface.S3API
 		shouldPass         bool
 		listObjectsErr     error
 		listObjectsOutput  *s3.ListObjectsOutput
@@ -90,7 +72,6 @@ func TestExecuteCleanCmd(t *testing.T) {
 		{
 			"Success",
 			[]string{},
-			&mockS3Client{},
 			true,
 			nil,
 			&s3.ListObjectsOutput{},
@@ -100,7 +81,6 @@ func TestExecuteCleanCmd(t *testing.T) {
 		{
 			"Failure caused by invalid 'sortBy' flag",
 			[]string{"--sort-by=asldkfjalsdkf"},
-			&mockS3Client{},
 			false,
 			nil,
 			dummyListObjectsOutput,
@@ -110,7 +90,6 @@ func TestExecuteCleanCmd(t *testing.T) {
 		{
 			"Failure caused by wrong size flags",
 			[]string{"--max-size-mb=10", "--min-size-mb=20"},
-			&mockS3Client{},
 			false,
 			nil,
 			dummyListObjectsOutput,
@@ -120,7 +99,6 @@ func TestExecuteCleanCmd(t *testing.T) {
 		{
 			"Failure caused by ListObjects error",
 			[]string{},
-			&mockS3Client{},
 			false,
 			constants.ErrInjected,
 			&s3.ListObjectsOutput{},
@@ -132,14 +110,12 @@ func TestExecuteCleanCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case '%s'", tc.caseName)
 
-		defaultListObjectsErr = tc.listObjectsErr
-		defaultListObjectsOutput = tc.listObjectsOutput
-
-		defaultDeleteObjectErr = tc.deleteObjectErr
-		defaultDeleteObjectOutput = tc.deleteObjectOutput
+		mockS3 := new(internalaws.MockS3Client)
+		mockS3.On("DeleteObject", mock.AnythingOfType("*s3.DeleteObjectInput")).Return(tc.deleteObjectOutput, tc.deleteObjectErr)
+		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.listObjectsOutput, tc.listObjectsErr)
 
 		CleanCmd.SetArgs(tc.args)
-		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, tc.svc))
+		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.S3SvcKey{}, mockS3))
 		CleanCmd.SetContext(context.WithValue(CleanCmd.Context(), options.OptsKey{}, rootOpts))
 
 		err := CleanCmd.Execute()
@@ -148,7 +124,5 @@ func TestExecuteCleanCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
-
-		cleanOpts.SetZeroValues()
 	}
 }

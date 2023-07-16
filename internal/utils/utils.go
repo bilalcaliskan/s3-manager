@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
@@ -59,11 +61,16 @@ func BeautifyJSON(jsonString string) (string, error) {
 	return string(beautifiedBytes), nil
 }
 
-func PrepareConstants(cmd *cobra.Command) (s3iface.S3API, *options.RootOptions, zerolog.Logger) {
+func PrepareConstants(cmd *cobra.Command) (s3iface.S3API, *options.RootOptions, zerolog.Logger, prompt.PromptRunner) {
 	svc := cmd.Context().Value(options.S3SvcKey{}).(s3iface.S3API)
 	rootOpts := cmd.Context().Value(options.OptsKey{}).(*options.RootOptions)
 
-	return svc, rootOpts, logging.GetLogger(rootOpts)
+	confirmRunner, ok := cmd.Context().Value(options.ConfirmRunnerKey{}).(prompt.PromptRunner)
+	if !ok {
+		confirmRunner = nil
+	}
+
+	return svc, rootOpts, logging.GetLogger(rootOpts), confirmRunner
 }
 
 func CheckArgs(args []string, allowed int) error {

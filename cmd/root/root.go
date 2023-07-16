@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy"
@@ -80,6 +82,7 @@ var (
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.S3SvcKey{}, svc))
+			cmd.SetContext(context.WithValue(cmd.Context(), options.ConfirmRunnerKey{}, prompt.GetConfirmRunner()))
 
 			return nil
 		},

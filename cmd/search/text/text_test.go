@@ -9,36 +9,19 @@ import (
 	"sync"
 	"testing"
 
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+
+	"github.com/stretchr/testify/mock"
+
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	defaultListObjectsErr    error
-	defaultListObjectsOutput = &s3.ListObjectsOutput{}
-	defaultGetObjectErr      error
-	defaultGetObjectOutput   = &s3.GetObjectOutput{}
-	mu                       sync.Mutex
-)
-
-type mockS3Client struct {
-	s3iface.S3API
-}
-
-// ListObjects mocks the S3API ListObjects method
-func (m *mockS3Client) ListObjects(obj *s3.ListObjectsInput) (*s3.ListObjectsOutput, error) {
-	return defaultListObjectsOutput, defaultListObjectsErr
-}
-
-// GetObject mocks the S3API GetObject method
-func (m *mockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
-	return defaultGetObjectOutput, defaultGetObjectErr
-}
+var mu sync.Mutex
 
 func TestExecuteTextCmd(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
@@ -113,13 +96,13 @@ func TestExecuteTextCmd(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		defaultListObjectsErr = tc.listObjectsErr
-		defaultListObjectsOutput = tc.listObjectsOutput
+		t.Logf("starting case %s", tc.caseName)
 
-		defaultGetObjectErr = tc.getObjectErr
-		defaultGetObjectOutput = tc.getObjectOutput
+		mockS3 := new(internalaws.MockS3Client)
+		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.listObjectsOutput, tc.listObjectsErr)
+		mockS3.On("GetObject", mock.AnythingOfType("*s3.GetObjectInput")).Return(tc.getObjectOutput, tc.getObjectErr)
 
-		TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.S3SvcKey{}, &mockS3Client{}))
+		TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.S3SvcKey{}, mockS3))
 		TextCmd.SetContext(context.WithValue(TextCmd.Context(), options.OptsKey{}, rootOpts))
 		TextCmd.SetArgs(tc.args)
 
@@ -132,8 +115,6 @@ func TestExecuteTextCmd(t *testing.T) {
 		} else {
 			assert.NotNil(t, err)
 		}
-
-		searchOpts.SetZeroValues()
 	}
 }
 
