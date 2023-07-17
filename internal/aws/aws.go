@@ -7,8 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
-
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	internalutil "github.com/bilalcaliskan/s3-manager/internal/utils"
@@ -94,19 +92,15 @@ func GetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.GetBuc
 // It accepts an S3API interface and TagOptions as arguments.
 // For each tag in the provided TagOptions, a new tag is created and added to a slice of tags.
 // It then attaches these tags to the bucket and returns a PutBucketTaggingOutput and any error encountered.
-func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions, confirmRunner prompt.PromptRunner, logger zerolog.Logger) error {
+func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
 	if opts.DryRun {
 		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
 		return nil
 	}
 
 	if !opts.AutoApprove {
-		if res, err := confirmRunner.Run(); err != nil {
-			if strings.ToLower(res) == "n" {
-				return constants.ErrUserTerminated
-			}
-
-			return constants.ErrInvalidInput
+		if err := prompt.AskForApproval(runner); err != nil {
+			return err
 		}
 	}
 
@@ -143,12 +137,8 @@ func DeleteAllBucketTags(svc s3iface.S3API, opts *options3.TagOptions, runner pr
 	}
 
 	if !opts.AutoApprove {
-		if res, err := runner.Run(); err != nil {
-			if strings.ToLower(res) == "n" {
-				return out, constants.ErrUserTerminated
-			}
-
-			return out, constants.ErrInvalidInput
+		if err := prompt.AskForApproval(runner); err != nil {
+			return out, err
 		}
 	}
 
@@ -173,21 +163,15 @@ func GetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerat
 // If the provided 'DryRun' or 'AutoApprove' options are set, the function will return early.
 // If not, it will set the bucket's transfer acceleration status based on the provided desired state.
 // It logs any errors encountered and returns them.
-func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions, confirmRunner prompt.PromptRunner, logger zerolog.Logger) error {
+func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
 	if opts.DryRun {
 		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
 		return nil
 	}
 
-	var err error
 	if !opts.AutoApprove {
-		var res string
-		if res, err = confirmRunner.Run(); err != nil {
-			if strings.ToLower(res) == "n" {
-				return constants.ErrUserTerminated
-			}
-
-			return constants.ErrInvalidInput
+		if err := prompt.AskForApproval(runner); err != nil {
+			return err
 		}
 	}
 
@@ -323,20 +307,15 @@ func GetBucketVersioning(svc s3iface.S3API, opts *options.RootOptions) (res *s3.
 // flags, confirm versioning state changes with the user if needed, and execute a
 // PutBucketVersioningInput request to set the bucket's versioning state.
 // The function logs the process, including any errors encountered, and returns these errors.
-func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningOptions, confirmRunner prompt.PromptRunner, logger zerolog.Logger) (err error) {
+func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningOptions, runner prompt.PromptRunner, logger zerolog.Logger) (err error) {
 	if versioningOpts.DryRun {
 		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
 		return nil
 	}
 
 	if !versioningOpts.AutoApprove {
-		var res string
-		if res, err = confirmRunner.Run(); err != nil {
-			if strings.ToLower(res) == "n" {
-				return constants.ErrUserTerminated
-			}
-
-			return constants.ErrInvalidInput
+		if err := prompt.AskForApproval(runner); err != nil {
+			return err
 		}
 	}
 
