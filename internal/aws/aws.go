@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
+
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	internalutil "github.com/bilalcaliskan/s3-manager/internal/utils"
@@ -94,7 +96,7 @@ func GetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.GetBuc
 // It then attaches these tags to the bucket and returns a PutBucketTaggingOutput and any error encountered.
 func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
 	if opts.DryRun {
-		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		logger.Info().Msg(constants.InfDryRun)
 		return nil
 	}
 
@@ -132,7 +134,7 @@ func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions, runner prompt.P
 // a DeleteBucketTaggingOutput and any error encountered.
 func DeleteAllBucketTags(svc s3iface.S3API, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) (out *s3.DeleteBucketTaggingOutput, err error) {
 	if opts.DryRun {
-		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		logger.Info().Msg(constants.InfDryRun)
 		return out, nil
 	}
 
@@ -165,7 +167,7 @@ func GetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerat
 // It logs any errors encountered and returns them.
 func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
 	if opts.DryRun {
-		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		logger.Info().Msg(constants.InfDryRun)
 		return nil
 	}
 
@@ -247,7 +249,7 @@ func GetBucketPolicyString(svc s3iface.S3API, opts *options5.BucketPolicyOptions
 // and returns a PutBucketPolicyOutput and any error encountered.
 func SetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *s3.PutBucketPolicyOutput, err error) {
 	if opts.DryRun {
-		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		logger.Info().Msg(constants.InfDryRun)
 		return res, nil
 	}
 
@@ -272,7 +274,7 @@ func SetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions, runn
 // along with any error encountered during the process.
 func DeleteBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *s3.DeleteBucketPolicyOutput, err error) {
 	if opts.DryRun {
-		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		logger.Info().Msg(constants.InfDryRun)
 		return res, nil
 	}
 
@@ -309,7 +311,7 @@ func GetBucketVersioning(svc s3iface.S3API, opts *options.RootOptions) (res *s3.
 // The function logs the process, including any errors encountered, and returns these errors.
 func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningOptions, runner prompt.PromptRunner, logger zerolog.Logger) (err error) {
 	if versioningOpts.DryRun {
-		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		logger.Info().Msg(constants.InfDryRun)
 		return nil
 	}
 
