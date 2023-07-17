@@ -5,6 +5,8 @@ package prompt
 import (
 	"testing"
 
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,4 +63,50 @@ func TestPromptMock_Run(t *testing.T) {
 
 	_, err := runner.Run()
 	assert.Nil(t, err)
+}
+
+func TestAskForApproval(t *testing.T) {
+	testCases := []struct {
+		caseName  string
+		mock      *PromptMock
+		expectErr bool
+	}{
+		{
+			caseName: "Approve",
+			mock: &PromptMock{
+				Msg: "y",
+				Err: nil,
+			},
+			expectErr: false,
+		},
+		{
+			caseName: "Terminate",
+			mock: &PromptMock{
+				Msg: "n",
+				Err: constants.ErrUserTerminated,
+			},
+			expectErr: true,
+		},
+		{
+			caseName: "Invalid input",
+			mock: &PromptMock{
+				Msg: "adsjlkfasd",
+				Err: constants.ErrInvalidInput,
+			},
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.caseName, func(t *testing.T) {
+			t.Logf("starting case %s", tc.caseName)
+
+			err := AskForApproval(tc.mock)
+			if tc.expectErr {
+				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
 }

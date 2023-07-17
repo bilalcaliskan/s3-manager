@@ -2,7 +2,9 @@ package prompt
 
 import (
 	"errors"
+	"strings"
 
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
 	"github.com/manifoldco/promptui"
 )
 
@@ -26,6 +28,18 @@ func GetConfirmRunner() *promptui.Prompt {
 
 		return errors.New("invalid input")
 	})
+}
+
+func AskForApproval(runner PromptRunner) error {
+	if res, err := runner.Run(); err != nil {
+		if strings.ToLower(res) == "n" {
+			return constants.ErrUserTerminated
+		}
+
+		return constants.ErrInvalidInput
+	}
+
+	return nil
 }
 
 type PromptMock struct {

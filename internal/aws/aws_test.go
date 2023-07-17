@@ -53,6 +53,16 @@ var dummyBucketPolicyStr = `
 }
 `
 
+// TestGetAllFiles is a test function that tests the behavior of the GetAllFiles function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a mocked S3 client and defines a list of objects to be returned.
+// It expects GetAllFiles to return a nil error.
+// For the failure case, it injects an error in the ListObjects operation of the mocked S3 client.
+// It expects GetAllFiles to return a specific error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestGetAllFiles(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
@@ -104,6 +114,16 @@ func TestGetAllFiles(t *testing.T) {
 	}
 }
 
+// TestDeleteFiles is a test function that tests the behavior of the DeleteFiles function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a mocked S3 client and defines a list of objects to be deleted.
+// It expects DeleteFiles to return a nil error.
+// For the failure case, it injects an error in the DeleteObject operation of the mocked S3 client.
+// It expects DeleteFiles to return a specific error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestDeleteFiles(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
@@ -183,6 +203,16 @@ func TestDeleteFiles(t *testing.T) {
 	}
 }
 
+// TestCreateAwsService is a test function that tests the behavior of the CreateAwsService function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a RootOptions object with all the required fields.
+// It expects CreateAwsService to return a non-nil AWS service client and a nil error.
+// For the failure case, it sets up a RootOptions object with a missing required field.
+// It expects CreateAwsService to return a nil AWS service client and a non-nil error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestCreateAwsService(t *testing.T) {
 	cases := []struct {
 		caseName   string
@@ -224,6 +254,16 @@ func TestCreateAwsService(t *testing.T) {
 	}
 }
 
+// TestSearchString is a test function that tests the behavior of the SearchString function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success cases, it sets up SearchOptions objects with specific search criteria and a mocked S3 client.
+// It expects SearchString to return a non-nil result and a nil error, and it asserts the match count.
+// For the failure cases, it either injects an error in the ListObjects operation or the GetObject operation of the mocked S3 client.
+// It expects SearchString to return a nil result and a non-nil error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestSearchString(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
@@ -364,6 +404,17 @@ func TestSearchString(t *testing.T) {
 	}
 }
 
+// TestSetBucketVersioning is a test function that tests the behavior of the SetBucketVersioning function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases cover various scenarios related to enabling or disabling bucket versioning.
+// Each test case includes VersioningOptions, GetBucketVersioningOutput, and error parameters.
+// The function tests different combinations of inputs, including success cases and failure cases.
+// It sets up a mocked S3 client and mocks the GetBucketVersioning and PutBucketVersioning operations.
+// The function asserts the expected error or nil value based on the scenario being tested.
+// It also verifies that the function behaves correctly when dry-run or auto-approve options are enabled.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestSetBucketVersioning(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
@@ -567,6 +618,16 @@ func TestSetBucketVersioning(t *testing.T) {
 	}
 }
 
+// TestGetBucketVersioning is a test function that tests the behavior of the GetBucketVersioning function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a mocked S3 client and defines a GetBucketVersioningOutput object with a specific status.
+// It expects GetBucketVersioning to return a non-nil output and a nil error.
+// For the failure case, it injects an error in the GetBucketVersioning operation of the mocked S3 client.
+// It expects GetBucketVersioning to return a nil output and a non-nil error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestGetBucketVersioning(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
@@ -602,6 +663,16 @@ func TestGetBucketVersioning(t *testing.T) {
 	}
 }
 
+// TestGetBucketTags is a test function that tests the behavior of the GetBucketTags function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a mocked S3 client and defines a GetBucketTaggingOutput object with specific tags.
+// It expects GetBucketTags to return the expected tags and a nil error.
+// For the failure case, it injects an error in the GetBucketTagging operation of the mocked S3 client.
+// It expects GetBucketTags to return a nil result and a non-nil error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestGetBucketTags(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
@@ -653,14 +724,28 @@ func TestGetBucketTags(t *testing.T) {
 	}
 }
 
+// TestSetBucketTags is a test function that tests the behavior of the SetBucketTags function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a mocked S3 client and defines a list of tags to be added to the bucket.
+// It expects SetBucketTags to return a nil error.
+// For the failure case, it injects an error in the PutBucketTagging operation of the mocked S3 client.
+// It expects SetBucketTags to return a non-nil error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestSetBucketTags(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
+	logger := logging.GetLogger(rootOpts)
 	cases := []struct {
 		caseName string
 		expected error
 		*options4.TagOptions
 		tags                []*s3.Tag
 		putBucketTaggingErr error
+		enableDryRun        bool
+		enableAutoApprove   bool
+		prompt.PromptRunner
 	}{
 		{
 			"Success",
@@ -680,6 +765,35 @@ func TestSetBucketTags(t *testing.T) {
 					Value: aws.String("bar2"),
 				},
 			},
+			nil,
+			false,
+			false,
+			&prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
+			},
+		},
+		{
+			"Success with dry run enabled",
+			nil,
+			&options4.TagOptions{
+				RootOptions:  rootOpts,
+				TagsToAdd:    make(map[string]string),
+				TagsToRemove: make(map[string]string),
+			},
+			[]*s3.Tag{
+				{
+					Key:   aws.String("foo"),
+					Value: aws.String("bar"),
+				},
+				{
+					Key:   aws.String("foo2"),
+					Value: aws.String("bar2"),
+				},
+			},
+			nil,
+			true,
+			false,
 			nil,
 		},
 		{
@@ -701,11 +815,72 @@ func TestSetBucketTags(t *testing.T) {
 				},
 			},
 			constants.ErrInjected,
+			false,
+			false,
+			&prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
+			},
+		},
+		{
+			"Failure caused by user terminated the process",
+			constants.ErrUserTerminated,
+			&options4.TagOptions{
+				RootOptions:  rootOpts,
+				TagsToAdd:    make(map[string]string),
+				TagsToRemove: make(map[string]string),
+			},
+			[]*s3.Tag{
+				{
+					Key:   aws.String("foo"),
+					Value: aws.String("bar"),
+				},
+				{
+					Key:   aws.String("foo2"),
+					Value: aws.String("bar2"),
+				},
+			},
+			constants.ErrInjected,
+			false,
+			false,
+			&prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrUserTerminated,
+			},
+		},
+		{
+			"Failure caused by invalid input",
+			constants.ErrInvalidInput,
+			&options4.TagOptions{
+				RootOptions:  rootOpts,
+				TagsToAdd:    make(map[string]string),
+				TagsToRemove: make(map[string]string),
+			},
+			[]*s3.Tag{
+				{
+					Key:   aws.String("foo"),
+					Value: aws.String("bar"),
+				},
+				{
+					Key:   aws.String("foo2"),
+					Value: aws.String("bar2"),
+				},
+			},
+			constants.ErrInjected,
+			false,
+			false,
+			&prompt.PromptMock{
+				Msg: "asdfasdfy",
+				Err: constants.ErrInvalidInput,
+			},
 		},
 	}
 
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
+
+		tc.DryRun = tc.enableDryRun
+		tc.AutoApprove = tc.enableAutoApprove
 
 		mockS3 := new(MockS3Client)
 		mockS3.On("PutBucketTagging", mock.AnythingOfType("*s3.PutBucketTaggingInput")).Return(&s3.PutBucketTaggingOutput{}, tc.putBucketTaggingErr)
@@ -714,18 +889,31 @@ func TestSetBucketTags(t *testing.T) {
 			tc.TagOptions.TagsToAdd[*v.Key] = *v.Value
 		}
 
-		_, err := SetBucketTags(mockS3, tc.TagOptions)
-		assert.Equal(t, tc.expected, err)
+		assert.Equal(t, tc.expected, SetBucketTags(mockS3, tc.TagOptions, tc.PromptRunner, logger))
 	}
 }
 
+// TestDeleteAllBucketTags is a test function that tests the behavior of the DeleteAllBucketTags function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a mocked S3 client and expects the DeleteBucketTagging operation to succeed.
+// It expects DeleteAllBucketTags to return a nil error.
+// For the failure case, it injects an error in the DeleteBucketTagging operation of the mocked S3 client.
+// It expects DeleteAllBucketTags to return a non-nil error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestDeleteAllBucketTags(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
+	logger := logging.GetLogger(rootOpts)
 	cases := []struct {
 		caseName string
 		expected error
 		*options4.TagOptions
 		deleteBucketTaggingErr error
+		enableDryRun           bool
+		enableAutoApprove      bool
+		prompt.PromptRunner
 	}{
 		{
 			"Success",
@@ -733,6 +921,23 @@ func TestDeleteAllBucketTags(t *testing.T) {
 			&options4.TagOptions{
 				RootOptions: rootOpts,
 			},
+			nil,
+			false,
+			false,
+			&prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
+			},
+		},
+		{
+			"Success with dry-run enabled",
+			nil,
+			&options4.TagOptions{
+				RootOptions: rootOpts,
+			},
+			nil,
+			true,
+			false,
 			nil,
 		},
 		{
@@ -742,20 +947,67 @@ func TestDeleteAllBucketTags(t *testing.T) {
 				RootOptions: rootOpts,
 			},
 			constants.ErrInjected,
+			false,
+			false,
+			&prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
+			},
+		},
+		{
+			"Failure caused by user terminated process",
+			constants.ErrUserTerminated,
+			&options4.TagOptions{
+				RootOptions: rootOpts,
+			},
+			nil,
+			false,
+			false,
+			&prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrUserTerminated,
+			},
+		},
+		{
+			"Failure caused by invalid input",
+			constants.ErrInvalidInput,
+			&options4.TagOptions{
+				RootOptions: rootOpts,
+			},
+			nil,
+			false,
+			false,
+			&prompt.PromptMock{
+				Msg: "nasfassadads",
+				Err: constants.ErrInvalidInput,
+			},
 		},
 	}
 
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
+		tc.DryRun = tc.enableDryRun
+		tc.AutoApprove = tc.enableAutoApprove
+
 		mockS3 := new(MockS3Client)
 		mockS3.On("DeleteBucketTagging", mock.AnythingOfType("*s3.DeleteBucketTaggingInput")).Return(&s3.DeleteBucketTaggingOutput{}, tc.deleteBucketTaggingErr)
 
-		_, err := DeleteAllBucketTags(mockS3, tc.TagOptions)
+		_, err := DeleteAllBucketTags(mockS3, tc.TagOptions, tc.PromptRunner, logger)
 		assert.Equal(t, tc.expected, err)
 	}
 }
 
+// TestGetBucketPolicy is a test function that tests the behavior of the GetBucketPolicy function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a mocked S3 client and expects the GetBucketPolicy operation to succeed.
+// It expects GetBucketPolicy to return a nil error.
+// For the failure case, it injects an error in the GetBucketPolicy operation of the mocked S3 client.
+// It expects GetBucketPolicy to return a non-nil error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestGetBucketPolicy(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
@@ -793,45 +1045,111 @@ func TestGetBucketPolicy(t *testing.T) {
 	}
 }
 
+// TestSetBucketPolicy is a test function that tests the behavior of the SetBucketPolicy function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a mocked S3 client and expects the PutBucketPolicy operation to succeed.
+// It expects SetBucketPolicy to return a nil error.
+// For the failure case, it injects an error in the PutBucketPolicy operation of the mocked S3 client.
+// It expects SetBucketPolicy to return a non-nil error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestSetBucketPolicy(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
+	logger := logging.GetLogger(rootOpts)
 	cases := []struct {
 		caseName string
 		expected error
+		prompt.PromptRunner
 		*options6.BucketPolicyOptions
 		putBucketPolicyErr error
+		autoApprove        bool
+		dryRun             bool
 	}{
 		{
 			"Success",
 			nil,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
+			},
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
 			nil,
+			false,
+			false,
+		},
+		{
+			"Success with dry-run enabled",
+			nil,
+			nil,
+			&options6.BucketPolicyOptions{
+				RootOptions:         rootOpts,
+				BucketPolicyContent: dummyBucketPolicyStr,
+			},
+			nil,
+			false,
+			true,
 		},
 		{
 			"Failure",
 			constants.ErrInjected,
+			prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
+			},
 			&options6.BucketPolicyOptions{
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
 			constants.ErrInjected,
+			false,
+			false,
+		},
+		{
+			"Failure caused by prompt error",
+			constants.ErrUserTerminated,
+			prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrUserTerminated,
+			},
+			&options6.BucketPolicyOptions{
+				RootOptions:         rootOpts,
+				BucketPolicyContent: dummyBucketPolicyStr,
+			},
+			nil,
+			false,
+			false,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
+		tc.DryRun = tc.dryRun
+		tc.AutoApprove = tc.autoApprove
+
 		mockS3 := new(MockS3Client)
 		mockS3.On("PutBucketPolicy", mock.AnythingOfType("*s3.PutBucketPolicyInput")).Return(&s3.PutBucketPolicyOutput{}, tc.putBucketPolicyErr)
 
-		_, err := SetBucketPolicy(mockS3, tc.BucketPolicyOptions)
+		_, err := SetBucketPolicy(mockS3, tc.BucketPolicyOptions, tc.PromptRunner, logger)
 		assert.Equal(t, tc.expected, err)
 	}
 }
 
+// TestGetBucketPolicyString is a test function that tests the behavior of the GetBucketPolicyString function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a mocked S3 client and expects the GetBucketPolicy operation to succeed.
+// It expects GetBucketPolicyString to return the expected bucket policy string and a nil error.
+// For the failure case, it injects an error in the GetBucketPolicy operation of the mocked S3 client.
+// It expects GetBucketPolicyString to return a non-nil error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestGetBucketPolicyString(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
@@ -880,13 +1198,27 @@ func TestGetBucketPolicyString(t *testing.T) {
 	}
 }
 
+// TestDeleteBucketPolicy is a test function that tests the behavior of the DeleteBucketPolicy function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a mocked S3 client and expects the DeleteBucketPolicy operation to succeed.
+// It expects DeleteBucketPolicy to return a nil error.
+// For the failure case, it injects an error in the DeleteBucketPolicy operation of the mocked S3 client.
+// It expects DeleteBucketPolicy to return a non-nil error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestDeleteBucketPolicy(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
+	logger := logging.GetLogger(rootOpts)
 	cases := []struct {
 		caseName string
 		expected error
 		*options6.BucketPolicyOptions
 		deleteBucketPolicyErr error
+		prompt.PromptRunner
+		enableAutoApprove bool
+		enableDryRun      bool
 	}{
 		{
 			"Success",
@@ -896,6 +1228,27 @@ func TestDeleteBucketPolicy(t *testing.T) {
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
 			nil,
+			&prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
+			},
+			false,
+			false,
+		},
+		{
+			"Success with dry-run enabled",
+			nil,
+			&options6.BucketPolicyOptions{
+				RootOptions:         rootOpts,
+				BucketPolicyContent: dummyBucketPolicyStr,
+			},
+			nil,
+			&prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
+			},
+			false,
+			true,
 		},
 		{
 			"Failure",
@@ -905,20 +1258,54 @@ func TestDeleteBucketPolicy(t *testing.T) {
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
 			constants.ErrInjected,
+			&prompt.PromptMock{
+				Msg: "y",
+				Err: nil,
+			},
+			false,
+			false,
+		},
+		{
+			"Failure caused by user terminated process",
+			constants.ErrUserTerminated,
+			&options6.BucketPolicyOptions{
+				RootOptions:         rootOpts,
+				BucketPolicyContent: dummyBucketPolicyStr,
+			},
+			constants.ErrInjected,
+			&prompt.PromptMock{
+				Msg: "n",
+				Err: constants.ErrUserTerminated,
+			},
+			false,
+			false,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
+		tc.DryRun = tc.enableDryRun
+		tc.AutoApprove = tc.enableAutoApprove
+
 		mockS3 := new(MockS3Client)
 		mockS3.On("DeleteBucketPolicy", mock.AnythingOfType("*s3.DeleteBucketPolicyInput")).Return(&s3.DeleteBucketPolicyOutput{}, tc.deleteBucketPolicyErr)
 
-		_, err := DeleteBucketPolicy(mockS3, tc.BucketPolicyOptions)
+		_, err := DeleteBucketPolicy(mockS3, tc.BucketPolicyOptions, tc.PromptRunner, logger)
 		assert.Equal(t, tc.expected, err)
 	}
 }
 
+// TestGetTransferAcceleration is a test function that tests the behavior of the GetTransferAcceleration function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success case, it sets up a mocked S3 client and expects the GetBucketAccelerateConfiguration operation to succeed.
+// It expects GetTransferAcceleration to return a nil error.
+// For the failure case, it injects an error in the GetBucketAccelerateConfiguration operation of the mocked S3 client.
+// It expects GetTransferAcceleration to return a non-nil error.
+//
+// The test function iterates through all the test cases and performs the necessary assertions.
 func TestGetTransferAcceleration(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
@@ -956,6 +1343,17 @@ func TestGetTransferAcceleration(t *testing.T) {
 	}
 }
 
+// TestSetTransferAcceleration is a test function that tests the behavior of the SetTransferAcceleration function.
+//
+// It creates test cases with different scenarios and verifies the expected results.
+// The test cases include both success and failure cases.
+// For the success cases, it sets up a mocked S3 client and expects the GetBucketAccelerateConfiguration and PutBucketAccelerateConfiguration operations to succeed.
+// It verifies that the function returns a nil error when the expected state is achieved.
+// For the failure cases, it injects errors in the GetBucketAccelerateConfiguration and PutBucketAccelerateConfiguration operations of the mocked S3 client.
+// It expects the function to return a non-nil error.
+// The test function also includes cases where dry-run mode is enabled and prompts are involved.
+//
+// The function iterates through all the test cases and performs the necessary assertions.
 func TestSetTransferAcceleration(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {

@@ -35,10 +35,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// createSession initializes session with provided credentials
+// createSession initializes a new AWS SDK session using provided credentials.
 //
-// It returns a pointer to session.Session along with the error that encountered during
-// session initialization process.
+// It accepts access key, secret key and region as arguments, then uses them
+// to create an AWS Config, which is then used to initialize the session.
+// It returns a pointer to session.Session along with any error encountered during
+// session initialization process. If no error occurred during the process, the error is nil.
 func createSession(accessKey, secretKey, region string) (*session.Session, error) {
 	return session.NewSession(&aws.Config{
 		Region:      aws.String(region),
@@ -46,6 +48,12 @@ func createSession(accessKey, secretKey, region string) (*session.Session, error
 	})
 }
 
+// CreateAwsService creates a new Amazon Web Service S3 instance.
+//
+// It accepts a pointer to RootOptions as argument and uses them to create a new session
+// and subsequently an S3 service instance. It checks for the presence of the
+// required fields, and if any of them are empty, it returns an error.
+// It returns the newly created S3 service along with any encountered error during the process.
 func CreateAwsService(opts *options.RootOptions) (svc *s3.S3, err error) {
 	if opts.AccessKey == "" || opts.SecretKey == "" || opts.Region == "" {
 		return svc, errors.New("missing required fields")
@@ -60,7 +68,10 @@ func CreateAwsService(opts *options.RootOptions) (svc *s3.S3, err error) {
 	return s3.New(sess), err
 }
 
-// GetAllFiles gets all of the files in the target bucket as the function name indicates
+// GetAllFiles retrieves all of the files in the target S3 bucket.
+//
+// It accepts an S3API interface, pointer to RootOptions, and prefix string as arguments.
+// It returns a ListObjectsOutput, which contains all objects in the bucket, and any error encountered.
 func GetAllFiles(svc s3iface.S3API, opts *options.RootOptions, prefix string) (res *s3.ListObjectsOutput, err error) {
 	// fetch all the objects in target bucket
 	return svc.ListObjects(&s3.ListObjectsInput{
@@ -68,13 +79,33 @@ func GetAllFiles(svc s3iface.S3API, opts *options.RootOptions, prefix string) (r
 	})
 }
 
+// GetBucketTags retrieves all tags attached to a specific S3 bucket.
+//
+// It accepts an S3API interface and pointer of TagOptions as arguments, and returns
+// a GetBucketTaggingOutput, which contains all the bucket's tags, and any error encountered.
 func GetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.GetBucketTaggingOutput, err error) {
 	return svc.GetBucketTagging(&s3.GetBucketTaggingInput{
 		Bucket: aws.String(opts.BucketName),
 	})
 }
 
-func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.PutBucketTaggingOutput, err error) {
+// SetBucketTags attaches a set of tags to a specific S3 bucket.
+//
+// It accepts an S3API interface and TagOptions as arguments.
+// For each tag in the provided TagOptions, a new tag is created and added to a slice of tags.
+// It then attaches these tags to the bucket and returns a PutBucketTaggingOutput and any error encountered.
+func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
+	if opts.DryRun {
+		logger.Info().Msg(constants.InfDryRun)
+		return nil
+	}
+
+	if !opts.AutoApprove {
+		if err := prompt.AskForApproval(runner); err != nil {
+			return err
+		}
+	}
+
 	// fetch all the objects in target bucket
 	var tagsSet []*s3.Tag
 	for i, v := range opts.TagsToAdd {
@@ -85,45 +116,64 @@ func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.PutBuc
 		tagsSet = append(tagsSet, tag)
 	}
 
-	res, err = svc.PutBucketTagging(&s3.PutBucketTaggingInput{
+	_, err := svc.PutBucketTagging(&s3.PutBucketTaggingInput{
 		Bucket:  aws.String(opts.BucketName),
 		Tagging: &s3.Tagging{TagSet: tagsSet},
 	})
 
 	if err != nil {
-		return res, err
+		return err
 	}
 
-	return res, nil
+	return nil
 }
 
-func DeleteAllBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.DeleteBucketTaggingOutput, err error) {
+// DeleteAllBucketTags removes all tags attached to a specific S3 bucket.
+//
+// It accepts an S3API interface and TagOptions as arguments, and returns
+// a DeleteBucketTaggingOutput and any error encountered.
+func DeleteAllBucketTags(svc s3iface.S3API, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) (out *s3.DeleteBucketTaggingOutput, err error) {
+	if opts.DryRun {
+		logger.Info().Msg(constants.InfDryRun)
+		return out, nil
+	}
+
+	if !opts.AutoApprove {
+		if err := prompt.AskForApproval(runner); err != nil {
+			return out, err
+		}
+	}
+
 	return svc.DeleteBucketTagging(&s3.DeleteBucketTaggingInput{
 		Bucket: aws.String(opts.BucketName),
 	})
 }
 
+// GetTransferAcceleration retrieves the current transfer acceleration status of an S3 bucket.
+//
+// It accepts an S3API interface and TransferAccelerationOptions as arguments,
+// and returns a GetBucketAccelerateConfigurationOutput and any error encountered.
 func GetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions) (res *s3.GetBucketAccelerateConfigurationOutput, err error) {
 	return svc.GetBucketAccelerateConfiguration(&s3.GetBucketAccelerateConfigurationInput{
 		Bucket: aws.String(opts.BucketName),
 	})
 }
 
-func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions, confirmRunner prompt.PromptRunner, logger zerolog.Logger) error {
+// SetTransferAcceleration sets the transfer acceleration status of an S3 bucket.
+//
+// It accepts an S3API interface, TransferAccelerationOptions, a PromptRunner, and a Logger as arguments.
+// If the provided 'DryRun' or 'AutoApprove' options are set, the function will return early.
+// If not, it will set the bucket's transfer acceleration status based on the provided desired state.
+// It logs any errors encountered and returns them.
+func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerationOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
 	if opts.DryRun {
-		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		logger.Info().Msg(constants.InfDryRun)
 		return nil
 	}
 
-	var err error
 	if !opts.AutoApprove {
-		var res string
-		if res, err = confirmRunner.Run(); err != nil {
-			if strings.ToLower(res) == "n" {
-				return constants.ErrUserTerminated
-			}
-
-			return constants.ErrInvalidInput
+		if err := prompt.AskForApproval(runner); err != nil {
+			return err
 		}
 	}
 
@@ -170,12 +220,20 @@ func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerat
 	return nil
 }
 
+// GetBucketPolicy retrieves the current policy of an S3 bucket.
+//
+// It accepts an S3API interface and BucketPolicyOptions as arguments,
+// and returns a GetBucketPolicyOutput and any error encountered.
 func GetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res *s3.GetBucketPolicyOutput, err error) {
 	return svc.GetBucketPolicy(&s3.GetBucketPolicyInput{
 		Bucket: aws.String(opts.BucketName),
 	})
 }
 
+// GetBucketPolicyString retrieves the current policy of an S3 bucket and beautifies it into a readable format.
+//
+// It accepts an S3API interface and BucketPolicyOptions as arguments,
+// and returns the beautified policy as a string and any error encountered.
 func GetBucketPolicyString(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (out string, err error) {
 	res, err := GetBucketPolicy(svc, opts)
 	if err != nil {
@@ -185,41 +243,81 @@ func GetBucketPolicyString(svc s3iface.S3API, opts *options5.BucketPolicyOptions
 	return internalutil.BeautifyJSON(*res.Policy)
 }
 
-func SetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res *s3.PutBucketPolicyOutput, err error) {
+// SetBucketPolicy sets the policy of an S3 bucket.
+//
+// It accepts an S3API interface and BucketPolicyOptions as arguments,
+// and returns a PutBucketPolicyOutput and any error encountered.
+func SetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *s3.PutBucketPolicyOutput, err error) {
+	if opts.DryRun {
+		logger.Info().Msg(constants.InfDryRun)
+		return res, nil
+	}
+
+	if !opts.AutoApprove {
+		if err := prompt.AskForApproval(runner); err != nil {
+			return res, err
+		}
+	}
+
 	return svc.PutBucketPolicy(&s3.PutBucketPolicyInput{
 		Bucket: aws.String(opts.BucketName),
 		Policy: aws.String(opts.BucketPolicyContent),
 	})
 }
 
-func DeleteBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res *s3.DeleteBucketPolicyOutput, err error) {
+// DeleteBucketPolicy removes the existing policy from a specified S3 bucket.
+//
+// It requires an S3API interface and a BucketPolicyOptions object, which should
+// include the name of the target bucket. The function will use these to generate
+// and execute a DeleteBucketPolicyInput request via the provided S3 service.
+// It returns a DeleteBucketPolicyOutput, which acknowledges the operation,
+// along with any error encountered during the process.
+func DeleteBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *s3.DeleteBucketPolicyOutput, err error) {
+	if opts.DryRun {
+		logger.Info().Msg(constants.InfDryRun)
+		return res, nil
+	}
+
+	if !opts.AutoApprove {
+		if err := prompt.AskForApproval(runner); err != nil {
+			return res, err
+		}
+	}
+
 	return svc.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
 		Bucket: aws.String(opts.BucketName),
 	})
 }
 
-// GetBucketVersioning gets the target bucket
+// GetBucketVersioning retrieves the versioning state of the specified S3 bucket.
+//
+// The function accepts an S3API interface and RootOptions, which should include
+// the name of the target bucket. It uses these to generate and execute a
+// GetBucketVersioningInput request via the provided S3 service.
+// The function returns a GetBucketVersioningOutput, which includes the bucket's
+// versioning configuration, along with any error encountered during the process.
 func GetBucketVersioning(svc s3iface.S3API, opts *options.RootOptions) (res *s3.GetBucketVersioningOutput, err error) {
 	return svc.GetBucketVersioning(&s3.GetBucketVersioningInput{
 		Bucket: aws.String(opts.BucketName),
 	})
 }
 
-// SetBucketVersioning sets the target bucket
-func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningOptions, confirmRunner prompt.PromptRunner, logger zerolog.Logger) (err error) {
+// SetBucketVersioning updates the versioning configuration of a specific S3 bucket.
+//
+// It accepts an S3API interface, VersioningOptions, a PromptRunner for user confirmations,
+// and a Logger for logging events. The function uses these to check for dry-run or auto-approve
+// flags, confirm versioning state changes with the user if needed, and execute a
+// PutBucketVersioningInput request to set the bucket's versioning state.
+// The function logs the process, including any errors encountered, and returns these errors.
+func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningOptions, runner prompt.PromptRunner, logger zerolog.Logger) (err error) {
 	if versioningOpts.DryRun {
-		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		logger.Info().Msg(constants.InfDryRun)
 		return nil
 	}
 
 	if !versioningOpts.AutoApprove {
-		var res string
-		if res, err = confirmRunner.Run(); err != nil {
-			if strings.ToLower(res) == "n" {
-				return constants.ErrUserTerminated
-			}
-
-			return constants.ErrInvalidInput
+		if err := prompt.AskForApproval(runner); err != nil {
+			return err
 		}
 	}
 
@@ -267,7 +365,13 @@ func SetBucketVersioning(svc s3iface.S3API, versioningOpts *options4.VersioningO
 	return nil
 }
 
-// DeleteFiles deletes the slice of []*s3.Object objects in the target bucket
+// DeleteFiles removes a specific list of objects from a specified S3 bucket.
+//
+// The function accepts an S3API interface, the name of the target bucket, an array of
+// S3 Objects to delete, a dryRun boolean flag, and a Logger. It iterates over the array of
+// objects, logging each one, and unless dryRun is set, it sends a DeleteObjectInput request
+// for each object to the S3 service. The function logs each successful deletion and returns
+// any errors encountered during the process.
 func DeleteFiles(svc s3iface.S3API, bucketName string, slice []*s3.Object, dryRun bool, logger zerolog.Logger) error {
 	for _, v := range slice {
 		logger.Debug().Str("key", *v.Key).Time("lastModifiedDate", *v.LastModified).
@@ -288,6 +392,11 @@ func DeleteFiles(svc s3iface.S3API, bucketName string, slice []*s3.Object, dryRu
 	return nil
 }
 
+// GetDesiredObjects retrieves a list of objects in a specified S3 bucket that match a given
+//
+// regular expression. The function takes an S3API interface, the target bucket's name, and
+// the regex as arguments. It fetches all objects in the target bucket and filters them using
+// the regex. The function returns a list of matching S3 Object pointers and any error encountered.
 func GetDesiredObjects(svc s3iface.S3API, bucketName, regex string) (objects []*s3.Object, err error) {
 	// fetch all the objects in target bucket
 	listResult, err := svc.ListObjects(&s3.ListObjectsInput{
@@ -307,10 +416,13 @@ func GetDesiredObjects(svc s3iface.S3API, bucketName, regex string) (objects []*
 	return objects, err
 }
 
-// SearchString does the heavy lifting, communicates with the S3 and finds the files
+// SearchString scans all objects in a specified S3 bucket for a given text string.
 //
-// It returns the string array that contains keys of matched files, along with the error array
-// that contains errors during search process for each individual file.
+// The function accepts an S3API interface and SearchOptions, which include the bucket
+// name, file name pattern, and search text. It first retrieves a list of objects that match
+// the file name pattern, then concurrently checks each object's content for the search text.
+// The function returns a list of object keys that contain the search text and a list of errors
+// encountered during the search process.
 func SearchString(svc s3iface.S3API, opts *options2.SearchOptions) (matchedFiles []string, errs []error) {
 	var wg sync.WaitGroup
 	mu := &sync.Mutex{}
