@@ -1,4 +1,4 @@
-# S3 Manager :floppy_disk:
+# S3 Manager :floppy_disk: :cloud: :man_office_worker:
 ![CI](https://github.com/bilalcaliskan/s3-manager/workflows/CI/badge.svg?event=push)
 ![Go Report Card](https://goreportcard.com/badge/github.com/bilalcaliskan/s3-manager)
 ![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=bilalcaliskan_s3-manager&metric=alert_status)
