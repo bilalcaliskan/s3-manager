@@ -3,16 +3,17 @@
 package cleaner
 
 import (
-	"os"
 	"testing"
 	"time"
+
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	rootoptions "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,76 +22,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	defaultListObjectsErr    error
-	defaultGetObjectErr      error
-	defaultDeleteObjectErr   error
-	defaultListObjectsOutput = &s3.ListObjectsOutput{
-		Name:        aws.String(""),
-		Marker:      aws.String(""),
-		MaxKeys:     aws.Int64(1000),
-		Prefix:      aws.String(""),
-		IsTruncated: aws.Bool(false),
-		Contents: []*s3.Object{
-			{
-				ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-				Key:          aws.String("file4.txt"),
-				StorageClass: aws.String("STANDARD"),
-				Size:         aws.Int64(1000),
-				LastModified: aws.Time(time.Now()),
-			},
-			{
-				ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-				Key:          aws.String("file5.txt"),
-				StorageClass: aws.String("STANDARD"),
-				Size:         aws.Int64(2000),
-				LastModified: aws.Time(time.Now()),
-			},
-			{
-				ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-				Key:          aws.String("file6.txt"),
-				StorageClass: aws.String("STANDARD"),
-				Size:         aws.Int64(3000),
-				LastModified: aws.Time(time.Now()),
-			},
-		},
-	}
-	defaultDeleteObjectOutput = &s3.DeleteObjectOutput{
-		DeleteMarker:   nil,
-		RequestCharged: nil,
-		VersionId:      nil,
-	}
-)
-
-type mockS3Client struct {
-	s3iface.S3API
-}
-
-// ListObjects mocks the S3API ListObjects method
-func (m *mockS3Client) ListObjects(obj *s3.ListObjectsInput) (*s3.ListObjectsOutput, error) {
-	return defaultListObjectsOutput, defaultListObjectsErr
-}
-
-// GetObject mocks the S3API GetObject method
-func (m *mockS3Client) GetObject(input *s3.GetObjectInput) (*s3.GetObjectOutput, error) {
-	bytes, err := os.Open(*input.Key)
-	if err != nil {
-		return nil, err
-	}
-
-	return &s3.GetObjectOutput{
-		AcceptRanges:  aws.String("bytes"),
-		Body:          bytes,
-		ContentLength: aws.Int64(1000),
-		ContentType:   aws.String("text/plain"),
-		ETag:          aws.String("d73a503d212d9279e6b2ed8ac6bb81f3"),
-	}, defaultGetObjectErr
-}
-
-func (m *mockS3Client) DeleteObject(input *s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error) {
-	return defaultDeleteObjectOutput, defaultDeleteObjectErr
-}
-
+// TestStartCleaning is a unit test function that tests the StartCleaning function.
+//
+// It tests various scenarios and expected outcomes of the StartCleaning function.
 func TestStartCleaning(t *testing.T) {
 	cases := []struct {
 		caseName string
@@ -865,15 +799,11 @@ func TestStartCleaning(t *testing.T) {
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
-		defaultListObjectsOutput = tc.ListObjectsOutput
-		defaultListObjectsErr = tc.listObjectsErr
+		mockS3 := new(internalaws.MockS3Client)
+		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.ListObjectsOutput, tc.listObjectsErr)
+		mockS3.On("DeleteObject", mock.AnythingOfType("*s3.DeleteObjectInput")).Return(&s3.DeleteObjectOutput{}, tc.deleteObjectErr)
 
-		defaultDeleteObjectErr = tc.deleteObjectErr
-
-		mockSvc := &mockS3Client{}
-		assert.NotNil(t, mockSvc)
-
-		err := StartCleaning(mockSvc, tc.PromptRunner, tc.CleanOptions, logging.GetLogger(tc.CleanOptions.RootOptions))
+		err := StartCleaning(mockS3, tc.PromptRunner, tc.CleanOptions, logging.GetLogger(tc.CleanOptions.RootOptions))
 		assert.Equal(t, tc.expected, err)
 	}
 }

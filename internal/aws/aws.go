@@ -94,7 +94,22 @@ func GetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.GetBuc
 // It accepts an S3API interface and TagOptions as arguments.
 // For each tag in the provided TagOptions, a new tag is created and added to a slice of tags.
 // It then attaches these tags to the bucket and returns a PutBucketTaggingOutput and any error encountered.
-func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.PutBucketTaggingOutput, err error) {
+func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions, confirmRunner prompt.PromptRunner, logger zerolog.Logger) error {
+	if opts.DryRun {
+		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		return nil
+	}
+
+	if !opts.AutoApprove {
+		if res, err := confirmRunner.Run(); err != nil {
+			if strings.ToLower(res) == "n" {
+				return constants.ErrUserTerminated
+			}
+
+			return constants.ErrInvalidInput
+		}
+	}
+
 	// fetch all the objects in target bucket
 	var tagsSet []*s3.Tag
 	for i, v := range opts.TagsToAdd {
@@ -105,23 +120,38 @@ func SetBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.PutBuc
 		tagsSet = append(tagsSet, tag)
 	}
 
-	res, err = svc.PutBucketTagging(&s3.PutBucketTaggingInput{
+	_, err := svc.PutBucketTagging(&s3.PutBucketTaggingInput{
 		Bucket:  aws.String(opts.BucketName),
 		Tagging: &s3.Tagging{TagSet: tagsSet},
 	})
 
 	if err != nil {
-		return res, err
+		return err
 	}
 
-	return res, nil
+	return nil
 }
 
 // DeleteAllBucketTags removes all tags attached to a specific S3 bucket.
 //
 // It accepts an S3API interface and TagOptions as arguments, and returns
 // a DeleteBucketTaggingOutput and any error encountered.
-func DeleteAllBucketTags(svc s3iface.S3API, opts *options3.TagOptions) (res *s3.DeleteBucketTaggingOutput, err error) {
+func DeleteAllBucketTags(svc s3iface.S3API, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) (out *s3.DeleteBucketTaggingOutput, err error) {
+	if opts.DryRun {
+		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		return out, nil
+	}
+
+	if !opts.AutoApprove {
+		if res, err := runner.Run(); err != nil {
+			if strings.ToLower(res) == "n" {
+				return out, constants.ErrUserTerminated
+			}
+
+			return out, constants.ErrInvalidInput
+		}
+	}
+
 	return svc.DeleteBucketTagging(&s3.DeleteBucketTaggingInput{
 		Bucket: aws.String(opts.BucketName),
 	})
@@ -231,7 +261,18 @@ func GetBucketPolicyString(svc s3iface.S3API, opts *options5.BucketPolicyOptions
 //
 // It accepts an S3API interface and BucketPolicyOptions as arguments,
 // and returns a PutBucketPolicyOutput and any error encountered.
-func SetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res *s3.PutBucketPolicyOutput, err error) {
+func SetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *s3.PutBucketPolicyOutput, err error) {
+	if opts.DryRun {
+		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		return res, nil
+	}
+
+	if !opts.AutoApprove {
+		if err := prompt.AskForApproval(runner); err != nil {
+			return res, err
+		}
+	}
+
 	return svc.PutBucketPolicy(&s3.PutBucketPolicyInput{
 		Bucket: aws.String(opts.BucketName),
 		Policy: aws.String(opts.BucketPolicyContent),
@@ -245,7 +286,18 @@ func SetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res
 // and execute a DeleteBucketPolicyInput request via the provided S3 service.
 // It returns a DeleteBucketPolicyOutput, which acknowledges the operation,
 // along with any error encountered during the process.
-func DeleteBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res *s3.DeleteBucketPolicyOutput, err error) {
+func DeleteBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *s3.DeleteBucketPolicyOutput, err error) {
+	if opts.DryRun {
+		logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
+		return res, nil
+	}
+
+	if !opts.AutoApprove {
+		if err := prompt.AskForApproval(runner); err != nil {
+			return res, err
+		}
+	}
+
 	return svc.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
 		Bucket: aws.String(opts.BucketName),
 	})

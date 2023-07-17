@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
-
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
@@ -72,24 +69,9 @@ s3-manager bucketpolicy add my_custom_policy.json
 
 			logger.Info().Msg("will attempt to add below bucket policy")
 			fmt.Println(bucketPolicyOpts.BucketPolicyContent)
-			if bucketPolicyOpts.DryRun {
-				logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
-				return nil
-			}
-
-			if !bucketPolicyOpts.AutoApprove {
-				var res string
-				if res, err = confirmRunner.Run(); err != nil {
-					if strings.ToLower(res) == "n" {
-						return constants.ErrUserTerminated
-					}
-
-					return constants.ErrInvalidInput
-				}
-			}
 
 			logger.Info().Msg("trying to add bucket policy")
-			_, err = aws.SetBucketPolicy(svc, bucketPolicyOpts)
+			_, err = aws.SetBucketPolicy(svc, bucketPolicyOpts, confirmRunner, logger)
 			if err != nil {
 				logger.Error().
 					Str("error", err.Error()).

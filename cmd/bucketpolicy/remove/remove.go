@@ -2,15 +2,12 @@ package remove
 
 import (
 	"fmt"
-	"strings"
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
-
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
@@ -59,24 +56,9 @@ s3-manager bucketpolicy remove
 
 			logger.Info().Msg("will attempt to delete below bucket policy")
 			fmt.Println(bucketPolicyOpts.BucketPolicyContent)
-			if bucketPolicyOpts.DryRun {
-				logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
-				return nil
-			}
-
-			if !bucketPolicyOpts.AutoApprove {
-				var res string
-				if res, err = confirmRunner.Run(); err != nil {
-					if strings.ToLower(res) == "n" {
-						return constants.ErrUserTerminated
-					}
-
-					return constants.ErrInvalidInput
-				}
-			}
 
 			logger.Info().Msg("trying to remove current bucket policy if exists")
-			_, err = aws.DeleteBucketPolicy(svc, bucketPolicyOpts)
+			_, err = aws.DeleteBucketPolicy(svc, bucketPolicyOpts, confirmRunner, logger)
 			if err != nil {
 				logger.Error().
 					Str("error", err.Error()).

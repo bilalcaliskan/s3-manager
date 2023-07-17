@@ -9,11 +9,9 @@ import (
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
-
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/mock"
@@ -55,19 +53,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			false,
 		},
 		{
-			"Success with dry-run",
-			[]string{"../../../testdata/bucketpolicy.json"},
-			true,
-			nil,
-			&s3.PutBucketPolicyOutput{},
-			prompt.PromptMock{
-				Msg: "y",
-				Err: nil,
-			},
-			true,
-			false,
-		},
-		{
 			"Failure",
 			[]string{"../../../testdata/bucketpolicy.json"},
 			false,
@@ -76,32 +61,6 @@ func TestExecuteAddCmd(t *testing.T) {
 			prompt.PromptMock{
 				Msg: "y",
 				Err: nil,
-			},
-			false,
-			false,
-		},
-		{
-			"Failure caused by user terminated process",
-			[]string{"../../../testdata/bucketpolicy.json"},
-			false,
-			nil,
-			&s3.PutBucketPolicyOutput{},
-			prompt.PromptMock{
-				Msg: "n",
-				Err: constants.ErrInjected,
-			},
-			false,
-			false,
-		},
-		{
-			"Failure caused by prompt error",
-			[]string{"../../../testdata/bucketpolicy.json"},
-			false,
-			nil,
-			&s3.PutBucketPolicyOutput{},
-			prompt.PromptMock{
-				Msg: "nasdasd",
-				Err: constants.ErrInjected,
 			},
 			false,
 			false,

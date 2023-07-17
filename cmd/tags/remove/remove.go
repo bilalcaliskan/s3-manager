@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
-
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
@@ -99,25 +97,9 @@ s3-manager tags remove foo1=bar1,foo2=bar2
 				fmt.Printf(outputStr, i, v)
 			}
 
-			if tagOpts.DryRun {
-				logger.Info().Msg("skipping operation since '--dry-run' flag is passed")
-				return nil
-			}
-
-			if !tagOpts.AutoApprove {
-				var res string
-				if res, err = confirmRunner.Run(); err != nil {
-					if strings.ToLower(res) == "n" {
-						return constants.ErrUserTerminated
-					}
-
-					return constants.ErrInvalidInput
-				}
-			}
-
 			utils.RemoveMapElements(tagOpts.ActualTags, tagOpts.TagsToRemove)
 
-			if _, err := aws.DeleteAllBucketTags(svc, tagOpts); err != nil {
+			if _, err := aws.DeleteAllBucketTags(svc, tagOpts, confirmRunner, logger); err != nil {
 				logger.Error().
 					Str("error", err.Error()).
 					Msg("an error occurred while deleting all the tags")
@@ -125,7 +107,7 @@ s3-manager tags remove foo1=bar1,foo2=bar2
 			}
 
 			tagOpts.TagsToAdd = tagOpts.ActualTags
-			if _, err := aws.SetBucketTags(svc, tagOpts); err != nil {
+			if err := aws.SetBucketTags(svc, tagOpts, confirmRunner, logger); err != nil {
 				logger.Error().
 					Str("error", err.Error()).
 					Msg("an error occurred while setting desired tags")
