@@ -10,18 +10,10 @@
 ![Go version](https://img.shields.io/github/go-mod/go-version/bilalcaliskan/s3-manager)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 
-S3 Manager is a robust, flexible tool for managing your AWS S3 buckets with ease. Developed in Go, it is designed to
-streamline operations and decrease public cloud costs. Whether you need to set up file cleaning rules, search files, or
-manage various configurations, S3 Manager is the tool for you!
-
-## Table of Contents
-- [Available Subcommands](#available-subcommands)
-- [Configuration](#configuration)
-- [Installation](#installation)
-  - [Binary](#binary)
-  - [Homebrew](#homebrew)
-- [Examples](#examples)
-- [Development](#development)
+S3 Manager is robust, powerful and an all-in-one tool that provides a number of operations to enhance your experience
+with AWS S3 buckets. It offers an array of features from setting up file cleaning rules, search string in files,
+manipulating tags, and much more. It's designed to help you automate and optimize your operations, lowering your [public cloud costs](https://aws.amazon.com/s3/pricing/)
+in the process.
 
 ## Available Subcommands
 S3 Manager provides the following subcommands:
