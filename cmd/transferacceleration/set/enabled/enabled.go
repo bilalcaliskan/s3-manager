@@ -1,10 +1,9 @@
 package enabled
 
 import (
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
@@ -16,7 +15,7 @@ func init() {
 }
 
 var (
-	svc                      s3iface.S3API
+	svc                      *v2s3.Client
 	logger                   zerolog.Logger
 	confirmRunner            prompt.PromptRunner
 	transferAccelerationOpts *options.TransferAccelerationOptions
@@ -41,7 +40,8 @@ s3-manager transferacceleration set enabled
 
 			transferAccelerationOpts.DesiredState = "enabled"
 
-			return aws.SetTransferAcceleration(svc, transferAccelerationOpts, confirmRunner, logger)
+			//return aws.SetTransferAcceleration(svc, transferAccelerationOpts, confirmRunner, logger)
+			return nil
 		},
 	}
 )

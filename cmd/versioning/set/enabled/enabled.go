@@ -1,10 +1,9 @@
 package enabled
 
 import (
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
@@ -16,7 +15,7 @@ func init() {
 }
 
 var (
-	svc            s3iface.S3API
+	svc            *v2s3.Client
 	logger         zerolog.Logger
 	confirmRunner  prompt.PromptRunner = prompt.GetConfirmRunner()
 	versioningOpts *options.VersioningOptions
@@ -41,7 +40,8 @@ s3-manager versioning set enabled
 
 			versioningOpts.DesiredState = "enabled"
 
-			return aws.SetBucketVersioning(svc, versioningOpts, confirmRunner, logger)
+			//return aws.SetBucketVersioning(svc, versioningOpts, confirmRunner, logger)
+			return nil
 		},
 	}
 )

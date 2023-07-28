@@ -1,15 +1,13 @@
 package show
 
 import (
-	"fmt"
+	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/tags/options"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -19,7 +17,7 @@ func init() {
 }
 
 var (
-	svc     s3iface.S3API
+	svc     *v2s3.Client
 	logger  zerolog.Logger
 	tagOpts *options.TagOptions
 	ShowCmd = &cobra.Command{
@@ -45,19 +43,19 @@ s3-manager tags show
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			tags, err := aws.GetBucketTags(svc, tagOpts)
-			if err != nil {
-				logger.Error().
-					Str("error", err.Error()).
-					Msg("an error occurred while fetching current tags")
-				return err
-			}
-
-			logger.Info().Msg("fetched bucket tags successfully")
-
-			for _, v := range tags.TagSet {
-				fmt.Printf("%s=%s\n", *v.Key, *v.Value)
-			}
+			//tags, err := aws.GetBucketTags(svc, tagOpts)
+			//if err != nil {
+			//	logger.Error().
+			//		Str("error", err.Error()).
+			//		Msg("an error occurred while fetching current tags")
+			//	return err
+			//}
+			//
+			//logger.Info().Msg("fetched bucket tags successfully")
+			//
+			//for _, v := range tags.TagSet {
+			//	fmt.Printf("%s=%s\n", *v.Key, *v.Value)
+			//}
 
 			return nil
 		},

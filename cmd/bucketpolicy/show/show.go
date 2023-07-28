@@ -3,6 +3,8 @@ package show
 import (
 	"fmt"
 
+	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
+
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
@@ -10,7 +12,6 @@ import (
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +21,7 @@ func init() {
 }
 
 var (
-	svc              s3iface.S3API
+	svc              *s3v2.Client
 	logger           zerolog.Logger
 	bucketPolicyOpts *options2.BucketPolicyOptions
 	ShowCmd          = &cobra.Command{

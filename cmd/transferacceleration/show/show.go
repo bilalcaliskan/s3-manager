@@ -1,13 +1,10 @@
 package show
 
 import (
-	"fmt"
+	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
-
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
 	"github.com/rs/zerolog"
@@ -19,7 +16,7 @@ func init() {
 }
 
 var (
-	svc                      s3iface.S3API
+	svc                      *v2s3.Client
 	logger                   zerolog.Logger
 	transferAccelerationOpts *options.TransferAccelerationOptions
 	ShowCmd                  = &cobra.Command{
@@ -41,23 +38,23 @@ s3-manager transferacceleration show
 				return err
 			}
 
-			res, err := aws.GetTransferAcceleration(svc, transferAccelerationOpts)
-			if err != nil {
-				logger.Error().Msg(err.Error())
-				return err
-			}
-
-			if *res.Status == "Enabled" {
-				transferAccelerationOpts.ActualState = "enabled"
-			} else if *res.Status == "Suspended" {
-				transferAccelerationOpts.ActualState = "disabled"
-			} else {
-				err := fmt.Errorf("unknown status '%s' returned from AWS SDK", transferAccelerationOpts.ActualState)
-				logger.Error().Msg(err.Error())
-				return err
-			}
-
-			logger.Info().Msgf("current transfer acceleration configuration is %s", transferAccelerationOpts.ActualState)
+			//res, err := aws.GetTransferAcceleration(svc, transferAccelerationOpts)
+			//if err != nil {
+			//	logger.Error().Msg(err.Error())
+			//	return err
+			//}
+			//
+			//if *res.Status == "Enabled" {
+			//	transferAccelerationOpts.ActualState = "enabled"
+			//} else if *res.Status == "Suspended" {
+			//	transferAccelerationOpts.ActualState = "disabled"
+			//} else {
+			//	err := fmt.Errorf("unknown status '%s' returned from AWS SDK", transferAccelerationOpts.ActualState)
+			//	logger.Error().Msg(err.Error())
+			//	return err
+			//}
+			//
+			//logger.Info().Msgf("current transfer acceleration configuration is %s", transferAccelerationOpts.ActualState)
 
 			return nil
 		},

@@ -3,9 +3,10 @@ package remove
 import (
 	"fmt"
 
+	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 
@@ -20,7 +21,7 @@ func init() {
 }
 
 var (
-	svc              s3iface.S3API
+	svc              *v2s3.Client
 	logger           zerolog.Logger
 	confirmRunner    prompt.PromptRunner
 	bucketPolicyOpts *options.BucketPolicyOptions
@@ -57,16 +58,16 @@ s3-manager bucketpolicy remove
 			logger.Info().Msg("will attempt to delete below bucket policy")
 			fmt.Println(bucketPolicyOpts.BucketPolicyContent)
 
-			logger.Info().Msg("trying to remove current bucket policy if exists")
-			_, err = aws.DeleteBucketPolicy(svc, bucketPolicyOpts, confirmRunner, logger)
-			if err != nil {
-				logger.Error().
-					Str("error", err.Error()).
-					Msg("an error occurred while deleting current bucket policy")
-				return err
-			}
-
-			logger.Info().Msg("successfully deleted bucket policy on target bucket")
+			//logger.Info().Msg("trying to remove current bucket policy if exists")
+			//_, err = aws.DeleteBucketPolicy(svc, bucketPolicyOpts, confirmRunner, logger)
+			//if err != nil {
+			//	logger.Error().
+			//		Str("error", err.Error()).
+			//		Msg("an error occurred while deleting current bucket policy")
+			//	return err
+			//}
+			//
+			//logger.Info().Msg("successfully deleted bucket policy on target bucket")
 
 			return nil
 		},

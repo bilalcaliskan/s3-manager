@@ -2,10 +2,13 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
@@ -26,9 +29,13 @@ import (
 
 	options4 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
+	v2aws "github.com/aws/aws-sdk-go-v2/aws"
+	v2config "github.com/aws/aws-sdk-go-v2/config"
+	v2creds "github.com/aws/aws-sdk-go-v2/credentials"
+	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+
+	//"github.com/aws/aws-sdk-go/aws/session"
+	//"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
@@ -41,11 +48,30 @@ import (
 // to create an AWS Config, which is then used to initialize the session.
 // It returns a pointer to session.Session along with any error encountered during
 // session initialization process. If no error occurred during the process, the error is nil.
-func createSession(accessKey, secretKey, region string) (*session.Session, error) {
-	return session.NewSession(&aws.Config{
-		Region:      aws.String(region),
-		Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
-	})
+//func createSession(accessKey, secretKey, region string) (*session.Session, error) {
+//	return session.NewSession(&aws.Config{
+//		Region:      aws.String(region),
+//		Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
+//	})
+//}
+
+func CreateClient(opts *options.RootOptions) (*v2s3.Client, error) {
+	appCreds := v2aws.NewCredentialsCache(v2creds.NewStaticCredentialsProvider(opts.AccessKey, opts.SecretKey, ""))
+	//value, err := appCreds.Retrieve(context.TODO())
+	//if err != nil {
+	//	// handle error
+	//}
+
+	config, err := v2config.LoadDefaultConfig(context.Background(),
+		v2config.WithRegion(opts.Region),
+		v2config.WithCredentialsProvider(appCreds),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return v2s3.NewFromConfig(config), nil
 }
 
 // CreateAwsService creates a new Amazon Web Service S3 instance.
@@ -54,19 +80,19 @@ func createSession(accessKey, secretKey, region string) (*session.Session, error
 // and subsequently an S3 service instance. It checks for the presence of the
 // required fields, and if any of them are empty, it returns an error.
 // It returns the newly created S3 service along with any encountered error during the process.
-func CreateAwsService(opts *options.RootOptions) (svc *s3.S3, err error) {
-	if opts.AccessKey == "" || opts.SecretKey == "" || opts.Region == "" {
-		return svc, errors.New("missing required fields")
-	}
-
-	var sess *session.Session
-	sess, err = createSession(opts.AccessKey, opts.SecretKey, opts.Region)
-	if err != nil {
-		return svc, err
-	}
-
-	return s3.New(sess), err
-}
+//func CreateAwsService(opts *options.RootOptions) (svc *s3.S3, err error) {
+//	if opts.AccessKey == "" || opts.SecretKey == "" || opts.Region == "" {
+//		return svc, errors.New("missing required fields")
+//	}
+//
+//	var sess *session.Session
+//	sess, err = createSession(opts.AccessKey, opts.SecretKey, opts.Region)
+//	if err != nil {
+//		return svc, err
+//	}
+//
+//	return s3.New(sess), err
+//}
 
 // GetAllFiles retrieves all of the files in the target S3 bucket.
 //
@@ -224,17 +250,19 @@ func SetTransferAcceleration(svc s3iface.S3API, opts *options6.TransferAccelerat
 //
 // It accepts an S3API interface and BucketPolicyOptions as arguments,
 // and returns a GetBucketPolicyOutput and any error encountered.
-func GetBucketPolicy(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (res *s3.GetBucketPolicyOutput, err error) {
-	return svc.GetBucketPolicy(&s3.GetBucketPolicyInput{
+func GetBucketPolicy(svc S3ClientAPI, opts *options5.BucketPolicyOptions) (res *v2s3.GetBucketPolicyOutput, err error) {
+	return svc.GetBucketPolicy(context.Background(), &v2s3.GetBucketPolicyInput{
 		Bucket: aws.String(opts.BucketName),
 	})
+
+	//return svc.GetBucketPolicy()
 }
 
 // GetBucketPolicyString retrieves the current policy of an S3 bucket and beautifies it into a readable format.
 //
 // It accepts an S3API interface and BucketPolicyOptions as arguments,
 // and returns the beautified policy as a string and any error encountered.
-func GetBucketPolicyString(svc s3iface.S3API, opts *options5.BucketPolicyOptions) (out string, err error) {
+func GetBucketPolicyString(svc S3ClientAPI, opts *options5.BucketPolicyOptions) (out string, err error) {
 	res, err := GetBucketPolicy(svc, opts)
 	if err != nil {
 		return out, errors.Wrap(err, "an error occurred while getting bucket policy")

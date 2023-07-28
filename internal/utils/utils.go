@@ -6,13 +6,14 @@ import (
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/aws/aws-sdk-go/service/s3"
+
+	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 func Contains(s []string, e string) bool {
@@ -61,8 +62,8 @@ func BeautifyJSON(jsonString string) (string, error) {
 	return string(beautifiedBytes), nil
 }
 
-func PrepareConstants(cmd *cobra.Command) (s3iface.S3API, *options.RootOptions, zerolog.Logger, prompt.PromptRunner) {
-	svc := cmd.Context().Value(options.S3SvcKey{}).(s3iface.S3API)
+func PrepareConstants(cmd *cobra.Command) (*s3v2.Client, *options.RootOptions, zerolog.Logger, prompt.PromptRunner) {
+	svc := cmd.Context().Value(options.S3ClientKey{}).(*s3v2.Client)
 	rootOpts := cmd.Context().Value(options.OptsKey{}).(*options.RootOptions)
 
 	confirmRunner, ok := cmd.Context().Value(options.ConfirmRunnerKey{}).(prompt.PromptRunner)

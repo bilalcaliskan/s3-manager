@@ -3,13 +3,12 @@ package clean
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/clean/options"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	"github.com/bilalcaliskan/s3-manager/internal/cleaner"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -25,7 +24,7 @@ var (
 	ValidSortByOpts = []string{"size", "lastModificationDate"}
 	ValidOrderOpts  = []string{"ascending", "descending"}
 	cleanOpts       *options.CleanOptions
-	svc             s3iface.S3API
+	svc             *v2s3.Client
 	confirmRunner   prompt.PromptRunner
 	CleanCmd        = &cobra.Command{
 		Use:           "clean",
@@ -71,11 +70,11 @@ s3-manager clean --min-size-mb=1 --max-size-mb=1000 --keep-last-n-files=2 --sort
 				Str("order", cleanOpts.Order).
 				Logger()
 
-			logger.Info().Msg("trying to search files on target bucket")
-			if err = cleaner.StartCleaning(svc, confirmRunner, cleanOpts, logger); err != nil {
-				logger.Error().Str("error", err.Error()).Msg("an error occurred while cleaning")
-				return err
-			}
+			//logger.Info().Msg("trying to search files on target bucket")
+			//if err = cleaner.StartCleaning(svc, confirmRunner, cleanOpts, logger); err != nil {
+			//	logger.Error().Str("error", err.Error()).Msg("an error occurred while cleaning")
+			//	return err
+			//}
 
 			return nil
 		},

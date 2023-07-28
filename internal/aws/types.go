@@ -1,13 +1,28 @@
 package aws
 
 import (
+	"context"
 	"os"
+
+	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/stretchr/testify/mock"
 )
+
+type S3ClientAPI interface {
+	GetBucketPolicy(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error)
+}
+
+type MockS3v2Client struct {
+	GetBucketPolicyAPI func(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error)
+}
+
+func (m *MockS3v2Client) GetBucketPolicy(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error) {
+	return m.GetBucketPolicyAPI(ctx, params, optFns...)
+}
 
 type MockS3Client struct {
 	mock.Mock
