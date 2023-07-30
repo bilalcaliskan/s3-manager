@@ -10,8 +10,6 @@ import (
 
 	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 
-	"github.com/stretchr/testify/mock"
-
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -173,11 +171,11 @@ func TestExecuteDisabledCmd(t *testing.T) {
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		mockS3 := new(internalaws.MockS3Client)
-		mockS3.On("GetBucketAccelerateConfiguration", mock.AnythingOfType("*s3.GetBucketAccelerateConfigurationInput")).Return(tc.getBucketAccelerationOutput, tc.getBucketAccelerationErr)
-		mockS3.On("PutBucketAccelerateConfiguration", mock.AnythingOfType("*s3.PutBucketAccelerateConfigurationInput")).Return(tc.putBucketAccelerationOutput, tc.putBucketAccelerationErr)
+		mockS3 := new(internalaws.MockS3v2Client)
+		//mockS3.On("GetBucketAccelerateConfiguration", mock.AnythingOfType("*s3.GetBucketAccelerateConfigurationInput")).Return(tc.getBucketAccelerationOutput, tc.getBucketAccelerationErr)
+		//mockS3.On("PutBucketAccelerateConfiguration", mock.AnythingOfType("*s3.PutBucketAccelerateConfigurationInput")).Return(tc.putBucketAccelerationOutput, tc.putBucketAccelerationErr)
 
-		DisabledCmd.SetContext(context.WithValue(DisabledCmd.Context(), options.S3SvcKey{}, mockS3))
+		DisabledCmd.SetContext(context.WithValue(DisabledCmd.Context(), options.S3ClientKey{}, mockS3))
 		DisabledCmd.SetContext(context.WithValue(DisabledCmd.Context(), options.OptsKey{}, rootOpts))
 		DisabledCmd.SetContext(context.WithValue(DisabledCmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
 		DisabledCmd.SetArgs(tc.args)

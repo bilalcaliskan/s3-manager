@@ -1,7 +1,10 @@
 package show
 
 import (
+	"fmt"
+
 	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 
@@ -38,23 +41,23 @@ s3-manager transferacceleration show
 				return err
 			}
 
-			//res, err := aws.GetTransferAcceleration(svc, transferAccelerationOpts)
-			//if err != nil {
-			//	logger.Error().Msg(err.Error())
-			//	return err
-			//}
-			//
-			//if *res.Status == "Enabled" {
-			//	transferAccelerationOpts.ActualState = "enabled"
-			//} else if *res.Status == "Suspended" {
-			//	transferAccelerationOpts.ActualState = "disabled"
-			//} else {
-			//	err := fmt.Errorf("unknown status '%s' returned from AWS SDK", transferAccelerationOpts.ActualState)
-			//	logger.Error().Msg(err.Error())
-			//	return err
-			//}
-			//
-			//logger.Info().Msgf("current transfer acceleration configuration is %s", transferAccelerationOpts.ActualState)
+			res, err := aws.GetTransferAcceleration(svc, transferAccelerationOpts)
+			if err != nil {
+				logger.Error().Msg(err.Error())
+				return err
+			}
+
+			if res.Status == "Enabled" {
+				transferAccelerationOpts.ActualState = "enabled"
+			} else if res.Status == "Suspended" {
+				transferAccelerationOpts.ActualState = "disabled"
+			} else {
+				err := fmt.Errorf("unknown status '%s' returned from AWS SDK", transferAccelerationOpts.ActualState)
+				logger.Error().Msg(err.Error())
+				return err
+			}
+
+			logger.Info().Msgf("current transfer acceleration configuration is %s", transferAccelerationOpts.ActualState)
 
 			return nil
 		},

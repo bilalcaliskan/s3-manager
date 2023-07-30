@@ -4,6 +4,7 @@ import (
 	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
+	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
@@ -40,8 +41,7 @@ s3-manager transferacceleration set enabled
 
 			transferAccelerationOpts.DesiredState = "enabled"
 
-			//return aws.SetTransferAcceleration(svc, transferAccelerationOpts, confirmRunner, logger)
-			return nil
+			return aws.SetTransferAcceleration(svc, transferAccelerationOpts, confirmRunner, logger)
 		},
 	}
 )

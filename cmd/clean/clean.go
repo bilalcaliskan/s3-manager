@@ -3,6 +3,8 @@ package clean
 import (
 	"fmt"
 
+	"github.com/bilalcaliskan/s3-manager/internal/cleaner"
+
 	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
@@ -70,11 +72,11 @@ s3-manager clean --min-size-mb=1 --max-size-mb=1000 --keep-last-n-files=2 --sort
 				Str("order", cleanOpts.Order).
 				Logger()
 
-			//logger.Info().Msg("trying to search files on target bucket")
-			//if err = cleaner.StartCleaning(svc, confirmRunner, cleanOpts, logger); err != nil {
-			//	logger.Error().Str("error", err.Error()).Msg("an error occurred while cleaning")
-			//	return err
-			//}
+			logger.Info().Msg("trying to search files on target bucket")
+			if err = cleaner.StartCleaning(svc, confirmRunner, cleanOpts, logger); err != nil {
+				logger.Error().Str("error", err.Error()).Msg("an error occurred while cleaning")
+				return err
+			}
 
 			return nil
 		},

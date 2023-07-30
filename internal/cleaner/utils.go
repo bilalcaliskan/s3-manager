@@ -3,7 +3,8 @@ package cleaner
 import (
 	"sort"
 
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+
 	"github.com/bilalcaliskan/s3-manager/cmd/clean/options"
 )
 
@@ -19,7 +20,7 @@ import (
 //
 // Returns:
 // - None
-func sortObjects(slice []*s3.Object, opts *options.CleanOptions) {
+func sortObjects(slice []*types.Object, opts *options.CleanOptions) {
 	switch opts.SortBy {
 	case "lastModificationDate":
 		sort.Slice(slice, func(i, j int) bool {
@@ -36,11 +37,11 @@ func sortObjects(slice []*s3.Object, opts *options.CleanOptions) {
 		sort.Slice(slice, func(i, j int) bool {
 			switch opts.Order {
 			case "ascending":
-				return *slice[i].Size < *slice[j].Size
+				return slice[i].Size < slice[j].Size
 			case "descending":
-				return *slice[i].Size > *slice[j].Size
+				return slice[i].Size > slice[j].Size
 			default:
-				return *slice[i].Size < *slice[j].Size
+				return slice[i].Size < slice[j].Size
 			}
 		})
 	}

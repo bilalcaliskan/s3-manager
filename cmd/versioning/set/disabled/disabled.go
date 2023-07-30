@@ -1,9 +1,9 @@
 package disabled
 
 import (
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
+	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
@@ -15,7 +15,7 @@ func init() {
 }
 
 var (
-	svc            *v2s3.Client
+	svc            aws.S3ClientAPI
 	logger         zerolog.Logger
 	confirmRunner  prompt.PromptRunner = prompt.GetConfirmRunner()
 	versioningOpts *options.VersioningOptions
@@ -40,8 +40,7 @@ s3-manager versioning set disabled
 
 			versioningOpts.DesiredState = "disabled"
 
-			//return aws.SetBucketVersioning(svc, versioningOpts, confirmRunner, logger)
-			return nil
+			return aws.SetBucketVersioning(svc, versioningOpts, confirmRunner, logger)
 		},
 	}
 )

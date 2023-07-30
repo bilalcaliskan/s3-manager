@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-
-	"github.com/aws/aws-sdk-go/service/s3"
 
 	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
 )
@@ -25,7 +24,7 @@ func Contains(s []string, e string) bool {
 	return false
 }
 
-func GetKeysOnly(s []*s3.Object) []string {
+func GetKeysOnly(s []*types.Object) []string {
 	var res []string
 
 	for _, v := range s {

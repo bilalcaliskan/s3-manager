@@ -1,7 +1,10 @@
 package show
 
 import (
+	"fmt"
+
 	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 
@@ -37,23 +40,23 @@ s3-manager versioning show
 				return err
 			}
 
-			//versioning, err := aws.GetBucketVersioning(svc, versioningOpts.RootOptions)
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//switch *versioning.Status {
-			//case "Enabled":
-			//	versioningOpts.ActualState = "enabled"
-			//case "Suspended":
-			//	versioningOpts.ActualState = "disabled"
-			//default:
-			//	err := fmt.Errorf("unknown versioning status %s returned from S3 SDK", *versioning.Status)
-			//	logger.Error().Msg(err.Error())
-			//	return err
-			//}
-			//
-			//logger.Info().Msgf("current versioning configuration is %s", versioningOpts.ActualState)
+			versioning, err := aws.GetBucketVersioning(svc, versioningOpts.RootOptions)
+			if err != nil {
+				return err
+			}
+
+			switch versioning.Status {
+			case "Enabled":
+				versioningOpts.ActualState = "enabled"
+			case "Suspended":
+				versioningOpts.ActualState = "disabled"
+			default:
+				err := fmt.Errorf("unknown versioning status %s returned from S3 SDK", versioning.Status)
+				logger.Error().Msg(err.Error())
+				return err
+			}
+
+			logger.Info().Msgf("current versioning configuration is %s", versioningOpts.ActualState)
 
 			return nil
 		},

@@ -1,7 +1,10 @@
 package file
 
 import (
+	"fmt"
+
 	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
@@ -43,25 +46,26 @@ s3-manager search file ".*.json"
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			//files, err := aws.GetDesiredObjects(svc, searchOpts.BucketName, searchOpts.FileName)
-			//if err != nil {
-			//	logger.Error().
-			//		Str("fileName", searchOpts.FileName).
-			//		Str("error", err.Error()).
-			//		Msg("an error occurred while fetching desired files")
-			//	return err
-			//}
-			//
-			//if len(files) == 0 {
-			//	logger.Warn().
-			//		Str("fileName", searchOpts.FileName).
-			//		Msg("no file found with the specified fileName or pattern")
-			//	return nil
-			//}
-			//
-			//for _, v := range files {
-			//	fmt.Println(*v.Key)
-			//}
+			// TODO: recover from panic if something is broken with regex
+			files, err := aws.GetDesiredObjects(svc, searchOpts.BucketName, searchOpts.FileName)
+			if err != nil {
+				logger.Error().
+					Str("fileName", searchOpts.FileName).
+					Str("error", err.Error()).
+					Msg("an error occurred while fetching desired files")
+				return err
+			}
+
+			if len(files) == 0 {
+				logger.Warn().
+					Str("fileName", searchOpts.FileName).
+					Msg("no file found with the specified fileName or pattern")
+				return nil
+			}
+
+			for _, v := range files {
+				fmt.Println(*v.Key)
+			}
 
 			return nil
 		},

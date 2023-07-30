@@ -8,8 +8,6 @@ import (
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-
 	start "github.com/bilalcaliskan/s3-manager/cmd/clean/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
@@ -42,7 +40,7 @@ import (
 // deletion, it logs the error and returns it.
 //
 // The function returns nil if it completes without encountering any errors.
-func StartCleaning(svc s3iface.S3API, runner prompt.PromptRunner, cleanOpts *start.CleanOptions, logger zerolog.Logger) error {
+func StartCleaning(svc aws.S3ClientAPI, runner prompt.PromptRunner, cleanOpts *start.CleanOptions, logger zerolog.Logger) error {
 	res, err := aws.GetDesiredObjects(svc, cleanOpts.BucketName, cleanOpts.Regex)
 	if err != nil {
 		return err

@@ -58,16 +58,16 @@ s3-manager bucketpolicy remove
 			logger.Info().Msg("will attempt to delete below bucket policy")
 			fmt.Println(bucketPolicyOpts.BucketPolicyContent)
 
-			//logger.Info().Msg("trying to remove current bucket policy if exists")
-			//_, err = aws.DeleteBucketPolicy(svc, bucketPolicyOpts, confirmRunner, logger)
-			//if err != nil {
-			//	logger.Error().
-			//		Str("error", err.Error()).
-			//		Msg("an error occurred while deleting current bucket policy")
-			//	return err
-			//}
-			//
-			//logger.Info().Msg("successfully deleted bucket policy on target bucket")
+			logger.Info().Msg("trying to remove current bucket policy if exists")
+			_, err = aws.DeleteBucketPolicy(svc, bucketPolicyOpts, confirmRunner, logger)
+			if err != nil {
+				logger.Error().
+					Str("error", err.Error()).
+					Msg("an error occurred while deleting current bucket policy")
+				return err
+			}
+
+			logger.Info().Msg("successfully deleted bucket policy on target bucket")
 
 			return nil
 		},
