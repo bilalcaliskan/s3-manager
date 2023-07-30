@@ -11,8 +11,6 @@ import (
 
 	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"github.com/stretchr/testify/mock"
-
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
@@ -30,7 +28,6 @@ import (
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
@@ -934,9 +931,9 @@ func TestDeleteAllBucketTags(t *testing.T) {
 		caseName string
 		expected error
 		*options4.TagOptions
-		deleteBucketTaggingErr error
-		enableDryRun           bool
-		enableAutoApprove      bool
+		deleteBucketTaggingFunc func(ctx context.Context, params *v2s3.DeleteBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketTaggingOutput, error)
+		enableDryRun            bool
+		enableAutoApprove       bool
 		prompt.PromptRunner
 	}{
 		{
@@ -945,7 +942,9 @@ func TestDeleteAllBucketTags(t *testing.T) {
 			&options4.TagOptions{
 				RootOptions: rootOpts,
 			},
-			nil,
+			func(ctx context.Context, params *v2s3.DeleteBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketTaggingOutput, error) {
+				return &v2s3.DeleteBucketTaggingOutput{}, nil
+			},
 			false,
 			false,
 			&prompt.PromptMock{
@@ -959,7 +958,9 @@ func TestDeleteAllBucketTags(t *testing.T) {
 			&options4.TagOptions{
 				RootOptions: rootOpts,
 			},
-			nil,
+			func(ctx context.Context, params *v2s3.DeleteBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketTaggingOutput, error) {
+				return &v2s3.DeleteBucketTaggingOutput{}, nil
+			},
 			true,
 			false,
 			nil,
@@ -970,7 +971,9 @@ func TestDeleteAllBucketTags(t *testing.T) {
 			&options4.TagOptions{
 				RootOptions: rootOpts,
 			},
-			constants.ErrInjected,
+			func(ctx context.Context, params *v2s3.DeleteBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketTaggingOutput, error) {
+				return &v2s3.DeleteBucketTaggingOutput{}, constants.ErrInjected
+			},
 			false,
 			false,
 			&prompt.PromptMock{
@@ -984,7 +987,9 @@ func TestDeleteAllBucketTags(t *testing.T) {
 			&options4.TagOptions{
 				RootOptions: rootOpts,
 			},
-			nil,
+			func(ctx context.Context, params *v2s3.DeleteBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketTaggingOutput, error) {
+				return &v2s3.DeleteBucketTaggingOutput{}, nil
+			},
 			false,
 			false,
 			&prompt.PromptMock{
@@ -998,7 +1003,9 @@ func TestDeleteAllBucketTags(t *testing.T) {
 			&options4.TagOptions{
 				RootOptions: rootOpts,
 			},
-			nil,
+			func(ctx context.Context, params *v2s3.DeleteBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketTaggingOutput, error) {
+				return &v2s3.DeleteBucketTaggingOutput{}, nil
+			},
 			false,
 			false,
 			&prompt.PromptMock{
@@ -1014,8 +1021,8 @@ func TestDeleteAllBucketTags(t *testing.T) {
 		tc.DryRun = tc.enableDryRun
 		tc.AutoApprove = tc.enableAutoApprove
 
-		mockS3 := new(MockS3Client)
-		mockS3.On("DeleteBucketTagging", mock.AnythingOfType("*s3.DeleteBucketTaggingInput")).Return(&s3.DeleteBucketTaggingOutput{}, tc.deleteBucketTaggingErr)
+		mockS3 := new(MockS3v2Client)
+		mockS3.DeleteBucketTaggingAPI = tc.deleteBucketTaggingFunc
 
 		_, err := DeleteAllBucketTags(mockS3, tc.TagOptions, tc.PromptRunner, logger)
 		assert.Equal(t, tc.expected, err)
@@ -1035,9 +1042,9 @@ func TestDeleteAllBucketTags(t *testing.T) {
 func TestGetBucketPolicy(t *testing.T) {
 	rootOpts := options.GetMockedRootOptions()
 	cases := []struct {
-		caseName string
-		expected error
-		mockFunc func(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error)
+		caseName            string
+		expected            error
+		getBucketPolicyFunc func(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error)
 		*options6.BucketPolicyOptions
 		getBucketPolicyErr error
 	}{
@@ -1052,31 +1059,27 @@ func TestGetBucketPolicy(t *testing.T) {
 			},
 			nil,
 		},
-		//{
-		//	"Failure",
-		//	constants.ErrInjected,
-		//	&options6.BucketPolicyOptions{
-		//		RootOptions: rootOpts,
-		//	},
-		//	constants.ErrInjected,
-		//},
+		{
+			"Failure",
+			nil,
+			func(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error) {
+				return nil, constants.ErrInjected
+			},
+			&options6.BucketPolicyOptions{
+				RootOptions: rootOpts,
+			},
+			nil,
+		},
 	}
 
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		client := &MockS3v2Client{
-			GetBucketPolicyAPI: tc.mockFunc,
-		}
+		mockSvc := new(MockS3v2Client)
+		mockSvc.GetBucketPolicyAPI = tc.getBucketPolicyFunc
 
-		_, err := GetBucketPolicy(client, tc.BucketPolicyOptions)
+		_, err := GetBucketPolicy(mockSvc, tc.BucketPolicyOptions)
 		assert.Nil(t, err)
-
-		//mockS3 := new(MockS3Client)
-		//mockS3.On("GetBucketPolicy", mock.AnythingOfType("*s3.GetBucketPolicyInput")).Return(&s3.GetBucketPolicyOutput{}, tc.getBucketPolicyErr)
-
-		//_, err := GetBucketPolicy(mockS3, tc.BucketPolicyOptions)
-		//assert.Equal(t, tc.expected, err)
 	}
 }
 
@@ -1098,9 +1101,9 @@ func TestSetBucketPolicy(t *testing.T) {
 		expected error
 		prompt.PromptRunner
 		*options6.BucketPolicyOptions
-		putBucketPolicyErr error
-		autoApprove        bool
-		dryRun             bool
+		putBucketPolicyFunc func(ctx context.Context, params *v2s3.PutBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketPolicyOutput, error)
+		autoApprove         bool
+		dryRun              bool
 	}{
 		{
 			"Success",
@@ -1113,7 +1116,9 @@ func TestSetBucketPolicy(t *testing.T) {
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
-			nil,
+			func(ctx context.Context, params *v2s3.PutBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketPolicyOutput, error) {
+				return &v2s3.PutBucketPolicyOutput{}, nil
+			},
 			false,
 			false,
 		},
@@ -1125,7 +1130,9 @@ func TestSetBucketPolicy(t *testing.T) {
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
-			nil,
+			func(ctx context.Context, params *v2s3.PutBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketPolicyOutput, error) {
+				return &v2s3.PutBucketPolicyOutput{}, nil
+			},
 			false,
 			true,
 		},
@@ -1140,7 +1147,9 @@ func TestSetBucketPolicy(t *testing.T) {
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
-			constants.ErrInjected,
+			func(ctx context.Context, params *v2s3.PutBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketPolicyOutput, error) {
+				return &v2s3.PutBucketPolicyOutput{}, constants.ErrInjected
+			},
 			false,
 			false,
 		},
@@ -1155,7 +1164,9 @@ func TestSetBucketPolicy(t *testing.T) {
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
-			nil,
+			func(ctx context.Context, params *v2s3.PutBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketPolicyOutput, error) {
+				return &v2s3.PutBucketPolicyOutput{}, nil
+			},
 			false,
 			false,
 		},
@@ -1167,8 +1178,8 @@ func TestSetBucketPolicy(t *testing.T) {
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
-		mockS3 := new(MockS3Client)
-		mockS3.On("PutBucketPolicy", mock.AnythingOfType("*s3.PutBucketPolicyInput")).Return(&s3.PutBucketPolicyOutput{}, tc.putBucketPolicyErr)
+		mockS3 := new(MockS3v2Client)
+		mockS3.PutBucketPolicyAPI = tc.putBucketPolicyFunc
 
 		_, err := SetBucketPolicy(mockS3, tc.BucketPolicyOptions, tc.PromptRunner, logger)
 		assert.Equal(t, tc.expected, err)
@@ -1191,8 +1202,7 @@ func TestGetBucketPolicyString(t *testing.T) {
 		caseName string
 		expected error
 		*options6.BucketPolicyOptions
-		*v2s3.GetBucketPolicyOutput
-		getBucketPolicyErr error
+		getBucketPolicyFunc func(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error)
 	}{
 		{
 			"Success",
@@ -1201,10 +1211,11 @@ func TestGetBucketPolicyString(t *testing.T) {
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
-			&v2s3.GetBucketPolicyOutput{
-				Policy: aws.String(dummyBucketPolicyStr),
+			func(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error) {
+				return &v2s3.GetBucketPolicyOutput{
+					Policy: aws.String(dummyBucketPolicyStr),
+				}, nil
 			},
-			nil,
 		},
 		{
 			"Failure",
@@ -1213,8 +1224,9 @@ func TestGetBucketPolicyString(t *testing.T) {
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
-			nil,
-			constants.ErrInjected,
+			func(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error) {
+				return nil, constants.ErrInjected
+			},
 		},
 	}
 
@@ -1222,10 +1234,7 @@ func TestGetBucketPolicyString(t *testing.T) {
 		t.Logf("starting case %s", tc.caseName)
 
 		mockS3 := new(MockS3v2Client)
-		//mockS3.On("GetBucketPolicy", mock.AnythingOfType("*s3.GetBucketPolicyInput")).Return(tc.GetBucketPolicyOutput, tc.getBucketPolicyErr)
-		mockS3.GetBucketPolicyAPI = func(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error) {
-			return tc.GetBucketPolicyOutput, tc.getBucketPolicyErr
-		}
+		mockS3.GetBucketPolicyAPI = tc.getBucketPolicyFunc
 
 		_, err := GetBucketPolicyString(mockS3, tc.BucketPolicyOptions)
 		if tc.expected == nil {
@@ -1253,7 +1262,7 @@ func TestDeleteBucketPolicy(t *testing.T) {
 		caseName string
 		expected error
 		*options6.BucketPolicyOptions
-		deleteBucketPolicyErr error
+		deleteBucketPolicyFunc func(ctx context.Context, params *v2s3.DeleteBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketPolicyOutput, error)
 		prompt.PromptRunner
 		enableAutoApprove bool
 		enableDryRun      bool
@@ -1265,7 +1274,9 @@ func TestDeleteBucketPolicy(t *testing.T) {
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
-			nil,
+			func(ctx context.Context, params *v2s3.DeleteBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketPolicyOutput, error) {
+				return &v2s3.DeleteBucketPolicyOutput{}, nil
+			},
 			&prompt.PromptMock{
 				Msg: "y",
 				Err: nil,
@@ -1280,7 +1291,9 @@ func TestDeleteBucketPolicy(t *testing.T) {
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
-			nil,
+			func(ctx context.Context, params *v2s3.DeleteBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketPolicyOutput, error) {
+				return &v2s3.DeleteBucketPolicyOutput{}, nil
+			},
 			&prompt.PromptMock{
 				Msg: "y",
 				Err: nil,
@@ -1295,7 +1308,9 @@ func TestDeleteBucketPolicy(t *testing.T) {
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
-			constants.ErrInjected,
+			func(ctx context.Context, params *v2s3.DeleteBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketPolicyOutput, error) {
+				return nil, constants.ErrInjected
+			},
 			&prompt.PromptMock{
 				Msg: "y",
 				Err: nil,
@@ -1310,7 +1325,9 @@ func TestDeleteBucketPolicy(t *testing.T) {
 				RootOptions:         rootOpts,
 				BucketPolicyContent: dummyBucketPolicyStr,
 			},
-			constants.ErrInjected,
+			func(ctx context.Context, params *v2s3.DeleteBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketPolicyOutput, error) {
+				return nil, constants.ErrInjected
+			},
 			&prompt.PromptMock{
 				Msg: "n",
 				Err: constants.ErrUserTerminated,
@@ -1326,8 +1343,8 @@ func TestDeleteBucketPolicy(t *testing.T) {
 		tc.DryRun = tc.enableDryRun
 		tc.AutoApprove = tc.enableAutoApprove
 
-		mockS3 := new(MockS3Client)
-		mockS3.On("DeleteBucketPolicy", mock.AnythingOfType("*s3.DeleteBucketPolicyInput")).Return(&s3.DeleteBucketPolicyOutput{}, tc.deleteBucketPolicyErr)
+		mockS3 := new(MockS3v2Client)
+		mockS3.DeleteBucketPolicyAPI = tc.deleteBucketPolicyFunc
 
 		_, err := DeleteBucketPolicy(mockS3, tc.BucketPolicyOptions, tc.PromptRunner, logger)
 		assert.Equal(t, tc.expected, err)
@@ -1350,7 +1367,8 @@ func TestGetTransferAcceleration(t *testing.T) {
 		caseName string
 		expected error
 		*options5.TransferAccelerationOptions
-		getBucketAccelerationErr error
+		getBucketAccelerationErr  error
+		getBucketAccelerationFunc func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error)
 	}{
 		{
 			"Success",
@@ -1359,6 +1377,9 @@ func TestGetTransferAcceleration(t *testing.T) {
 				RootOptions: rootOpts,
 			},
 			nil,
+			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.GetBucketAccelerateConfigurationOutput{}, nil
+			},
 		},
 		{
 			"Failure",
@@ -1367,14 +1388,17 @@ func TestGetTransferAcceleration(t *testing.T) {
 				RootOptions: rootOpts,
 			},
 			constants.ErrInjected,
+			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+				return nil, constants.ErrInjected
+			},
 		},
 	}
 
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(MockS3Client)
-		mockS3.On("GetBucketAccelerateConfiguration", mock.AnythingOfType("*s3.GetBucketAccelerateConfigurationInput")).Return(&s3.GetBucketAccelerateConfigurationOutput{}, tc.getBucketAccelerationErr)
+		mockS3 := new(MockS3v2Client)
+		mockS3.GetBucketAccelerateConfigurationAPI = tc.getBucketAccelerationFunc
 
 		_, err := GetTransferAcceleration(mockS3, tc.TransferAccelerationOptions)
 		assert.Equal(t, tc.expected, err)
@@ -1398,11 +1422,10 @@ func TestSetTransferAcceleration(t *testing.T) {
 		caseName string
 		expected error
 		*options5.TransferAccelerationOptions
-		*s3.GetBucketAccelerateConfigurationOutput
-		getBucketAccelerationErr error
-		putBucketAccelerationErr error
-		dryRun                   bool
-		autoApprove              bool
+		getBucketAccelerationFunc func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error)
+		putBucketAccelerationFunc func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error)
+		dryRun                    bool
+		autoApprove               bool
 		prompt.PromptRunner
 	}{
 		{
@@ -1412,11 +1435,14 @@ func TestSetTransferAcceleration(t *testing.T) {
 				RootOptions:  rootOpts,
 				DesiredState: "enabled",
 			},
-			&s3.GetBucketAccelerateConfigurationOutput{
-				Status: aws.String("Suspended"),
+			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.GetBucketAccelerateConfigurationOutput{
+					Status: types.BucketAccelerateStatusSuspended,
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.PutBucketAccelerateConfigurationOutput{}, nil
+			},
 			false,
 			true,
 			nil,
@@ -1428,11 +1454,14 @@ func TestSetTransferAcceleration(t *testing.T) {
 				RootOptions:  rootOpts,
 				DesiredState: "enabled",
 			},
-			&s3.GetBucketAccelerateConfigurationOutput{
-				Status: aws.String("Enabled"),
+			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.GetBucketAccelerateConfigurationOutput{
+					Status: types.BucketAccelerateStatusEnabled,
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.PutBucketAccelerateConfigurationOutput{}, nil
+			},
 			false,
 			false,
 			prompt.PromptMock{
@@ -1447,11 +1476,14 @@ func TestSetTransferAcceleration(t *testing.T) {
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
-			&s3.GetBucketAccelerateConfigurationOutput{
-				Status: aws.String("Suspended"),
+			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.GetBucketAccelerateConfigurationOutput{
+					Status: types.BucketAccelerateStatusSuspended,
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.PutBucketAccelerateConfigurationOutput{}, nil
+			},
 			false,
 			false,
 			prompt.PromptMock{
@@ -1466,11 +1498,14 @@ func TestSetTransferAcceleration(t *testing.T) {
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
-			&s3.GetBucketAccelerateConfigurationOutput{
-				Status: aws.String("Suspended"),
+			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.GetBucketAccelerateConfigurationOutput{
+					Status: types.BucketAccelerateStatusSuspended,
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.PutBucketAccelerateConfigurationOutput{}, nil
+			},
 			true,
 			false,
 			prompt.PromptMock{
@@ -1485,9 +1520,12 @@ func TestSetTransferAcceleration(t *testing.T) {
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
-			nil,
-			constants.ErrInjected,
-			nil,
+			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+				return nil, constants.ErrInjected
+			},
+			func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.PutBucketAccelerateConfigurationOutput{}, nil
+			},
 			false,
 			false,
 			prompt.PromptMock{
@@ -1502,11 +1540,14 @@ func TestSetTransferAcceleration(t *testing.T) {
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
-			&s3.GetBucketAccelerateConfigurationOutput{
-				Status: aws.String("Suspendedddd"),
+			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.GetBucketAccelerateConfigurationOutput{
+					Status: "Suspendedddd",
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.PutBucketAccelerateConfigurationOutput{}, nil
+			},
 			false,
 			false,
 			prompt.PromptMock{
@@ -1521,11 +1562,14 @@ func TestSetTransferAcceleration(t *testing.T) {
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
-			&s3.GetBucketAccelerateConfigurationOutput{
-				Status: aws.String("Enabled"),
+			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.GetBucketAccelerateConfigurationOutput{
+					Status: types.BucketAccelerateStatusEnabled,
+				}, nil
 			},
-			nil,
-			constants.ErrInjected,
+			func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.PutBucketAccelerateConfigurationOutput{}, constants.ErrInjected
+			},
 			false,
 			false,
 			prompt.PromptMock{
@@ -1540,11 +1584,14 @@ func TestSetTransferAcceleration(t *testing.T) {
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
-			&s3.GetBucketAccelerateConfigurationOutput{
-				Status: aws.String("Enabled"),
+			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.GetBucketAccelerateConfigurationOutput{
+					Status: types.BucketAccelerateStatusEnabled,
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.PutBucketAccelerateConfigurationOutput{}, nil
+			},
 			false,
 			false,
 			prompt.PromptMock{
@@ -1559,11 +1606,14 @@ func TestSetTransferAcceleration(t *testing.T) {
 				RootOptions:  rootOpts,
 				DesiredState: "disabled",
 			},
-			&s3.GetBucketAccelerateConfigurationOutput{
-				Status: aws.String("Enabled"),
+			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.GetBucketAccelerateConfigurationOutput{
+					Status: types.BucketAccelerateStatusEnabled,
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error) {
+				return &v2s3.PutBucketAccelerateConfigurationOutput{}, nil
+			},
 			false,
 			false,
 			prompt.PromptMock{
@@ -1579,9 +1629,9 @@ func TestSetTransferAcceleration(t *testing.T) {
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
-		mockS3 := new(MockS3Client)
-		mockS3.On("GetBucketAccelerateConfiguration", mock.AnythingOfType("*s3.GetBucketAccelerateConfigurationInput")).Return(tc.GetBucketAccelerateConfigurationOutput, tc.getBucketAccelerationErr)
-		mockS3.On("PutBucketAccelerateConfiguration", mock.AnythingOfType("*s3.PutBucketAccelerateConfigurationInput")).Return(&s3.PutBucketAccelerateConfigurationOutput{}, tc.putBucketAccelerationErr)
+		mockS3 := new(MockS3v2Client)
+		mockS3.GetBucketAccelerateConfigurationAPI = tc.getBucketAccelerationFunc
+		mockS3.PutBucketAccelerateConfigurationAPI = tc.putBucketAccelerationFunc
 
 		err := SetTransferAcceleration(mockS3, tc.TransferAccelerationOptions, tc.PromptRunner, logging.GetLogger(tc.RootOptions))
 		if tc.expected == nil {

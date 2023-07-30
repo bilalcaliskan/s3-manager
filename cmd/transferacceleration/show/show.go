@@ -3,7 +3,6 @@ package show
 import (
 	"fmt"
 
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
@@ -19,7 +18,7 @@ func init() {
 }
 
 var (
-	svc                      *v2s3.Client
+	svc                      aws.S3ClientAPI
 	logger                   zerolog.Logger
 	transferAccelerationOpts *options.TransferAccelerationOptions
 	ShowCmd                  = &cobra.Command{
