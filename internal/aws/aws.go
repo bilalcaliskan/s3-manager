@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	types2 "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"regexp"
 	"strings"
 	"sync"
@@ -76,7 +77,7 @@ func CreateClient(opts *options.RootOptions) (*v2s3.Client, error) {
 //
 // It accepts an S3API interface and pointer of TagOptions as arguments, and returns
 // a GetBucketTaggingOutput, which contains all the bucket's tags, and any error encountered.
-func GetBucketTags(svc S3ClientAPI, opts *options3.TagOptions) (res *v2s3.GetBucketTaggingOutput, err error) {
+func GetBucketTags(svc types2.S3ClientAPI, opts *options3.TagOptions) (res *v2s3.GetBucketTaggingOutput, err error) {
 	return svc.GetBucketTagging(context.Background(), &v2s3.GetBucketTaggingInput{
 		Bucket: aws.String(opts.BucketName),
 	})
@@ -87,7 +88,7 @@ func GetBucketTags(svc S3ClientAPI, opts *options3.TagOptions) (res *v2s3.GetBuc
 // It accepts an S3API interface and TagOptions as arguments.
 // For each tag in the provided TagOptions, a new tag is created and added to a slice of tags.
 // It then attaches these tags to the bucket and returns a PutBucketTaggingOutput and any error encountered.
-func SetBucketTags(svc S3ClientAPI, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
+func SetBucketTags(svc types2.S3ClientAPI, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
 	if opts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return nil
@@ -125,7 +126,7 @@ func SetBucketTags(svc S3ClientAPI, opts *options3.TagOptions, runner prompt.Pro
 //
 // It accepts an S3API interface and TagOptions as arguments, and returns
 // a DeleteBucketTaggingOutput and any error encountered.
-func DeleteAllBucketTags(svc S3ClientAPI, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) (out *v2s3.DeleteBucketTaggingOutput, err error) {
+func DeleteAllBucketTags(svc types2.S3ClientAPI, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) (out *v2s3.DeleteBucketTaggingOutput, err error) {
 	if opts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return out, nil
@@ -146,7 +147,7 @@ func DeleteAllBucketTags(svc S3ClientAPI, opts *options3.TagOptions, runner prom
 //
 // It accepts an S3API interface and TransferAccelerationOptions as arguments,
 // and returns a GetBucketAccelerateConfigurationOutput and any error encountered.
-func GetTransferAcceleration(svc S3ClientAPI, opts *options6.TransferAccelerationOptions) (res *v2s3.GetBucketAccelerateConfigurationOutput, err error) {
+func GetTransferAcceleration(svc types2.S3ClientAPI, opts *options6.TransferAccelerationOptions) (res *v2s3.GetBucketAccelerateConfigurationOutput, err error) {
 	return svc.GetBucketAccelerateConfiguration(context.Background(), &v2s3.GetBucketAccelerateConfigurationInput{
 		Bucket: aws.String(opts.BucketName),
 	})
@@ -158,7 +159,7 @@ func GetTransferAcceleration(svc S3ClientAPI, opts *options6.TransferAcceleratio
 // If the provided 'DryRun' or 'AutoApprove' options are set, the function will return early.
 // If not, it will set the bucket's transfer acceleration status based on the provided desired state.
 // It logs any errors encountered and returns them.
-func SetTransferAcceleration(svc S3ClientAPI, opts *options6.TransferAccelerationOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
+func SetTransferAcceleration(svc types2.S3ClientAPI, opts *options6.TransferAccelerationOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
 	if opts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return nil
@@ -218,7 +219,7 @@ func SetTransferAcceleration(svc S3ClientAPI, opts *options6.TransferAcceleratio
 //
 // It accepts an S3API interface and BucketPolicyOptions as arguments,
 // and returns a GetBucketPolicyOutput and any error encountered.
-func GetBucketPolicy(svc S3ClientAPI, opts *options5.BucketPolicyOptions) (res *v2s3.GetBucketPolicyOutput, err error) {
+func GetBucketPolicy(svc types2.S3ClientAPI, opts *options5.BucketPolicyOptions) (res *v2s3.GetBucketPolicyOutput, err error) {
 	return svc.GetBucketPolicy(context.Background(), &v2s3.GetBucketPolicyInput{
 		Bucket: aws.String(opts.BucketName),
 	})
@@ -230,7 +231,7 @@ func GetBucketPolicy(svc S3ClientAPI, opts *options5.BucketPolicyOptions) (res *
 //
 // It accepts an S3API interface and BucketPolicyOptions as arguments,
 // and returns the beautified policy as a string and any error encountered.
-func GetBucketPolicyString(svc S3ClientAPI, opts *options5.BucketPolicyOptions) (out string, err error) {
+func GetBucketPolicyString(svc types2.S3ClientAPI, opts *options5.BucketPolicyOptions) (out string, err error) {
 	res, err := GetBucketPolicy(svc, opts)
 	if err != nil {
 		return out, errors.Wrap(err, "an error occurred while getting bucket policy")
@@ -243,7 +244,7 @@ func GetBucketPolicyString(svc S3ClientAPI, opts *options5.BucketPolicyOptions) 
 //
 // It accepts an S3API interface and BucketPolicyOptions as arguments,
 // and returns a PutBucketPolicyOutput and any error encountered.
-func SetBucketPolicy(svc S3ClientAPI, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *v2s3.PutBucketPolicyOutput, err error) {
+func SetBucketPolicy(svc types2.S3ClientAPI, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *v2s3.PutBucketPolicyOutput, err error) {
 	if opts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return res, nil
@@ -268,7 +269,7 @@ func SetBucketPolicy(svc S3ClientAPI, opts *options5.BucketPolicyOptions, runner
 // and execute a DeleteBucketPolicyInput request via the provided S3 service.
 // It returns a DeleteBucketPolicyOutput, which acknowledges the operation,
 // along with any error encountered during the process.
-func DeleteBucketPolicy(svc S3ClientAPI, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *v2s3.DeleteBucketPolicyOutput, err error) {
+func DeleteBucketPolicy(svc types2.S3ClientAPI, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *v2s3.DeleteBucketPolicyOutput, err error) {
 	if opts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return res, nil
@@ -292,7 +293,7 @@ func DeleteBucketPolicy(svc S3ClientAPI, opts *options5.BucketPolicyOptions, run
 // GetBucketVersioningInput request via the provided S3 service.
 // The function returns a GetBucketVersioningOutput, which includes the bucket's
 // versioning configuration, along with any error encountered during the process.
-func GetBucketVersioning(svc S3ClientAPI, opts *options.RootOptions) (res *v2s3.GetBucketVersioningOutput, err error) {
+func GetBucketVersioning(svc types2.S3ClientAPI, opts *options.RootOptions) (res *v2s3.GetBucketVersioningOutput, err error) {
 	return svc.GetBucketVersioning(context.Background(), &v2s3.GetBucketVersioningInput{
 		Bucket: aws.String(opts.BucketName),
 	})
@@ -305,7 +306,7 @@ func GetBucketVersioning(svc S3ClientAPI, opts *options.RootOptions) (res *v2s3.
 // flags, confirm versioning state changes with the user if needed, and execute a
 // PutBucketVersioningInput request to set the bucket's versioning state.
 // The function logs the process, including any errors encountered, and returns these errors.
-func SetBucketVersioning(svc S3ClientAPI, versioningOpts *options4.VersioningOptions, runner prompt.PromptRunner, logger zerolog.Logger) (err error) {
+func SetBucketVersioning(svc types2.S3ClientAPI, versioningOpts *options4.VersioningOptions, runner prompt.PromptRunner, logger zerolog.Logger) (err error) {
 	if versioningOpts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return nil
@@ -368,7 +369,7 @@ func SetBucketVersioning(svc S3ClientAPI, versioningOpts *options4.VersioningOpt
 // objects, logging each one, and unless dryRun is set, it sends a DeleteObjectInput request
 // for each object to the S3 service. The function logs each successful deletion and returns
 // any errors encountered during the process.
-func DeleteFiles(svc S3ClientAPI, bucketName string, slice []*types.Object, dryRun bool, logger zerolog.Logger) error {
+func DeleteFiles(svc types2.S3ClientAPI, bucketName string, slice []*types.Object, dryRun bool, logger zerolog.Logger) error {
 	for _, v := range slice {
 		logger.Debug().Str("key", *v.Key).Time("lastModifiedDate", *v.LastModified).
 			Float64("size", float64(v.Size)/1000000).Msg("will try to delete file")
@@ -393,7 +394,7 @@ func DeleteFiles(svc S3ClientAPI, bucketName string, slice []*types.Object, dryR
 // regular expression. The function takes an S3API interface, the target bucket's name, and
 // the regex as arguments. It fetches all objects in the target bucket and filters them using
 // the regex. The function returns a list of matching S3 Object pointers and any error encountered.
-func GetDesiredObjects(svc S3ClientAPI, bucketName, regex string) (objects []*types.Object, err error) {
+func GetDesiredObjects(svc types2.S3ClientAPI, bucketName, regex string) (objects []*types.Object, err error) {
 	// fetch all the objects in target bucket
 	listResult, err := svc.ListObjects(context.Background(), &v2s3.ListObjectsInput{
 		Bucket: aws.String(bucketName),
@@ -419,7 +420,7 @@ func GetDesiredObjects(svc S3ClientAPI, bucketName, regex string) (objects []*ty
 // the file name pattern, then concurrently checks each object's content for the search text.
 // The function returns a list of object keys that contain the search text and a list of errors
 // encountered during the search process.
-func SearchString(svc S3ClientAPI, opts *options2.SearchOptions) (matchedFiles []string, errs []error) {
+func SearchString(svc types2.S3ClientAPI, opts *options2.SearchOptions) (matchedFiles []string, errs []error) {
 	var wg sync.WaitGroup
 	mu := &sync.Mutex{}
 

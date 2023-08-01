@@ -4,18 +4,15 @@ package enabled
 
 import (
 	"context"
+	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"testing"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
-
-	"github.com/stretchr/testify/mock"
-
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,13 +24,11 @@ func TestExecuteEnabledCmd(t *testing.T) {
 	EnabledCmd.SetContext(ctx)
 
 	cases := []struct {
-		caseName                  string
-		args                      []string
-		shouldPass                bool
-		getBucketVersioningErr    error
-		getBucketVersioningOutput *s3.GetBucketVersioningOutput
-		putBucketVersioningErr    error
-		putBucketVersioningOutput *s3.PutBucketVersioningOutput
+		caseName                string
+		args                    []string
+		shouldPass              bool
+		getBucketVersioningFunc func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error)
+		putBucketVersioningFunc func(ctx context.Context, params *v2s3.PutBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketVersioningOutput, error)
 		prompt.PromptRunner
 		dryRun      bool
 		autoApprove bool
@@ -42,12 +37,12 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Too many arguments",
 			[]string{"enabled", "foo"},
 			false,
-			nil,
-			&s3.GetBucketVersioningOutput{
-				Status: aws.String("Enabled"),
+			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
+				return &v2s3.GetBucketVersioningOutput{
+					Status: types.BucketVersioningStatusEnabled,
+				}, nil
 			},
-			nil,
-			&s3.PutBucketVersioningOutput{},
+			internalawstypes.DefaultPutBucketVersioningFunc,
 			nil,
 			false,
 			false,
@@ -56,12 +51,12 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Success",
 			[]string{},
 			true,
-			nil,
-			&s3.GetBucketVersioningOutput{
-				Status: aws.String("Suspended"),
+			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
+				return &v2s3.GetBucketVersioningOutput{
+					Status: types.BucketVersioningStatusSuspended,
+				}, nil
 			},
-			nil,
-			&s3.PutBucketVersioningOutput{},
+			internalawstypes.DefaultPutBucketVersioningFunc,
 			prompt.PromptMock{
 				Msg: "y",
 				Err: nil,
@@ -73,12 +68,12 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Success when dry-run enabled",
 			[]string{},
 			true,
-			nil,
-			&s3.GetBucketVersioningOutput{
-				Status: aws.String("Suspended"),
+			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
+				return &v2s3.GetBucketVersioningOutput{
+					Status: types.BucketVersioningStatusSuspended,
+				}, nil
 			},
-			nil,
-			&s3.PutBucketVersioningOutput{},
+			internalawstypes.DefaultPutBucketVersioningFunc,
 			nil,
 			true,
 			false,
@@ -87,12 +82,12 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Success when auto-approve enabled",
 			[]string{},
 			true,
-			nil,
-			&s3.GetBucketVersioningOutput{
-				Status: aws.String("Suspended"),
+			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
+				return &v2s3.GetBucketVersioningOutput{
+					Status: types.BucketVersioningStatusSuspended,
+				}, nil
 			},
-			nil,
-			&s3.PutBucketVersioningOutput{},
+			internalawstypes.DefaultPutBucketVersioningFunc,
 			nil,
 			false,
 			true,
@@ -101,12 +96,12 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Success while already enabled",
 			[]string{},
 			true,
-			nil,
-			&s3.GetBucketVersioningOutput{
-				Status: aws.String("Enabled"),
+			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
+				return &v2s3.GetBucketVersioningOutput{
+					Status: types.BucketVersioningStatusEnabled,
+				}, nil
 			},
-			nil,
-			&s3.PutBucketVersioningOutput{},
+			internalawstypes.DefaultPutBucketVersioningFunc,
 			prompt.PromptMock{
 				Msg: "y",
 				Err: nil,
@@ -118,12 +113,12 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Failure caused by unknown status returned by external call",
 			[]string{},
 			false,
-			nil,
-			&s3.GetBucketVersioningOutput{
-				Status: aws.String("Enableddd"),
+			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
+				return &v2s3.GetBucketVersioningOutput{
+					Status: "Enableddd",
+				}, nil
 			},
-			nil,
-			&s3.PutBucketVersioningOutput{},
+			internalawstypes.DefaultPutBucketVersioningFunc,
 			prompt.PromptMock{
 				Msg: "y",
 				Err: nil,
@@ -135,12 +130,14 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Failure caused by put error",
 			[]string{},
 			false,
-			nil,
-			&s3.GetBucketVersioningOutput{
-				Status: aws.String("Suspended"),
+			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
+				return &v2s3.GetBucketVersioningOutput{
+					Status: types.BucketVersioningStatusSuspended,
+				}, nil
 			},
-			constants.ErrInjected,
-			&s3.PutBucketVersioningOutput{},
+			func(ctx context.Context, params *v2s3.PutBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketVersioningOutput, error) {
+				return nil, constants.ErrInjected
+			},
 			nil,
 			false,
 			true,
@@ -149,12 +146,12 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Failure caused by prompt error",
 			[]string{},
 			false,
-			nil,
-			&s3.GetBucketVersioningOutput{
-				Status: aws.String("Enabled"),
+			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
+				return &v2s3.GetBucketVersioningOutput{
+					Status: types.BucketVersioningStatusEnabled,
+				}, nil
 			},
-			nil,
-			&s3.PutBucketVersioningOutput{},
+			internalawstypes.DefaultPutBucketVersioningFunc,
 			prompt.PromptMock{
 				Msg: "asdfafj",
 				Err: constants.ErrInjected,
@@ -166,12 +163,12 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Failure caused by user terminated the process",
 			[]string{},
 			false,
-			nil,
-			&s3.GetBucketVersioningOutput{
-				Status: aws.String("Enabled"),
+			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
+				return &v2s3.GetBucketVersioningOutput{
+					Status: types.BucketVersioningStatusEnabled,
+				}, nil
 			},
-			nil,
-			&s3.PutBucketVersioningOutput{},
+			internalawstypes.DefaultPutBucketVersioningFunc,
 			prompt.PromptMock{
 				Msg: "n",
 				Err: constants.ErrInjected,
@@ -187,11 +184,11 @@ func TestExecuteEnabledCmd(t *testing.T) {
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		mockS3 := new(internalaws.MockS3Client)
-		mockS3.On("GetBucketVersioning", mock.AnythingOfType("*s3.GetBucketVersioningInput")).Return(tc.getBucketVersioningOutput, tc.getBucketVersioningErr)
-		mockS3.On("PutBucketVersioning", mock.AnythingOfType("*s3.PutBucketVersioningInput")).Return(tc.putBucketVersioningOutput, tc.putBucketVersioningErr)
+		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3.GetBucketVersioningAPI = tc.getBucketVersioningFunc
+		mockS3.PutBucketVersioningAPI = tc.putBucketVersioningFunc
 
-		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3SvcKey{}, mockS3))
+		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.S3ClientKey{}, mockS3))
 		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
 		EnabledCmd.SetContext(context.WithValue(EnabledCmd.Context(), options.OptsKey{}, rootOpts))
 		EnabledCmd.SetArgs(tc.args)

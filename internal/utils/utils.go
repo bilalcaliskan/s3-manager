@@ -3,8 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
@@ -61,8 +60,8 @@ func BeautifyJSON(jsonString string) (string, error) {
 	return string(beautifiedBytes), nil
 }
 
-func PrepareConstants(cmd *cobra.Command) (aws.S3ClientAPI, *options.RootOptions, zerolog.Logger, prompt.PromptRunner) {
-	svc := cmd.Context().Value(options.S3ClientKey{}).(aws.S3ClientAPI)
+func PrepareConstants(cmd *cobra.Command) (internalawstypes.S3ClientAPI, *options.RootOptions, zerolog.Logger, prompt.PromptRunner) {
+	svc := cmd.Context().Value(options.S3ClientKey{}).(internalawstypes.S3ClientAPI)
 	rootOpts := cmd.Context().Value(options.OptsKey{}).(*options.RootOptions)
 
 	confirmRunner, ok := cmd.Context().Value(options.ConfirmRunnerKey{}).(prompt.PromptRunner)

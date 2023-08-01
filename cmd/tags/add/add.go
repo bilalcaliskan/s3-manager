@@ -3,9 +3,9 @@ package add
 import (
 	"errors"
 	"fmt"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"strings"
 
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
@@ -22,7 +22,7 @@ func init() {
 }
 
 var (
-	svc           *v2s3.Client
+	svc           internalawstypes.S3ClientAPI
 	logger        zerolog.Logger
 	confirmRunner prompt.PromptRunner
 	tagOpts       *options.TagOptions

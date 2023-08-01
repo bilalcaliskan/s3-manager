@@ -1,10 +1,10 @@
 package enabled
 
 import (
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
@@ -16,7 +16,7 @@ func init() {
 }
 
 var (
-	svc                      *v2s3.Client
+	svc                      internalawstypes.S3ClientAPI
 	logger                   zerolog.Logger
 	confirmRunner            prompt.PromptRunner
 	transferAccelerationOpts *options.TransferAccelerationOptions

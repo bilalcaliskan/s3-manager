@@ -2,8 +2,8 @@ package show
 
 import (
 	"fmt"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
@@ -19,7 +19,7 @@ func init() {
 }
 
 var (
-	svc            *v2s3.Client
+	svc            internalawstypes.S3ClientAPI
 	logger         zerolog.Logger
 	versioningOpts *options.VersioningOptions
 	ShowCmd        = &cobra.Command{

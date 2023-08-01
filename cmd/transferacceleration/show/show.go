@@ -2,6 +2,7 @@ package show
 
 import (
 	"fmt"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
@@ -18,7 +19,7 @@ func init() {
 }
 
 var (
-	svc                      aws.S3ClientAPI
+	svc                      internalawstypes.S3ClientAPI
 	logger                   zerolog.Logger
 	transferAccelerationOpts *options.TransferAccelerationOptions
 	ShowCmd                  = &cobra.Command{

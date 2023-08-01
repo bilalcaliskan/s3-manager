@@ -2,6 +2,7 @@ package cleaner
 
 import (
 	"fmt"
+	"github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"strings"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
@@ -40,7 +41,7 @@ import (
 // deletion, it logs the error and returns it.
 //
 // The function returns nil if it completes without encountering any errors.
-func StartCleaning(svc aws.S3ClientAPI, runner prompt.PromptRunner, cleanOpts *start.CleanOptions, logger zerolog.Logger) error {
+func StartCleaning(svc types.S3ClientAPI, runner prompt.PromptRunner, cleanOpts *start.CleanOptions, logger zerolog.Logger) error {
 	res, err := aws.GetDesiredObjects(svc, cleanOpts.BucketName, cleanOpts.Regex)
 	if err != nil {
 		return err
