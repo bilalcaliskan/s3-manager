@@ -3,9 +3,10 @@ package remove
 import (
 	"fmt"
 
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
+
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 
@@ -20,7 +21,7 @@ func init() {
 }
 
 var (
-	svc              s3iface.S3API
+	svc              internalawstypes.S3ClientAPI
 	logger           zerolog.Logger
 	confirmRunner    prompt.PromptRunner
 	bucketPolicyOpts *options.BucketPolicyOptions

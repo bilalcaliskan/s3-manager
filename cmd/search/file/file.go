@@ -3,13 +3,15 @@ package file
 import (
 	"fmt"
 
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
+
+	"github.com/bilalcaliskan/s3-manager/internal/aws"
+
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/search/options"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +23,7 @@ func init() {
 var (
 	logger     zerolog.Logger
 	searchOpts *options.SearchOptions
-	svc        s3iface.S3API
+	svc        internalawstypes.S3ClientAPI
 	FileCmd    = &cobra.Command{
 		Use:           "file",
 		Short:         "searches the files which has desired file name pattern in it (supports regex)",
@@ -45,6 +47,7 @@ s3-manager search file ".*.json"
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			// TODO: recover from panic if something is broken with regex
 			files, err := aws.GetDesiredObjects(svc, searchOpts.BucketName, searchOpts.FileName)
 			if err != nil {
 				logger.Error().

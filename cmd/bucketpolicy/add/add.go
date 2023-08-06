@@ -5,11 +5,13 @@ import (
 	"io"
 	"os"
 
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
+
+	"github.com/bilalcaliskan/s3-manager/internal/aws"
+
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
@@ -21,7 +23,7 @@ func init() {
 }
 
 var (
-	svc              s3iface.S3API
+	svc              internalawstypes.S3ClientAPI
 	logger           zerolog.Logger
 	confirmRunner    prompt.PromptRunner
 	bucketPolicyOpts *options.BucketPolicyOptions

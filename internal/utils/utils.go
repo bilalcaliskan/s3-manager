@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-
-	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 func Contains(s []string, e string) bool {
@@ -24,7 +24,7 @@ func Contains(s []string, e string) bool {
 	return false
 }
 
-func GetKeysOnly(s []*s3.Object) []string {
+func GetKeysOnly(s []types.Object) []string {
 	var res []string
 
 	for _, v := range s {
@@ -61,8 +61,8 @@ func BeautifyJSON(jsonString string) (string, error) {
 	return string(beautifiedBytes), nil
 }
 
-func PrepareConstants(cmd *cobra.Command) (s3iface.S3API, *options.RootOptions, zerolog.Logger, prompt.PromptRunner) {
-	svc := cmd.Context().Value(options.S3SvcKey{}).(s3iface.S3API)
+func PrepareConstants(cmd *cobra.Command) (internalawstypes.S3ClientAPI, *options.RootOptions, zerolog.Logger, prompt.PromptRunner) {
+	svc := cmd.Context().Value(options.S3ClientKey{}).(internalawstypes.S3ClientAPI)
 	rootOpts := cmd.Context().Value(options.OptsKey{}).(*options.RootOptions)
 
 	confirmRunner, ok := cmd.Context().Value(options.ConfirmRunnerKey{}).(prompt.PromptRunner)

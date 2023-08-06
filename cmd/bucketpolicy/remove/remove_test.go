@@ -6,17 +6,16 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
-	"github.com/stretchr/testify/mock"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,13 +48,11 @@ func TestExecuteRemoveCmd(t *testing.T) {
 	ctx := context.Background()
 	RemoveCmd.SetContext(ctx)
 	cases := []struct {
-		caseName                 string
-		args                     []string
-		shouldPass               bool
-		getBucketPolicyOutput    *s3.GetBucketPolicyOutput
-		getBucketPolicyErr       error
-		deleteBucketPolicyErr    error
-		deleteBucketPolicyOutput *s3.DeleteBucketPolicyOutput
+		caseName               string
+		args                   []string
+		shouldPass             bool
+		getBucketPolicyFunc    func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error)
+		deleteBucketPolicyFunc func(ctx context.Context, params *s3.DeleteBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketPolicyOutput, error)
 		prompt.PromptRunner
 		dryRun      bool
 		autoApprove bool
@@ -64,10 +61,8 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Too many arguments",
 			[]string{"enabled", "foo"},
 			false,
-			&s3.GetBucketPolicyOutput{},
 			nil,
 			nil,
-			&s3.DeleteBucketPolicyOutput{},
 			nil,
 			false,
 			false,
@@ -76,12 +71,14 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Success",
 			[]string{},
 			true,
-			&s3.GetBucketPolicyOutput{
-				Policy: aws.String(policyStr),
+			func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error) {
+				return &s3.GetBucketPolicyOutput{
+					Policy: aws.String(policyStr),
+				}, nil
 			},
-			nil,
-			nil,
-			&s3.DeleteBucketPolicyOutput{},
+			func(ctx context.Context, params *s3.DeleteBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketPolicyOutput, error) {
+				return &s3.DeleteBucketPolicyOutput{}, nil
+			},
 			prompt.PromptMock{
 				Msg: "y",
 				Err: nil,
@@ -93,12 +90,14 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Success with dry run",
 			[]string{},
 			true,
-			&s3.GetBucketPolicyOutput{
-				Policy: aws.String(policyStr),
+			func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error) {
+				return &s3.GetBucketPolicyOutput{
+					Policy: aws.String(policyStr),
+				}, nil
 			},
-			nil,
-			nil,
-			&s3.DeleteBucketPolicyOutput{},
+			func(ctx context.Context, params *s3.DeleteBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketPolicyOutput, error) {
+				return &s3.DeleteBucketPolicyOutput{}, nil
+			},
 			prompt.PromptMock{
 				Msg: "y",
 				Err: nil,
@@ -110,26 +109,30 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Success with auto approve",
 			[]string{},
 			true,
-			&s3.GetBucketPolicyOutput{
-				Policy: aws.String(policyStr),
+			func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error) {
+				return &s3.GetBucketPolicyOutput{
+					Policy: aws.String(policyStr),
+				}, nil
 			},
-			nil,
-			nil,
-			&s3.DeleteBucketPolicyOutput{},
+			func(ctx context.Context, params *s3.DeleteBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketPolicyOutput, error) {
+				return &s3.DeleteBucketPolicyOutput{}, nil
+			},
 			nil,
 			false,
 			true,
 		},
 		{
-			"Failure",
+			"Failure caused by delete error",
 			[]string{},
 			false,
-			&s3.GetBucketPolicyOutput{
-				Policy: aws.String(policyStr),
+			func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error) {
+				return &s3.GetBucketPolicyOutput{
+					Policy: aws.String(policyStr),
+				}, nil
 			},
-			nil,
-			constants.ErrInjected,
-			&s3.DeleteBucketPolicyOutput{},
+			func(ctx context.Context, params *s3.DeleteBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketPolicyOutput, error) {
+				return nil, constants.ErrInjected
+			},
 			prompt.PromptMock{
 				Msg: "y",
 				Err: nil,
@@ -141,12 +144,12 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by get bucket policy error",
 			[]string{},
 			false,
-			&s3.GetBucketPolicyOutput{
-				Policy: nil,
+			func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error) {
+				return nil, constants.ErrInjected
 			},
-			constants.ErrInjected,
-			nil,
-			&s3.DeleteBucketPolicyOutput{},
+			func(ctx context.Context, params *s3.DeleteBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketPolicyOutput, error) {
+				return nil, constants.ErrInjected
+			},
 			prompt.PromptMock{
 				Msg: "y",
 				Err: nil,
@@ -158,12 +161,10 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by user terminated process",
 			[]string{},
 			false,
-			&s3.GetBucketPolicyOutput{
-				Policy: aws.String(policyStr),
+			func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error) {
+				return nil, constants.ErrInjected
 			},
 			nil,
-			nil,
-			&s3.DeleteBucketPolicyOutput{},
 			prompt.PromptMock{
 				Msg: "n",
 				Err: constants.ErrInjected,
@@ -175,12 +176,10 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by prompt error",
 			[]string{},
 			false,
-			&s3.GetBucketPolicyOutput{
-				Policy: aws.String(policyStr),
+			func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error) {
+				return nil, constants.ErrInjected
 			},
 			nil,
-			nil,
-			&s3.DeleteBucketPolicyOutput{},
 			prompt.PromptMock{
 				Msg: "nasdfadf",
 				Err: constants.ErrInjected,
@@ -193,14 +192,14 @@ func TestExecuteRemoveCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(internalaws.MockS3Client)
-		mockS3.On("GetBucketPolicy", mock.AnythingOfType("*s3.GetBucketPolicyInput")).Return(tc.getBucketPolicyOutput, tc.getBucketPolicyErr)
-		mockS3.On("DeleteBucketPolicy", mock.AnythingOfType("*s3.DeleteBucketPolicyInput")).Return(tc.deleteBucketPolicyOutput, tc.deleteBucketPolicyErr)
+		mockS3 := new(internalawstypes.MockS3Client)
+		mockS3.GetBucketPolicyAPI = tc.getBucketPolicyFunc
+		mockS3.DeleteBucketPolicyAPI = tc.deleteBucketPolicyFunc
 
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3SvcKey{}, mockS3))
+		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.S3ClientKey{}, mockS3))
 		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.OptsKey{}, rootOpts))
 		RemoveCmd.SetContext(context.WithValue(RemoveCmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
 		RemoveCmd.SetArgs(tc.args)

@@ -1,8 +1,9 @@
 package logging
 
 import (
-	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"os"
+
+	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
 	"github.com/rs/zerolog"
 )

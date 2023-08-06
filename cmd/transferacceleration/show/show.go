@@ -3,11 +3,12 @@ package show
 import (
 	"fmt"
 
-	"github.com/bilalcaliskan/s3-manager/internal/utils"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	"github.com/bilalcaliskan/s3-manager/internal/utils"
+
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
 	"github.com/rs/zerolog"
@@ -19,7 +20,7 @@ func init() {
 }
 
 var (
-	svc                      s3iface.S3API
+	svc                      internalawstypes.S3ClientAPI
 	logger                   zerolog.Logger
 	transferAccelerationOpts *options.TransferAccelerationOptions
 	ShowCmd                  = &cobra.Command{
@@ -47,9 +48,9 @@ s3-manager transferacceleration show
 				return err
 			}
 
-			if *res.Status == "Enabled" {
+			if res.Status == "Enabled" {
 				transferAccelerationOpts.ActualState = "enabled"
-			} else if *res.Status == "Suspended" {
+			} else if res.Status == "Suspended" {
 				transferAccelerationOpts.ActualState = "disabled"
 			} else {
 				err := fmt.Errorf("unknown status '%s' returned from AWS SDK", transferAccelerationOpts.ActualState)
