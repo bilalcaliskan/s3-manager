@@ -57,11 +57,11 @@ var (
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			opts.SetAccessFlagsRequired(cmd)
 
-			svc, err := aws.CreateAwsService(opts)
+			client, err := aws.CreateClient(opts)
 			if err != nil {
 				logger.Error().
 					Str("error", err.Error()).
-					Msg("an error occurred while creating aws service")
+					Msg("an error occurred while creating s3 client")
 				return err
 			}
 
@@ -81,7 +81,7 @@ var (
 
 			cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logger))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, opts))
-			cmd.SetContext(context.WithValue(cmd.Context(), options.S3SvcKey{}, svc))
+			cmd.SetContext(context.WithValue(cmd.Context(), options.S3ClientKey{}, client))
 			cmd.SetContext(context.WithValue(cmd.Context(), options.ConfirmRunnerKey{}, prompt.GetConfirmRunner()))
 
 			return nil

@@ -12,7 +12,7 @@ var rootOptions = &RootOptions{}
 type (
 	OptsKey          struct{}
 	LoggerKey        struct{}
-	S3SvcKey         struct{}
+	S3ClientKey      struct{}
 	ConfirmRunnerKey struct{}
 )
 

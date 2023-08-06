@@ -6,12 +6,10 @@ import (
 	"context"
 	"testing"
 
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
-	"github.com/stretchr/testify/mock"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,37 +20,35 @@ func TestExecuteShowCmd(t *testing.T) {
 	ShowCmd.SetContext(ctx)
 
 	cases := []struct {
-		caseName              string
-		args                  []string
-		shouldPass            bool
-		getBucketPolicyErr    error
-		getBucketPolicyOutput *s3.GetBucketPolicyOutput
+		caseName            string
+		args                []string
+		shouldPass          bool
+		getBucketPolicyFunc func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error)
 	}{
 		{
 			"Too many arguments",
 			[]string{"enabled", "foo"},
 			false,
 			nil,
-			&s3.GetBucketPolicyOutput{
-				Policy: aws.String("{}"),
-			},
 		},
 		{
 			"Success",
 			[]string{},
 			true,
-			nil,
-			&s3.GetBucketPolicyOutput{
-				Policy: aws.String("{}"),
+			func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error) {
+				return &s3.GetBucketPolicyOutput{
+					Policy: aws.String("{}"),
+				}, nil
 			},
 		},
 		{
 			"Json failure",
 			[]string{},
 			false,
-			nil,
-			&s3.GetBucketPolicyOutput{
-				Policy: aws.String(""),
+			func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error) {
+				return &s3.GetBucketPolicyOutput{
+					Policy: aws.String(""),
+				}, nil
 			},
 		},
 	}
@@ -60,10 +56,10 @@ func TestExecuteShowCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(internalaws.MockS3Client)
-		mockS3.On("GetBucketPolicy", mock.AnythingOfType("*s3.GetBucketPolicyInput")).Return(tc.getBucketPolicyOutput, tc.getBucketPolicyErr)
+		mockS3 := new(internalawstypes.MockS3Client)
+		mockS3.GetBucketPolicyAPI = tc.getBucketPolicyFunc
 
-		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3SvcKey{}, mockS3))
+		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3ClientKey{}, mockS3))
 		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.OptsKey{}, rootOpts))
 		ShowCmd.SetArgs(tc.args)
 

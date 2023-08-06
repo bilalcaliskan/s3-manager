@@ -3,13 +3,14 @@ package clean
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
+
+	"github.com/bilalcaliskan/s3-manager/internal/cleaner"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/clean/options"
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	"github.com/bilalcaliskan/s3-manager/internal/cleaner"
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -25,7 +26,7 @@ var (
 	ValidSortByOpts = []string{"size", "lastModificationDate"}
 	ValidOrderOpts  = []string{"ascending", "descending"}
 	cleanOpts       *options.CleanOptions
-	svc             s3iface.S3API
+	svc             internalawstypes.S3ClientAPI
 	confirmRunner   prompt.PromptRunner
 	CleanCmd        = &cobra.Command{
 		Use:           "clean",

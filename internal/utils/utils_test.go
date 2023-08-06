@@ -8,41 +8,42 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/spf13/cobra"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-
 	"github.com/stretchr/testify/assert"
 )
 
-var mockObjects = []*s3.Object{{
+var mockObjects = []types.Object{{
 	ChecksumAlgorithm: nil,
 	ETag:              aws.String("233b4ce689c7086b7958eb31d8f8b811"),
 	Key:               aws.String("bar-service/233b4ce689c7086b7958eb31d8f8b811.template"),
 	LastModified:      aws.Time(time.Now()),
-	Owner: &s3.Owner{
+	Owner: &types.Owner{
 		DisplayName: aws.String("developer1"),
 		ID:          aws.String("3becc289963dfc26fe632e4d2fc78d2c7875fc4f030813629e28db2c1fbba4b7"),
 	},
-	Size:         aws.Int64(2129),
-	StorageClass: aws.String("STANDARD"),
+	Size:         2129,
+	StorageClass: types.ObjectStorageClass("STANDART"),
 }, {
 	ChecksumAlgorithm: nil,
 	ETag:              aws.String("233b4ce689c7086b7958eb31d8f8b811"),
 	Key:               aws.String("foo-service/233b4ce689c7086b7958eb31d8f8b811.template"),
 	LastModified:      aws.Time(time.Now()),
-	Owner: &s3.Owner{
+	Owner: &types.Owner{
 		DisplayName: aws.String("developer1"),
 		ID:          aws.String("3becc289963dfc26fe632e4d2fc78d2c7875fc4f030813629e28db2c1fbba4b7"),
 	},
-	Size:         aws.Int64(2129),
-	StorageClass: aws.String("STANDARD"),
+	Size:         2129,
+	StorageClass: types.ObjectStorageClass("STANDART"),
 }}
 
 func TestContains(t *testing.T) {
@@ -82,12 +83,22 @@ func TestPrepareConstants(t *testing.T) {
 	cmd.SetContext(ctx)
 
 	rootOpts := options.GetMockedRootOptions()
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(rootOpts.Region),
-		Credentials: credentials.NewStaticCredentials(rootOpts.AccessKey, rootOpts.SecretKey, ""),
-	})
-	assert.NotNil(t, sess)
+	appCreds := aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(rootOpts.AccessKey, rootOpts.SecretKey, ""))
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithRegion(rootOpts.Region),
+		config.WithCredentialsProvider(appCreds),
+	)
 	assert.Nil(t, err)
+
+	client := s3.NewFromConfig(cfg)
+	assert.NotNil(t, client)
+
+	//sess, err := session.NewSession(&aws.Config{
+	//	Region:      aws.String(rootOpts.Region),
+	//	Credentials: credentials.NewStaticCredentials(rootOpts.AccessKey, rootOpts.SecretKey, ""),
+	//})
+	//assert.NotNil(t, sess)
+	//assert.Nil(t, err)
 
 	cases := []struct {
 		caseName string
@@ -106,7 +117,7 @@ func TestPrepareConstants(t *testing.T) {
 	for _, tc := range cases {
 		cmd.SetContext(context.WithValue(cmd.Context(), options.LoggerKey{}, logging.GetLogger(rootOpts)))
 		cmd.SetContext(context.WithValue(cmd.Context(), options.OptsKey{}, rootOpts))
-		cmd.SetContext(context.WithValue(cmd.Context(), options.S3SvcKey{}, s3.New(sess)))
+		cmd.SetContext(context.WithValue(cmd.Context(), options.S3ClientKey{}, client))
 		cmd.SetContext(context.WithValue(cmd.Context(), options.ConfirmRunnerKey{}, tc.PromptRunner))
 
 		returnSvc, returnOpts, returnLogger, returnPrompt := PrepareConstants(cmd)
