@@ -4,9 +4,10 @@ package remove
 
 import (
 	"context"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
-	"testing"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 

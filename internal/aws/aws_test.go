@@ -4,12 +4,13 @@ package aws
 
 import (
 	"context"
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"io"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 

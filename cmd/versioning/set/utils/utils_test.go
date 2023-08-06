@@ -4,9 +4,10 @@ package utils
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"testing"
 
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 	"github.com/stretchr/testify/assert"

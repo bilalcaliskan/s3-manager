@@ -2,8 +2,9 @@ package cleaner
 
 import (
 	"fmt"
-	"github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"strings"
+
+	"github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 

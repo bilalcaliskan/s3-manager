@@ -4,11 +4,12 @@ package cleaner
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
-	"testing"
-	"time"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"

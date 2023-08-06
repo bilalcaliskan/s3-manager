@@ -2,6 +2,7 @@ package text
 
 import (
 	"fmt"
+
 	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	"github.com/bilalcaliskan/s3-manager/internal/aws"

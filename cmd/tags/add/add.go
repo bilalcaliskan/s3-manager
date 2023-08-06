@@ -3,8 +3,9 @@ package add
 import (
 	"errors"
 	"fmt"
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"strings"
+
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"

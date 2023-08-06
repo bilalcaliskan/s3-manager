@@ -2,9 +2,10 @@ package add
 
 import (
 	"fmt"
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"io"
 	"os"
+
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 

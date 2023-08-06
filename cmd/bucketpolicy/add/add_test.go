@@ -4,10 +4,11 @@ package add
 
 import (
 	"context"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
-	"testing"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 

@@ -4,15 +4,16 @@ package text
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
 	"io"
 	"os"
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"

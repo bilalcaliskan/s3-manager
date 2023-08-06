@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"regexp"
 	"strings"
 	"sync"
+
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 

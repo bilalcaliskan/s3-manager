@@ -2,6 +2,7 @@ package show
 
 import (
 	"fmt"
+
 	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
