@@ -23,7 +23,7 @@ func Contains(s []string, e string) bool {
 	return false
 }
 
-func GetKeysOnly(s []*types.Object) []string {
+func GetKeysOnly(s []types.Object) []string {
 	var res []string
 
 	for _, v := range s {

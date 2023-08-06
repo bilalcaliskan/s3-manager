@@ -4,18 +4,14 @@ package file
 
 import (
 	"context"
-	"io"
-	"strings"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"testing"
-
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
-
-	"github.com/stretchr/testify/mock"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,88 +22,75 @@ func TestExecuteFileCmd(t *testing.T) {
 	FileCmd.SetContext(ctx)
 
 	cases := []struct {
-		caseName          string
-		args              []string
-		shouldPass        bool
-		listObjectsErr    error
-		listObjectsOutput *s3.ListObjectsOutput
-		getObjectErr      error
-		getObjectOutput   *s3.GetObjectOutput
+		caseName        string
+		args            []string
+		shouldPass      bool
+		listObjectsFunc func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error)
 	}{
 		{
 			"Failure caused by too many arguments",
 			[]string{"text1", "text2.txt"},
 			false,
 			nil,
-			&s3.ListObjectsOutput{},
-			nil,
-			&s3.GetObjectOutput{},
 		},
 		{
 			"Success matching files",
 			[]string{"file3.txt"},
 			true,
-			nil,
-			&s3.ListObjectsOutput{
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("../../../testdata/file1.txt"),
-						StorageClass: aws.String("STANDARD"),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file1.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file2.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file3.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("../../../testdata/file2.txt"),
-						StorageClass: aws.String("STANDARD"),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("../../../testdata/file3.txt"),
-						StorageClass: aws.String("STANDARD"),
-					},
-				},
-			},
-			nil,
-			&s3.GetObjectOutput{
-				Body: getMockBody("BrYKzqcTqn"),
+				}, nil
 			},
 		},
 		{
 			"Failure caused by ListObjects error",
 			[]string{"file3.txt"},
 			false,
-			constants.ErrInjected,
-			&s3.ListObjectsOutput{},
-			nil,
-			&s3.GetObjectOutput{},
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return nil, constants.ErrInjected
+			},
 		},
 		{
 			"Success no matching files",
 			[]string{"file3.txt"},
 			true,
-			nil,
-			&s3.ListObjectsOutput{
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("../../../testdata/file11.txt"),
-						StorageClass: aws.String("STANDARD"),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("../../../testdata/file11.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("../../../testdata/file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("../../../testdata/file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("../../../testdata/file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("../../../testdata/file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-					},
-				},
-			},
-			nil,
-			&s3.GetObjectOutput{
-				Body: getMockBody("BrYKzqcTqn"),
+				}, nil
 			},
 		},
 	}
@@ -115,11 +98,10 @@ func TestExecuteFileCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(internalaws.MockS3Client)
-		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.listObjectsOutput, tc.listObjectsErr)
-		mockS3.On("GetObject", mock.AnythingOfType("*s3.GetObjectInput")).Return(tc.getObjectOutput, tc.getObjectErr)
+		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3.ListObjectsAPI = tc.listObjectsFunc
 
-		FileCmd.SetContext(context.WithValue(FileCmd.Context(), options.S3SvcKey{}, mockS3))
+		FileCmd.SetContext(context.WithValue(FileCmd.Context(), options.S3ClientKey{}, mockS3))
 		FileCmd.SetContext(context.WithValue(FileCmd.Context(), options.OptsKey{}, rootOpts))
 		FileCmd.SetArgs(tc.args)
 
@@ -133,14 +115,4 @@ func TestExecuteFileCmd(t *testing.T) {
 
 		searchOpts.SetZeroValues()
 	}
-}
-
-// getMockBody returns a mock implementation of io.ReadCloser
-func getMockBody(str string) io.ReadCloser {
-	// Create a ReadCloser implementation using strings.NewReader
-	// strings.NewReader returns a new Reader reading from the provided string
-	body := strings.NewReader(str)
-
-	// Return the ReadCloser implementation
-	return io.NopCloser(body)
 }

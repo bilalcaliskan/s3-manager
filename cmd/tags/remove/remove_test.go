@@ -4,7 +4,7 @@ package remove
 
 import (
 	"context"
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"testing"
@@ -13,7 +13,7 @@ import (
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,9 +28,9 @@ func TestExecuteRemoveCmd(t *testing.T) {
 		caseName                string
 		args                    []string
 		shouldPass              bool
-		getBucketTaggingFunc    func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error)
-		putBucketTaggingFunc    func(ctx context.Context, params *v2s3.PutBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketTaggingOutput, error)
-		deleteBucketTaggingFunc func(ctx context.Context, params *v2s3.DeleteBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketTaggingOutput, error)
+		getBucketTaggingFunc    func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error)
+		putBucketTaggingFunc    func(ctx context.Context, params *s3.PutBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.PutBucketTaggingOutput, error)
+		deleteBucketTaggingFunc func(ctx context.Context, params *s3.DeleteBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketTaggingOutput, error)
 		prompt.PromptRunner
 		dryRun      bool
 		autoApprove bool
@@ -50,8 +50,8 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Success while has single tag",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("foo"),
@@ -73,8 +73,8 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Success when dry-run enabled",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("foo"),
@@ -93,8 +93,8 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Success when auto-approve enabled",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("foo"),
@@ -113,8 +113,8 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Success while has multiple tags",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("foo"),
@@ -162,8 +162,8 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Warn while has no tags to remove",
 			[]string{"foo3=bar3,foo4=bar4"},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("foo"),
@@ -189,7 +189,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by GetBucketTags error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
 				return nil, constants.ErrInjected
 			},
 			internalawstypes.DefaultPutBucketTaggingFunc,
@@ -205,8 +205,8 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by DeleteAllBucketTags error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("foo"),
@@ -220,7 +220,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 				}, nil
 			},
 			internalawstypes.DefaultPutBucketTaggingFunc,
-			func(ctx context.Context, params *v2s3.DeleteBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketTaggingOutput, error) {
+			func(ctx context.Context, params *s3.DeleteBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketTaggingOutput, error) {
 				return nil, constants.ErrInjected
 			},
 			prompt.PromptMock{
@@ -234,8 +234,8 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by prompt error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("foo"),
@@ -261,8 +261,8 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by user terminated the process",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("foo"),
@@ -288,8 +288,8 @@ func TestExecuteRemoveCmd(t *testing.T) {
 			"Failure caused by DeleteAllBucketTags error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("foo"),
@@ -302,7 +302,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 					},
 				}, nil
 			},
-			func(ctx context.Context, params *v2s3.PutBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketTaggingOutput, error) {
+			func(ctx context.Context, params *s3.PutBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.PutBucketTaggingOutput, error) {
 				return nil, constants.ErrInjected
 			},
 			internalawstypes.DefaultDeleteBucketTaggingFunc,

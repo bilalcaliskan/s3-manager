@@ -3,11 +3,12 @@
 package cleaner
 
 import (
+	"context"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"testing"
 	"time"
-
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws"
-	"github.com/stretchr/testify/mock"
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
@@ -16,8 +17,7 @@ import (
 
 	"github.com/bilalcaliskan/s3-manager/internal/logging"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/bilalcaliskan/s3-manager/cmd/clean/options"
 	"github.com/stretchr/testify/assert"
 )
@@ -31,11 +31,10 @@ func TestStartCleaning(t *testing.T) {
 		expected error
 		*options.CleanOptions
 		prompt.PromptRunner
-		*s3.ListObjectsOutput
-		listObjectsErr  error
-		deleteObjectErr error
-		dryRun          bool
-		autoApprove     bool
+		listObjectsFunc  func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error)
+		deleteObjectFunc func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
+		dryRun           bool
+		autoApprove      bool
 	}{
 		{
 			"Success while sorting by lastModificationDate descending",
@@ -54,38 +53,41 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(10000000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         10000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         20000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         30000000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(20000000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(30000000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+				return &s3.DeleteObjectOutput{}, nil
+			},
 			false,
 			false,
 		},
@@ -106,38 +108,41 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(10000000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         10000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         20000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         30000000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(20000000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(30000000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+				return &s3.DeleteObjectOutput{}, nil
+			},
 			false,
 			false,
 		},
@@ -158,38 +163,41 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(10000000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         10000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         20000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         30000000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(20000000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(30000000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+				return &s3.DeleteObjectOutput{}, nil
+			},
 			false,
 			false,
 		},
@@ -209,45 +217,48 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(100000000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         100000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         200000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         300000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file4.json"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         300000000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(200000000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(300000000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file4.json"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(300000000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+				return &s3.DeleteObjectOutput{}, nil
+			},
 			false,
 			false,
 		},
@@ -267,45 +278,48 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(100000000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         100000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         200000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         300000000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("/"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         300000000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(200000000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(300000000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("/"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(300000000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+				return &s3.DeleteObjectOutput{}, nil
+			},
 			false,
 			false,
 		},
@@ -326,38 +340,41 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(1000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         1000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         2000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         3000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(2000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(3000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+				return &s3.DeleteObjectOutput{}, nil
+			},
 			false,
 			false,
 		},
@@ -378,38 +395,41 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(1000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         1000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         2000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         3000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(2000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(3000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+				return &s3.DeleteObjectOutput{}, nil
+			},
 			false,
 			false,
 		},
@@ -430,38 +450,41 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(1000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         1000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         2000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         3000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(2000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(3000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+				return &s3.DeleteObjectOutput{}, nil
+			},
 			false,
 			false,
 		},
@@ -481,38 +504,41 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(1000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         1000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         2000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         3000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(2000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(3000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
-			nil,
+			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+				return &s3.DeleteObjectOutput{}, nil
+			},
 			true,
 			false,
 		},
@@ -532,8 +558,9 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			nil,
-			constants.ErrInjected,
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return nil, constants.ErrInjected
+			},
 			nil,
 			false,
 			false,
@@ -554,37 +581,38 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(1000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         1000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         2000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         3000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(2000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(3000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
 			nil,
 			false,
 			false,
@@ -605,37 +633,38 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(1000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         1000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         2000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         3000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(2000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(3000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
 			nil,
 			false,
 			false,
@@ -656,37 +685,38 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "n",
 				Err: constants.ErrInjected,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(1000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         1000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         2000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         3000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(2000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(3000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
 			nil,
 			false,
 			false,
@@ -707,37 +737,38 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "asdfadsf",
 				Err: constants.ErrInjected,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(1000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         1000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         2000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         3000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(2000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(3000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
 			nil,
 			false,
 			false,
@@ -758,50 +789,54 @@ func TestStartCleaning(t *testing.T) {
 				Msg: "y",
 				Err: nil,
 			},
-			&s3.ListObjectsOutput{
-				Name:        aws.String(""),
-				Marker:      aws.String(""),
-				MaxKeys:     aws.Int64(1000),
-				Prefix:      aws.String(""),
-				IsTruncated: aws.Bool(false),
-				Contents: []*s3.Object{
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-						Key:          aws.String("file4.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(1000),
-						LastModified: aws.Time(time.Now()),
+			func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
+				return &s3.ListObjectsOutput{
+					Name:        aws.String(""),
+					Marker:      aws.String(""),
+					MaxKeys:     1000,
+					Prefix:      aws.String(""),
+					IsTruncated: false,
+					Contents: []types.Object{
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+							Key:          aws.String("file4.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         1000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+							Key:          aws.String("file5.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         2000,
+							LastModified: aws.Time(time.Now()),
+						},
+						{
+							ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+							Key:          aws.String("file6.txt"),
+							StorageClass: types.ObjectStorageClassStandard,
+							Size:         3000,
+							LastModified: aws.Time(time.Now()),
+						},
 					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-						Key:          aws.String("file5.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(2000),
-						LastModified: aws.Time(time.Now()),
-					},
-					{
-						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-						Key:          aws.String("file6.txt"),
-						StorageClass: aws.String("STANDARD"),
-						Size:         aws.Int64(3000),
-						LastModified: aws.Time(time.Now()),
-					},
-				},
+				}, nil
 			},
-			nil,
-			constants.ErrInjected,
+			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+				return nil, constants.ErrInjected
+			},
 			false,
 			true,
 		},
 	}
 
 	for _, tc := range cases {
+		t.Logf("starting case %s", tc.caseName)
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
-		mockS3 := new(internalaws.MockS3Client)
-		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.ListObjectsOutput, tc.listObjectsErr)
-		mockS3.On("DeleteObject", mock.AnythingOfType("*s3.DeleteObjectInput")).Return(&s3.DeleteObjectOutput{}, tc.deleteObjectErr)
+		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3.ListObjectsAPI = tc.listObjectsFunc
+		mockS3.DeleteObjectAPI = tc.deleteObjectFunc
 
 		err := StartCleaning(mockS3, tc.PromptRunner, tc.CleanOptions, logging.GetLogger(tc.CleanOptions.RootOptions))
 		assert.Equal(t, tc.expected, err)

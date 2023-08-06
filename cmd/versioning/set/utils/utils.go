@@ -3,7 +3,7 @@ package utils
 import (
 	"fmt"
 
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 )
@@ -18,7 +18,7 @@ const (
 	InfSettingVersioning = "setting versioning as %v"
 )
 
-func DecideActualState(versioning *v2s3.GetBucketVersioningOutput, opts *options.VersioningOptions) error {
+func DecideActualState(versioning *s3.GetBucketVersioningOutput, opts *options.VersioningOptions) error {
 	switch versioning.Status {
 	case "Enabled":
 		opts.ActualState = "enabled"

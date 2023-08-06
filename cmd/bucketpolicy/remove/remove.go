@@ -2,8 +2,7 @@ package remove
 
 import (
 	"fmt"
-
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
@@ -21,7 +20,7 @@ func init() {
 }
 
 var (
-	svc              *v2s3.Client
+	svc              internalawstypes.S3ClientAPI
 	logger           zerolog.Logger
 	confirmRunner    prompt.PromptRunner
 	bucketPolicyOpts *options.BucketPolicyOptions

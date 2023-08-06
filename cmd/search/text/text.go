@@ -2,8 +2,8 @@ package text
 
 import (
 	"fmt"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
 
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
@@ -23,7 +23,7 @@ func init() {
 var (
 	logger     zerolog.Logger
 	searchOpts *options.SearchOptions
-	svc        *v2s3.Client
+	svc        internalawstypes.S3ClientAPI
 	TextCmd    = &cobra.Command{
 		Use:           "text",
 		Short:         "searches the texts in files which has desired file name pattern and string pattern in it (supports regex)",

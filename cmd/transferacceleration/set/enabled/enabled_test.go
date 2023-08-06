@@ -4,7 +4,7 @@ package enabled
 
 import (
 	"context"
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"testing"
@@ -27,8 +27,8 @@ func TestExecuteEnabledCmd(t *testing.T) {
 		caseName                  string
 		args                      []string
 		shouldPass                bool
-		getBucketAccelerationFunc func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error)
-		putBucketAccelerationFunc func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error)
+		getBucketAccelerationFunc func(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error)
+		putBucketAccelerationFunc func(ctx context.Context, params *s3.PutBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.PutBucketAccelerateConfigurationOutput, error)
 		prompt.PromptRunner
 		dryRun      bool
 		autoApprove bool
@@ -37,8 +37,8 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Too many arguments",
 			[]string{"enabled", "foo"},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
-				return &v2s3.GetBucketAccelerateConfigurationOutput{
+			func(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &s3.GetBucketAccelerateConfigurationOutput{
 					Status: types.BucketAccelerateStatusEnabled,
 				}, nil
 			},
@@ -51,8 +51,8 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Success when disabled",
 			[]string{},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
-				return &v2s3.GetBucketAccelerateConfigurationOutput{
+			func(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &s3.GetBucketAccelerateConfigurationOutput{
 					Status: types.BucketAccelerateStatusSuspended,
 				}, nil
 			},
@@ -68,8 +68,8 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Success already enabled",
 			[]string{},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
-				return &v2s3.GetBucketAccelerateConfigurationOutput{
+			func(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &s3.GetBucketAccelerateConfigurationOutput{
 					Status: types.BucketAccelerateStatusEnabled,
 				}, nil
 			},
@@ -85,8 +85,8 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Success when auto-approve enabled",
 			[]string{},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
-				return &v2s3.GetBucketAccelerateConfigurationOutput{
+			func(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &s3.GetBucketAccelerateConfigurationOutput{
 					Status: types.BucketAccelerateStatusSuspended,
 				}, nil
 			},
@@ -99,8 +99,8 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Success when dry-run enabled",
 			[]string{},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
-				return &v2s3.GetBucketAccelerateConfigurationOutput{
+			func(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &s3.GetBucketAccelerateConfigurationOutput{
 					Status: types.BucketAccelerateStatusSuspended,
 				}, nil
 			},
@@ -113,8 +113,8 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Failure unknown status",
 			[]string{},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
-				return &v2s3.GetBucketAccelerateConfigurationOutput{
+			func(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &s3.GetBucketAccelerateConfigurationOutput{
 					Status: "Enableddd",
 				}, nil
 			},
@@ -130,8 +130,8 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Failure caused by prompt error",
 			[]string{},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
-				return &v2s3.GetBucketAccelerateConfigurationOutput{
+			func(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &s3.GetBucketAccelerateConfigurationOutput{
 					Status: types.BucketAccelerateStatusEnabled,
 				}, nil
 			},
@@ -147,8 +147,8 @@ func TestExecuteEnabledCmd(t *testing.T) {
 			"Failure caused by user terminated the process",
 			[]string{},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
-				return &v2s3.GetBucketAccelerateConfigurationOutput{
+			func(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error) {
+				return &s3.GetBucketAccelerateConfigurationOutput{
 					Status: types.BucketAccelerateStatusEnabled,
 				}, nil
 			},

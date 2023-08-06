@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	v2aws "github.com/aws/aws-sdk-go-v2/aws"
-	v2config "github.com/aws/aws-sdk-go-v2/config"
-	v2creds "github.com/aws/aws-sdk-go-v2/credentials"
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
@@ -19,12 +19,10 @@ import (
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/spf13/cobra"
 
-	"github.com/aws/aws-sdk-go/aws"
-
 	"github.com/stretchr/testify/assert"
 )
 
-var mockObjects = []*types.Object{{
+var mockObjects = []types.Object{{
 	ChecksumAlgorithm: nil,
 	ETag:              aws.String("233b4ce689c7086b7958eb31d8f8b811"),
 	Key:               aws.String("bar-service/233b4ce689c7086b7958eb31d8f8b811.template"),
@@ -85,14 +83,14 @@ func TestPrepareConstants(t *testing.T) {
 	cmd.SetContext(ctx)
 
 	rootOpts := options.GetMockedRootOptions()
-	appCreds := v2aws.NewCredentialsCache(v2creds.NewStaticCredentialsProvider(rootOpts.AccessKey, rootOpts.SecretKey, ""))
-	config, err := v2config.LoadDefaultConfig(context.Background(),
-		v2config.WithRegion(rootOpts.Region),
-		v2config.WithCredentialsProvider(appCreds),
+	appCreds := aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(rootOpts.AccessKey, rootOpts.SecretKey, ""))
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithRegion(rootOpts.Region),
+		config.WithCredentialsProvider(appCreds),
 	)
 	assert.Nil(t, err)
 
-	client := v2s3.NewFromConfig(config)
+	client := s3.NewFromConfig(cfg)
 	assert.NotNil(t, client)
 
 	//sess, err := session.NewSession(&aws.Config{

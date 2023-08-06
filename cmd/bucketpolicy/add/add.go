@@ -2,12 +2,11 @@ package add
 
 import (
 	"fmt"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"io"
 	"os"
 
 	"github.com/bilalcaliskan/s3-manager/internal/aws"
-
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
@@ -23,7 +22,7 @@ func init() {
 }
 
 var (
-	svc              *v2s3.Client
+	svc              internalawstypes.S3ClientAPI
 	logger           zerolog.Logger
 	confirmRunner    prompt.PromptRunner
 	bucketPolicyOpts *options.BucketPolicyOptions

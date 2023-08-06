@@ -4,7 +4,7 @@ package add
 
 import (
 	"context"
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"testing"
@@ -13,7 +13,7 @@ import (
 
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,8 +28,8 @@ func TestExecuteAddCmd(t *testing.T) {
 		caseName             string
 		args                 []string
 		shouldPass           bool
-		getBucketTaggingFunc func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error)
-		putBucketTaggingFunc func(ctx context.Context, params *v2s3.PutBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketTaggingOutput, error)
+		getBucketTaggingFunc func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error)
+		putBucketTaggingFunc func(ctx context.Context, params *s3.PutBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.PutBucketTaggingOutput, error)
 		prompt.PromptRunner
 		dryRun      bool
 		autoApprove bool
@@ -48,8 +48,8 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Success when auto-approve disabled",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("hasan1"),
@@ -74,8 +74,8 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Success when auto-approve enabled",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("hasan1"),
@@ -97,8 +97,8 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Success when dry run enabled",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("hasan1"),
@@ -120,8 +120,8 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Success",
 			[]string{"foo=bar,foo2=bar2"},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("hasan1"),
@@ -146,7 +146,7 @@ func TestExecuteAddCmd(t *testing.T) {
 			"Failure caused by GetBucketTags error",
 			[]string{"foo=bar,foo2=bar2"},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
 				return nil, constants.ErrInjected
 			},
 			internalawstypes.DefaultPutBucketTaggingFunc,
@@ -201,7 +201,7 @@ func TestExecuteAddCmd(t *testing.T) {
 			[]string{"foo=bar,foo2=bar2"},
 			false,
 			internalawstypes.DefaultGetBucketTaggingFunc,
-			func(ctx context.Context, params *v2s3.PutBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketTaggingOutput, error) {
+			func(ctx context.Context, params *s3.PutBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.PutBucketTaggingOutput, error) {
 				return nil, constants.ErrInjected
 			},
 			prompt.PromptMock{

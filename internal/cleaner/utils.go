@@ -20,7 +20,7 @@ import (
 //
 // Returns:
 // - None
-func sortObjects(slice []*types.Object, opts *options.CleanOptions) {
+func sortObjects(slice []types.Object, opts *options.CleanOptions) {
 	switch opts.SortBy {
 	case "lastModificationDate":
 		sort.Slice(slice, func(i, j int) bool {

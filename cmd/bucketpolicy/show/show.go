@@ -2,8 +2,7 @@ package show
 
 import (
 	"fmt"
-
-	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
@@ -21,7 +20,7 @@ func init() {
 }
 
 var (
-	svc              *s3v2.Client
+	svc              internalawstypes.S3ClientAPI
 	logger           zerolog.Logger
 	bucketPolicyOpts *options2.BucketPolicyOptions
 	ShowCmd          = &cobra.Command{

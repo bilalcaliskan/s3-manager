@@ -4,13 +4,13 @@ package show
 
 import (
 	"context"
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +26,7 @@ func TestExecuteShowCmd(t *testing.T) {
 		caseName             string
 		args                 []string
 		shouldPass           bool
-		getBucketTaggingFunc func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error)
+		getBucketTaggingFunc func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error)
 	}{
 		{
 			"Too many arguments",
@@ -44,8 +44,8 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Success with non-empty TagSet",
 			[]string{},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
-				return &v2s3.GetBucketTaggingOutput{
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
+				return &s3.GetBucketTaggingOutput{
 					TagSet: []types.Tag{
 						{
 							Key:   aws.String("foo"),
@@ -63,7 +63,7 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Failure",
 			[]string{},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
+			func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
 				return nil, constants.ErrInjected
 			},
 		},

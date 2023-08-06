@@ -4,7 +4,7 @@ package disabled
 
 import (
 	"context"
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"testing"
@@ -27,8 +27,8 @@ func TestExecuteDisabledCmd(t *testing.T) {
 		caseName                string
 		args                    []string
 		shouldPass              bool
-		getBucketVersioningFunc func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error)
-		putBucketVersioningFunc func(ctx context.Context, params *v2s3.PutBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketVersioningOutput, error)
+		getBucketVersioningFunc func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error)
+		putBucketVersioningFunc func(ctx context.Context, params *s3.PutBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.PutBucketVersioningOutput, error)
 		prompt.PromptRunner
 		dryRun      bool
 		autoApprove bool
@@ -37,8 +37,8 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Too many arguments",
 			[]string{"enabled", "foo"},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
-				return &v2s3.GetBucketVersioningOutput{
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
+				return &s3.GetBucketVersioningOutput{
 					Status: types.BucketVersioningStatusEnabled,
 				}, nil
 			},
@@ -51,8 +51,8 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Success when enabled",
 			[]string{},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
-				return &v2s3.GetBucketVersioningOutput{
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
+				return &s3.GetBucketVersioningOutput{
 					Status: types.BucketVersioningStatusEnabled,
 				}, nil
 			},
@@ -68,8 +68,8 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Success already disabled",
 			[]string{},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
-				return &v2s3.GetBucketVersioningOutput{
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
+				return &s3.GetBucketVersioningOutput{
 					Status: types.BucketVersioningStatusSuspended,
 				}, nil
 			},
@@ -85,8 +85,8 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Success when dry-run enabled",
 			[]string{},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
-				return &v2s3.GetBucketVersioningOutput{
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
+				return &s3.GetBucketVersioningOutput{
 					Status: types.BucketVersioningStatusEnabled,
 				}, nil
 			},
@@ -99,8 +99,8 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Success when auto-approve enabled",
 			[]string{},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
-				return &v2s3.GetBucketVersioningOutput{
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
+				return &s3.GetBucketVersioningOutput{
 					Status: types.BucketVersioningStatusEnabled,
 				}, nil
 			},
@@ -113,8 +113,8 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Failure unknown status",
 			[]string{},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
-				return &v2s3.GetBucketVersioningOutput{
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
+				return &s3.GetBucketVersioningOutput{
 					Status: "Enableddd",
 				}, nil
 			},
@@ -130,8 +130,8 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Failure caused by user terminated the process",
 			[]string{},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
-				return &v2s3.GetBucketVersioningOutput{
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
+				return &s3.GetBucketVersioningOutput{
 					Status: types.BucketVersioningStatusEnabled,
 				}, nil
 			},
@@ -147,8 +147,8 @@ func TestExecuteDisabledCmd(t *testing.T) {
 			"Failure caused by prompt error",
 			[]string{},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
-				return &v2s3.GetBucketVersioningOutput{
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
+				return &s3.GetBucketVersioningOutput{
 					Status: types.BucketVersioningStatusEnabled,
 				}, nil
 			},

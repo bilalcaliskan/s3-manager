@@ -3,90 +3,90 @@ package types
 import (
 	"context"
 
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type S3ClientAPI interface {
-	GetBucketPolicy(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error)
-	GetBucketAccelerateConfiguration(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error)
-	PutBucketAccelerateConfiguration(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error)
-	GetBucketVersioning(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error)
-	PutBucketVersioning(ctx context.Context, params *v2s3.PutBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketVersioningOutput, error)
-	GetBucketTagging(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error)
-	PutBucketTagging(ctx context.Context, params *v2s3.PutBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketTaggingOutput, error)
-	DeleteBucketTagging(ctx context.Context, params *v2s3.DeleteBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketTaggingOutput, error)
-	ListObjects(ctx context.Context, params *v2s3.ListObjectsInput, optFns ...func(*v2s3.Options)) (*v2s3.ListObjectsOutput, error)
-	GetObject(ctx context.Context, params *v2s3.GetObjectInput, optFns ...func(*v2s3.Options)) (*v2s3.GetObjectOutput, error)
-	DeleteObject(ctx context.Context, params *v2s3.DeleteObjectInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteObjectOutput, error)
-	PutBucketPolicy(ctx context.Context, params *v2s3.PutBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketPolicyOutput, error)
-	DeleteBucketPolicy(ctx context.Context, params *v2s3.DeleteBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketPolicyOutput, error)
+	GetBucketPolicy(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error)
+	GetBucketAccelerateConfiguration(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error)
+	PutBucketAccelerateConfiguration(ctx context.Context, params *s3.PutBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.PutBucketAccelerateConfigurationOutput, error)
+	GetBucketVersioning(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error)
+	PutBucketVersioning(ctx context.Context, params *s3.PutBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.PutBucketVersioningOutput, error)
+	GetBucketTagging(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error)
+	PutBucketTagging(ctx context.Context, params *s3.PutBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.PutBucketTaggingOutput, error)
+	DeleteBucketTagging(ctx context.Context, params *s3.DeleteBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketTaggingOutput, error)
+	ListObjects(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error)
+	GetObject(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error)
+	DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
+	PutBucketPolicy(ctx context.Context, params *s3.PutBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.PutBucketPolicyOutput, error)
+	DeleteBucketPolicy(ctx context.Context, params *s3.DeleteBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketPolicyOutput, error)
 }
 
 type MockS3v2Client struct {
-	GetBucketPolicyAPI                  func(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error)
-	GetBucketAccelerateConfigurationAPI func(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error)
-	PutBucketAccelerateConfigurationAPI func(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error)
-	GetBucketVersioningAPI              func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error)
-	PutBucketVersioningAPI              func(ctx context.Context, params *v2s3.PutBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketVersioningOutput, error)
-	GetBucketTaggingAPI                 func(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error)
-	PutBucketTaggingAPI                 func(ctx context.Context, params *v2s3.PutBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketTaggingOutput, error)
-	DeleteBucketTaggingAPI              func(ctx context.Context, params *v2s3.DeleteBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketTaggingOutput, error)
-	ListObjectsAPI                      func(ctx context.Context, params *v2s3.ListObjectsInput, optFns ...func(*v2s3.Options)) (*v2s3.ListObjectsOutput, error)
-	GetObjectAPI                        func(ctx context.Context, params *v2s3.GetObjectInput, optFns ...func(*v2s3.Options)) (*v2s3.GetObjectOutput, error)
-	DeleteObjectAPI                     func(ctx context.Context, params *v2s3.DeleteObjectInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteObjectOutput, error)
-	PutBucketPolicyAPI                  func(ctx context.Context, params *v2s3.PutBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketPolicyOutput, error)
-	DeleteBucketPolicyAPI               func(ctx context.Context, params *v2s3.DeleteBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketPolicyOutput, error)
+	GetBucketPolicyAPI                  func(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error)
+	GetBucketAccelerateConfigurationAPI func(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error)
+	PutBucketAccelerateConfigurationAPI func(ctx context.Context, params *s3.PutBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.PutBucketAccelerateConfigurationOutput, error)
+	GetBucketVersioningAPI              func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error)
+	PutBucketVersioningAPI              func(ctx context.Context, params *s3.PutBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.PutBucketVersioningOutput, error)
+	GetBucketTaggingAPI                 func(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error)
+	PutBucketTaggingAPI                 func(ctx context.Context, params *s3.PutBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.PutBucketTaggingOutput, error)
+	DeleteBucketTaggingAPI              func(ctx context.Context, params *s3.DeleteBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketTaggingOutput, error)
+	ListObjectsAPI                      func(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error)
+	GetObjectAPI                        func(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error)
+	DeleteObjectAPI                     func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
+	PutBucketPolicyAPI                  func(ctx context.Context, params *s3.PutBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.PutBucketPolicyOutput, error)
+	DeleteBucketPolicyAPI               func(ctx context.Context, params *s3.DeleteBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketPolicyOutput, error)
 }
 
-func (m *MockS3v2Client) PutBucketPolicy(ctx context.Context, params *v2s3.PutBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketPolicyOutput, error) {
+func (m *MockS3v2Client) PutBucketPolicy(ctx context.Context, params *s3.PutBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.PutBucketPolicyOutput, error) {
 	return m.PutBucketPolicyAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) DeleteBucketPolicy(ctx context.Context, params *v2s3.DeleteBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketPolicyOutput, error) {
+func (m *MockS3v2Client) DeleteBucketPolicy(ctx context.Context, params *s3.DeleteBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketPolicyOutput, error) {
 	return m.DeleteBucketPolicyAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) DeleteObject(ctx context.Context, params *v2s3.DeleteObjectInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteObjectOutput, error) {
+func (m *MockS3v2Client) DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
 	return m.DeleteObjectAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) GetObject(ctx context.Context, params *v2s3.GetObjectInput, optFns ...func(*v2s3.Options)) (*v2s3.GetObjectOutput, error) {
+func (m *MockS3v2Client) GetObject(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error) {
 	return m.GetObjectAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) ListObjects(ctx context.Context, params *v2s3.ListObjectsInput, optFns ...func(*v2s3.Options)) (*v2s3.ListObjectsOutput, error) {
+func (m *MockS3v2Client) ListObjects(ctx context.Context, params *s3.ListObjectsInput, optFns ...func(*s3.Options)) (*s3.ListObjectsOutput, error) {
 	return m.ListObjectsAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) GetBucketPolicy(ctx context.Context, params *v2s3.GetBucketPolicyInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketPolicyOutput, error) {
+func (m *MockS3v2Client) GetBucketPolicy(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error) {
 	return m.GetBucketPolicyAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) GetBucketAccelerateConfiguration(ctx context.Context, params *v2s3.GetBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketAccelerateConfigurationOutput, error) {
+func (m *MockS3v2Client) GetBucketAccelerateConfiguration(ctx context.Context, params *s3.GetBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAccelerateConfigurationOutput, error) {
 	return m.GetBucketAccelerateConfigurationAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) PutBucketAccelerateConfiguration(ctx context.Context, params *v2s3.PutBucketAccelerateConfigurationInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketAccelerateConfigurationOutput, error) {
+func (m *MockS3v2Client) PutBucketAccelerateConfiguration(ctx context.Context, params *s3.PutBucketAccelerateConfigurationInput, optFns ...func(*s3.Options)) (*s3.PutBucketAccelerateConfigurationOutput, error) {
 	return m.PutBucketAccelerateConfigurationAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) GetBucketVersioning(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
+func (m *MockS3v2Client) GetBucketVersioning(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
 	return m.GetBucketVersioningAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) PutBucketVersioning(ctx context.Context, params *v2s3.PutBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketVersioningOutput, error) {
+func (m *MockS3v2Client) PutBucketVersioning(ctx context.Context, params *s3.PutBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.PutBucketVersioningOutput, error) {
 	return m.PutBucketVersioningAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) GetBucketTagging(ctx context.Context, params *v2s3.GetBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketTaggingOutput, error) {
+func (m *MockS3v2Client) GetBucketTagging(ctx context.Context, params *s3.GetBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketTaggingOutput, error) {
 	return m.GetBucketTaggingAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) PutBucketTagging(ctx context.Context, params *v2s3.PutBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.PutBucketTaggingOutput, error) {
+func (m *MockS3v2Client) PutBucketTagging(ctx context.Context, params *s3.PutBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.PutBucketTaggingOutput, error) {
 	return m.PutBucketTaggingAPI(ctx, params, optFns...)
 }
 
-func (m *MockS3v2Client) DeleteBucketTagging(ctx context.Context, params *v2s3.DeleteBucketTaggingInput, optFns ...func(*v2s3.Options)) (*v2s3.DeleteBucketTaggingOutput, error) {
+func (m *MockS3v2Client) DeleteBucketTagging(ctx context.Context, params *s3.DeleteBucketTaggingInput, optFns ...func(*s3.Options)) (*s3.DeleteBucketTaggingOutput, error) {
 	return m.DeleteBucketTaggingAPI(ctx, params, optFns...)
 }
 

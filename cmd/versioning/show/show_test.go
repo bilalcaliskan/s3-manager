@@ -4,7 +4,7 @@ package show
 
 import (
 	"context"
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 	"github.com/bilalcaliskan/s3-manager/internal/constants"
@@ -24,7 +24,7 @@ func TestExecuteShowCmd(t *testing.T) {
 		caseName                string
 		args                    []string
 		shouldPass              bool
-		getBucketVersioningFunc func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error)
+		getBucketVersioningFunc func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error)
 	}{
 		{
 			"Too many arguments",
@@ -36,8 +36,8 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Success while already enabled",
 			[]string{},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
-				return &v2s3.GetBucketVersioningOutput{
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
+				return &s3.GetBucketVersioningOutput{
 					Status: types.BucketVersioningStatusEnabled,
 				}, nil
 			},
@@ -46,8 +46,8 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Success while disabled",
 			[]string{},
 			true,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
-				return &v2s3.GetBucketVersioningOutput{
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
+				return &s3.GetBucketVersioningOutput{
 					Status: types.BucketVersioningStatusSuspended,
 				}, nil
 			},
@@ -56,7 +56,7 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Failure caused by GetBucketVersioning error",
 			[]string{},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
 				return nil, constants.ErrInjected
 			},
 		},
@@ -64,8 +64,8 @@ func TestExecuteShowCmd(t *testing.T) {
 			"Failure caused by unknown status returned by external call",
 			[]string{},
 			false,
-			func(ctx context.Context, params *v2s3.GetBucketVersioningInput, optFns ...func(*v2s3.Options)) (*v2s3.GetBucketVersioningOutput, error) {
-				return &v2s3.GetBucketVersioningOutput{
+			func(ctx context.Context, params *s3.GetBucketVersioningInput, optFns ...func(*s3.Options)) (*s3.GetBucketVersioningOutput, error) {
+				return &s3.GetBucketVersioningOutput{
 					Status: "Enableddd",
 				}, nil
 			},

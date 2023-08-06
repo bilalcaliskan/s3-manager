@@ -4,10 +4,10 @@ package utils
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,25 +19,25 @@ func TestDecideActualState(t *testing.T) {
 		expected error
 	}{
 		{
-			name: "Success enabled",
-			res: &s3.GetBucketVersioningOutput{
-				Status: aws.String("Enabled"),
+			"Success enabled",
+			&s3.GetBucketVersioningOutput{
+				Status: types.BucketVersioningStatusEnabled,
 			},
-			expected: nil,
+			nil,
 		},
 		{
-			name: "Success suspended",
-			res: &s3.GetBucketVersioningOutput{
-				Status: aws.String("Suspended"),
+			"Success suspended",
+			&s3.GetBucketVersioningOutput{
+				Status: types.BucketVersioningStatusSuspended,
 			},
-			expected: nil,
+			nil,
 		},
 		{
-			name: "Failure caused by unknown state",
-			res: &s3.GetBucketVersioningOutput{
-				Status: aws.String("Suspendeddd"),
+			"Failure caused by unknown state",
+			&s3.GetBucketVersioningOutput{
+				Status: "lasdkfjlkasdfjsldf",
 			},
-			expected: fmt.Errorf(ErrUnknownStatus, "Suspendeddd"),
+			fmt.Errorf(ErrUnknownStatus, "lasdkfjlkasdfjsldf"),
 		},
 	}
 

@@ -2,10 +2,9 @@ package clean
 
 import (
 	"fmt"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	"github.com/bilalcaliskan/s3-manager/internal/cleaner"
-
-	v2s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
@@ -26,7 +25,7 @@ var (
 	ValidSortByOpts = []string{"size", "lastModificationDate"}
 	ValidOrderOpts  = []string{"ascending", "descending"}
 	cleanOpts       *options.CleanOptions
-	svc             *v2s3.Client
+	svc             internalawstypes.S3ClientAPI
 	confirmRunner   prompt.PromptRunner
 	CleanCmd        = &cobra.Command{
 		Use:           "clean",
