@@ -81,7 +81,7 @@ func TestExecuteCleanCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case '%s'", tc.caseName)
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.ListObjectsAPI = tc.listObjectsFunc
 		mockS3.DeleteObjectAPI = tc.deleteObjectFunc
 

@@ -220,7 +220,7 @@ func TestExecuteAddCmd(t *testing.T) {
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.GetBucketTaggingAPI = tc.getBucketTaggingFunc
 		mockS3.PutBucketTaggingAPI = tc.putBucketTaggingFunc
 

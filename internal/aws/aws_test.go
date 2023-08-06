@@ -113,7 +113,7 @@ var dummyBucketPolicyStr = `
 //	for _, tc := range cases {
 //		t.Logf("starting case %s", tc.caseName)
 //
-//		mockS3 := new(MockS3v2Client)
+//		mockS3 := new(MockS3Client)
 //		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.listObjectsOutput, tc.listObjectsErr)
 //
 //		_, err := GetAllFiles(mockS3, rootOpts, "")
@@ -209,7 +209,7 @@ func TestDeleteFiles(t *testing.T) {
 
 		rootOpts.DryRun = tc.dryRun
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.DeleteObjectAPI = tc.deleteFunc
 
 		assert.Equal(t, tc.expected, DeleteFiles(mockS3, "thisisdemobucket", tc.objects, tc.dryRun, logging.GetLogger(rootOpts)))
@@ -443,7 +443,7 @@ func TestSearchString(t *testing.T) {
 
 		tc.searchOpts.RootOptions = rootOpts
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.ListObjectsAPI = tc.listObjectsFunc
 		mockS3.GetObjectAPI = tc.getObjectFunc
 
@@ -686,7 +686,7 @@ func TestSetBucketVersioning(t *testing.T) {
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.GetBucketVersioningAPI = tc.getBucketVersioningFunc
 		mockS3.PutBucketVersioningAPI = tc.putBucketVersioningFunc
 
@@ -737,7 +737,7 @@ func TestGetBucketVersioning(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.GetBucketVersioningAPI = tc.getBucketVersioningFunc
 
 		_, err := GetBucketVersioning(mockS3, rootOpts)
@@ -799,7 +799,7 @@ func TestGetBucketTags(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.GetBucketTaggingAPI = tc.getBucketTaggingFunc
 
 		_, err := GetBucketTags(mockS3, tc.TagOptions)
@@ -944,7 +944,7 @@ func TestSetBucketTags(t *testing.T) {
 		tc.DryRun = tc.enableDryRun
 		tc.AutoApprove = tc.enableAutoApprove
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.PutBucketTaggingAPI = tc.putBucketTaggingFunc
 
 		for k, v := range tc.tags {
@@ -1062,7 +1062,7 @@ func TestDeleteAllBucketTags(t *testing.T) {
 		tc.DryRun = tc.enableDryRun
 		tc.AutoApprove = tc.enableAutoApprove
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.DeleteBucketTaggingAPI = tc.deleteBucketTaggingFunc
 
 		_, err := DeleteAllBucketTags(mockS3, tc.TagOptions, tc.PromptRunner, logger)
@@ -1116,7 +1116,7 @@ func TestGetBucketPolicy(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockSvc := new(internalawstypes.MockS3v2Client)
+		mockSvc := new(internalawstypes.MockS3Client)
 		mockSvc.GetBucketPolicyAPI = tc.getBucketPolicyFunc
 
 		_, err := GetBucketPolicy(mockSvc, tc.BucketPolicyOptions)
@@ -1219,7 +1219,7 @@ func TestSetBucketPolicy(t *testing.T) {
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.PutBucketPolicyAPI = tc.putBucketPolicyFunc
 
 		_, err := SetBucketPolicy(mockS3, tc.BucketPolicyOptions, tc.PromptRunner, logger)
@@ -1274,7 +1274,7 @@ func TestGetBucketPolicyString(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.GetBucketPolicyAPI = tc.getBucketPolicyFunc
 
 		_, err := GetBucketPolicyString(mockS3, tc.BucketPolicyOptions)
@@ -1384,7 +1384,7 @@ func TestDeleteBucketPolicy(t *testing.T) {
 		tc.DryRun = tc.enableDryRun
 		tc.AutoApprove = tc.enableAutoApprove
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.DeleteBucketPolicyAPI = tc.deleteBucketPolicyFunc
 
 		_, err := DeleteBucketPolicy(mockS3, tc.BucketPolicyOptions, tc.PromptRunner, logger)
@@ -1438,7 +1438,7 @@ func TestGetTransferAcceleration(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.GetBucketAccelerateConfigurationAPI = tc.getBucketAccelerationFunc
 
 		_, err := GetTransferAcceleration(mockS3, tc.TransferAccelerationOptions)
@@ -1670,7 +1670,7 @@ func TestSetTransferAcceleration(t *testing.T) {
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.GetBucketAccelerateConfigurationAPI = tc.getBucketAccelerationFunc
 		mockS3.PutBucketAccelerateConfigurationAPI = tc.putBucketAccelerationFunc
 

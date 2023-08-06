@@ -835,7 +835,7 @@ func TestStartCleaning(t *testing.T) {
 		tc.DryRun = tc.dryRun
 		tc.AutoApprove = tc.autoApprove
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.ListObjectsAPI = tc.listObjectsFunc
 		mockS3.DeleteObjectAPI = tc.deleteObjectFunc
 

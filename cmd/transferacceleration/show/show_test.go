@@ -81,7 +81,7 @@ func TestExecuteShowCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(internalaws.MockS3v2Client)
+		mockS3 := new(internalaws.MockS3Client)
 		mockS3.GetBucketAccelerateConfigurationAPI = tc.getBucketAccelerationFunc
 
 		ShowCmd.SetContext(context.WithValue(ShowCmd.Context(), options.S3ClientKey{}, mockS3))

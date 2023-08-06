@@ -99,7 +99,7 @@ func TestExecuteFileCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.ListObjectsAPI = tc.listObjectsFunc
 
 		FileCmd.SetContext(context.WithValue(FileCmd.Context(), options.S3ClientKey{}, mockS3))

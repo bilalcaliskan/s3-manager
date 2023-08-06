@@ -185,7 +185,7 @@ func TestExecuteEnabledCmd(t *testing.T) {
 		rootOpts.DryRun = tc.dryRun
 		rootOpts.AutoApprove = tc.autoApprove
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.GetBucketVersioningAPI = tc.getBucketVersioningFunc
 		mockS3.PutBucketVersioningAPI = tc.putBucketVersioningFunc
 

@@ -319,7 +319,7 @@ func TestExecuteRemoveCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Logf("starting case %s", tc.caseName)
 
-		mockS3 := new(internalawstypes.MockS3v2Client)
+		mockS3 := new(internalawstypes.MockS3Client)
 		mockS3.GetBucketTaggingAPI = tc.getBucketTaggingFunc
 		mockS3.PutBucketTaggingAPI = tc.putBucketTaggingFunc
 		mockS3.DeleteBucketTaggingAPI = tc.deleteBucketTaggingFunc
