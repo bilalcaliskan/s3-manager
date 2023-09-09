@@ -92,6 +92,7 @@ This project requires below tools while developing:
 - [golangci-lint](https://golangci-lint.run/usage/install/) - required by [pre-commit](https://pre-commit.com/)
 - [gocyclo](https://github.com/fzipp/gocyclo) - required by [pre-commit](https://pre-commit.com/)
 
+
 After you installed [pre-commit](https://pre-commit.com/) and the rest, simply run below command to prepare your
 development environment:
 ```shell
