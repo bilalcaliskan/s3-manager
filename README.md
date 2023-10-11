@@ -8,6 +8,7 @@
 ![Coverage](https://sonarcloud.io/api/project_badges/measure?project=bilalcaliskan_s3-manager&metric=coverage)
 ![Release](https://img.shields.io/github/release/bilalcaliskan/s3-manager.svg)
 ![Go version](https://img.shields.io/github/go-mod/go-version/bilalcaliskan/s3-manager)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)
 
 S3 Manager is robust, powerful and an all-in-one tool that provides a number of operations to enhance your experience
