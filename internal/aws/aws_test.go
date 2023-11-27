@@ -112,6 +112,37 @@ func TestDeleteFiles(t *testing.T) {
 			},
 		},
 		{
+			"Success with non-empty file list and dry-run enabled",
+			nil,
+			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
+				return &s3.DeleteObjectOutput{}, nil
+			},
+			true,
+			[]types.Object{
+				{
+					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
+					Key:          aws.String("../../testdata/file4.txt"),
+					StorageClass: types.ObjectStorageClass("STANDART"),
+					Size:         aws.Int64(500),
+					LastModified: aws.Time(time.Now().Add(-5 * time.Hour)),
+				},
+				{
+					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
+					Key:          aws.String("../../testdata/file5.txt"),
+					StorageClass: types.ObjectStorageClass("STANDART"),
+					Size:         aws.Int64(1000),
+					LastModified: aws.Time(time.Now().Add(-2 * time.Hour)),
+				},
+				{
+					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
+					Key:          aws.String("../../testdata/file6.txt"),
+					StorageClass: types.ObjectStorageClass("STANDART"),
+					Size:         aws.Int64(1500),
+					LastModified: aws.Time(time.Now().Add(-10 * time.Hour)),
+				},
+			},
+		},
+		{
 			"Failure caused by delete object err",
 			constants.ErrInjected,
 			func(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error) {
@@ -169,6 +200,13 @@ func getMockBody(path string) io.ReadCloser {
 
 	// Return the ReadCloser implementation
 	return io.NopCloser(body)
+}
+
+func TestCreateClient(t *testing.T) {
+	rootOpts := options.GetMockedRootOptions()
+	cl, err := CreateClient(rootOpts)
+	assert.Nil(t, err)
+	assert.NotNil(t, cl)
 }
 
 // TestSearchString is a test function that tests the behavior of the SearchString function.

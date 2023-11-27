@@ -29,13 +29,16 @@ import (
 	"github.com/bilalcaliskan/s3-manager/internal/utils"
 )
 
-func CreateClient(opts *options.RootOptions) (*s3.Client, error) {
+func createConfig(opts *options.RootOptions) (cfg aws.Config, err error) {
 	appCreds := aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(opts.AccessKey, opts.SecretKey, ""))
-	cfg, err := config.LoadDefaultConfig(context.Background(),
+	return config.LoadDefaultConfig(context.Background(),
 		config.WithRegion(opts.Region),
 		config.WithCredentialsProvider(appCreds),
 	)
+}
 
+func CreateClient(opts *options.RootOptions) (*s3.Client, error) {
+	cfg, err := createConfig(opts)
 	if err != nil {
 		return nil, err
 	}
