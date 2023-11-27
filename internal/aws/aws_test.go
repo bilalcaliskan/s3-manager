@@ -37,6 +37,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// dummyBucketPolicyStr is a dummy bucket policy string used in tests.
 var dummyBucketPolicyStr = `
 {
   "Statement": [
@@ -59,67 +60,6 @@ var dummyBucketPolicyStr = `
   "Version": "2012-10-17"
 }
 `
-
-// TestGetAllFiles is a test function that tests the behavior of the GetAllFiles function.
-//
-// It creates test cases with different scenarios and verifies the expected results.
-// The test cases include both success and failure cases.
-// For the success case, it sets up a mocked S3 client and defines a list of objects to be returned.
-// It expects GetAllFiles to return a nil error.
-// For the failure case, it injects an error in the ListObjects operation of the mocked S3 client.
-// It expects GetAllFiles to return a specific error.
-//
-// The test function iterates through all the test cases and performs the necessary assertions.
-//func TestGetAllFiles(t *testing.T) {
-//	rootOpts := options.GetMockedRootOptions()
-//	cases := []struct {
-//		caseName          string
-//		expected          error
-//		listObjectsErr    error
-//		listObjectsOutput *s3.ListObjectsOutput
-//	}{
-//		{
-//			"Success with non-empty file list",
-//			nil,
-//			nil,
-//			&s3.ListObjectsOutput{
-//				Contents: []*s3.Object{
-//					{
-//						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
-//						Key:          aws.String("../../testdata/file4.txt"),
-//						StorageClass: aws.String("STANDARD"),
-//					},
-//					{
-//						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
-//						Key:          aws.String("../../testdata/file5.txt"),
-//						StorageClass: aws.String("STANDARD"),
-//					},
-//					{
-//						ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
-//						Key:          aws.String("../../testdata/file6.txt"),
-//						StorageClass: aws.String("STANDARD"),
-//					},
-//				},
-//			},
-//		},
-//		{
-//			"Failure caused by List objects error",
-//			constants.ErrInjected,
-//			constants.ErrInjected,
-//			nil,
-//		},
-//	}
-//
-//	for _, tc := range cases {
-//		t.Logf("starting case %s", tc.caseName)
-//
-//		mockS3 := new(MockS3Client)
-//		mockS3.On("ListObjects", mock.AnythingOfType("*s3.ListObjectsInput")).Return(tc.listObjectsOutput, tc.listObjectsErr)
-//
-//		_, err := GetAllFiles(mockS3, rootOpts, "")
-//		assert.Equal(t, tc.expected, err)
-//	}
-//}
 
 // TestDeleteFiles is a test function that tests the behavior of the DeleteFiles function.
 //
@@ -152,21 +92,21 @@ func TestDeleteFiles(t *testing.T) {
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
 					Key:          aws.String("../../testdata/file4.txt"),
 					StorageClass: types.ObjectStorageClass("STANDART"),
-					Size:         500,
+					Size:         aws.Int64(500),
 					LastModified: aws.Time(time.Now().Add(-5 * time.Hour)),
 				},
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
 					Key:          aws.String("../../testdata/file5.txt"),
 					StorageClass: types.ObjectStorageClass("STANDART"),
-					Size:         1000,
+					Size:         aws.Int64(1000),
 					LastModified: aws.Time(time.Now().Add(-2 * time.Hour)),
 				},
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
 					Key:          aws.String("../../testdata/file6.txt"),
 					StorageClass: types.ObjectStorageClass("STANDART"),
-					Size:         1500,
+					Size:         aws.Int64(1500),
 					LastModified: aws.Time(time.Now().Add(-10 * time.Hour)),
 				},
 			},
@@ -183,21 +123,21 @@ func TestDeleteFiles(t *testing.T) {
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5449d"),
 					Key:          aws.String("../../testdata/file4.txt"),
 					StorageClass: types.ObjectStorageClass("STANDART"),
-					Size:         500,
+					Size:         aws.Int64(500),
 					LastModified: aws.Time(time.Now().Add(-5 * time.Hour)),
 				},
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e54122"),
 					Key:          aws.String("../../testdata/file5.txt"),
 					StorageClass: types.ObjectStorageClass("STANDART"),
-					Size:         1000,
+					Size:         aws.Int64(1000),
 					LastModified: aws.Time(time.Now().Add(-2 * time.Hour)),
 				},
 				{
 					ETag:         aws.String("03c0fe42b7efa3470fc99037a8e5443d"),
 					Key:          aws.String("../../testdata/file6.txt"),
 					StorageClass: types.ObjectStorageClass("STANDART"),
-					Size:         1500,
+					Size:         aws.Int64(1500),
 					LastModified: aws.Time(time.Now().Add(-10 * time.Hour)),
 				},
 			},
@@ -215,57 +155,6 @@ func TestDeleteFiles(t *testing.T) {
 		assert.Equal(t, tc.expected, DeleteFiles(mockS3, "thisisdemobucket", tc.objects, tc.dryRun, logging.GetLogger(rootOpts)))
 	}
 }
-
-// TestCreateAwsService is a test function that tests the behavior of the CreateAwsService function.
-//
-// It creates test cases with different scenarios and verifies the expected results.
-// The test cases include both success and failure cases.
-// For the success case, it sets up a RootOptions object with all the required fields.
-// It expects CreateAwsService to return a non-nil AWS service client and a nil error.
-// For the failure case, it sets up a RootOptions object with a missing required field.
-// It expects CreateAwsService to return a nil AWS service client and a non-nil error.
-//
-// The test function iterates through all the test cases and performs the necessary assertions.
-//func TestCreateAwsService(t *testing.T) {
-//	cases := []struct {
-//		caseName   string
-//		opts       *options.RootOptions
-//		shouldPass bool
-//	}{
-//		{
-//			"Success",
-//			&options.RootOptions{
-//				AccessKey:  "thisisaccesskey",
-//				SecretKey:  "thisissecretkey",
-//				BucketName: "thisisbucketname",
-//				Region:     "thisisregion",
-//			},
-//			true,
-//		},
-//		{
-//			"Failure caused by missing required field",
-//			&options.RootOptions{
-//				AccessKey:  "thisisaccesskey",
-//				SecretKey:  "thisissecretkey",
-//				BucketName: "thisisbucketname",
-//				Region:     "",
-//			},
-//			false,
-//		},
-//	}
-//
-//	for _, tc := range cases {
-//		t.Logf("starting case %s", tc.caseName)
-//
-//		_, err := CreateAwsService(tc.opts)
-//
-//		if tc.shouldPass {
-//			assert.Nil(t, err)
-//		} else {
-//			assert.NotNil(t, err)
-//		}
-//	}
-//}
 
 // getMockBody returns a mock implementation of io.ReadCloser
 func getMockBody(path string) io.ReadCloser {
@@ -337,7 +226,7 @@ func TestSearchString(t *testing.T) {
 				return &s3.GetObjectOutput{
 					AcceptRanges:  aws.String("bytes"),
 					Body:          body,
-					ContentLength: 1000,
+					ContentLength: aws.Int64(1000),
 					ContentType:   aws.String("text/plain"),
 					ETag:          aws.String("d73a503d212d9279e6b2ed8ac6bb81f3"),
 				}, nil
@@ -379,7 +268,7 @@ func TestSearchString(t *testing.T) {
 				return &s3.GetObjectOutput{
 					AcceptRanges:  aws.String("bytes"),
 					Body:          body,
-					ContentLength: 1000,
+					ContentLength: aws.Int64(1000),
 					ContentType:   aws.String("text/plain"),
 					ETag:          aws.String("d73a503d212d9279e6b2ed8ac6bb81f3"),
 				}, nil

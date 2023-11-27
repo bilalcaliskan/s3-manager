@@ -37,11 +37,11 @@ func sortObjects(slice []types.Object, opts *options.CleanOptions) {
 		sort.Slice(slice, func(i, j int) bool {
 			switch opts.Order {
 			case "ascending":
-				return slice[i].Size < slice[j].Size
+				return *slice[i].Size < *slice[j].Size
 			case "descending":
-				return slice[i].Size > slice[j].Size
+				return *slice[i].Size > *slice[j].Size
 			default:
-				return slice[i].Size < slice[j].Size
+				return *slice[i].Size < *slice[j].Size
 			}
 		})
 	}

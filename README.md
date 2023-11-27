@@ -88,7 +88,7 @@ Every subcommand has its own usage examples, please refer to `s3-manager [comman
 
 ## Development
 This project requires below tools while developing:
-- [Golang 1.20](https://golang.org/doc/go1.20)
+- [Golang 1.21](https://golang.org/doc/go1.21)
 - [pre-commit](https://pre-commit.com/)
 - [golangci-lint](https://golangci-lint.run/usage/install/) - required by [pre-commit](https://pre-commit.com/)
 - [gocyclo](https://github.com/fzipp/gocyclo) - required by [pre-commit](https://pre-commit.com/)

@@ -8,41 +8,30 @@ import (
 	"strings"
 	"sync"
 
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
-
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
-
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
-
-	internalutil "github.com/bilalcaliskan/s3-manager/internal/utils"
-	"github.com/pkg/errors"
-
-	options6 "github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
-
-	options5 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
-
-	"github.com/bilalcaliskan/s3-manager/cmd/versioning/set/utils"
-
-	options3 "github.com/bilalcaliskan/s3-manager/cmd/tags/options"
-
-	options2 "github.com/bilalcaliskan/s3-manager/cmd/search/options"
-
-	options4 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-
-	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
+	bucketpolicyoptions "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
+	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
+	searchoptions "github.com/bilalcaliskan/s3-manager/cmd/search/options"
+	tagoptions "github.com/bilalcaliskan/s3-manager/cmd/tags/options"
+	taoptions "github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
+	versioningoptions "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
+	versioningutils "github.com/bilalcaliskan/s3-manager/cmd/versioning/utils"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/constants"
+	"github.com/bilalcaliskan/s3-manager/internal/prompt"
+	"github.com/bilalcaliskan/s3-manager/internal/utils"
 )
 
 func CreateClient(opts *options.RootOptions) (*s3.Client, error) {
 	appCreds := aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(opts.AccessKey, opts.SecretKey, ""))
-	config, err := config.LoadDefaultConfig(context.Background(),
+	cfg, err := config.LoadDefaultConfig(context.Background(),
 		config.WithRegion(opts.Region),
 		config.WithCredentialsProvider(appCreds),
 	)
@@ -51,14 +40,14 @@ func CreateClient(opts *options.RootOptions) (*s3.Client, error) {
 		return nil, err
 	}
 
-	return s3.NewFromConfig(config), nil
+	return s3.NewFromConfig(cfg), nil
 }
 
 // GetBucketTags retrieves all tags attached to a specific S3 bucket.
 //
 // It accepts an S3API interface and pointer of TagOptions as arguments, and returns
 // a GetBucketTaggingOutput, which contains all the bucket's tags, and any error encountered.
-func GetBucketTags(svc internalawstypes.S3ClientAPI, opts *options3.TagOptions) (res *s3.GetBucketTaggingOutput, err error) {
+func GetBucketTags(svc internalawstypes.S3ClientAPI, opts *tagoptions.TagOptions) (res *s3.GetBucketTaggingOutput, err error) {
 	return svc.GetBucketTagging(context.Background(), &s3.GetBucketTaggingInput{
 		Bucket: aws.String(opts.BucketName),
 	})
@@ -69,7 +58,7 @@ func GetBucketTags(svc internalawstypes.S3ClientAPI, opts *options3.TagOptions) 
 // It accepts an S3API interface and TagOptions as arguments.
 // For each tag in the provided TagOptions, a new tag is created and added to a slice of tags.
 // It then attaches these tags to the bucket and returns a PutBucketTaggingOutput and any error encountered.
-func SetBucketTags(svc internalawstypes.S3ClientAPI, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
+func SetBucketTags(svc internalawstypes.S3ClientAPI, opts *tagoptions.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
 	if opts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return nil
@@ -107,7 +96,7 @@ func SetBucketTags(svc internalawstypes.S3ClientAPI, opts *options3.TagOptions, 
 //
 // It accepts an S3API interface and TagOptions as arguments, and returns
 // a DeleteBucketTaggingOutput and any error encountered.
-func DeleteAllBucketTags(svc internalawstypes.S3ClientAPI, opts *options3.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) (out *s3.DeleteBucketTaggingOutput, err error) {
+func DeleteAllBucketTags(svc internalawstypes.S3ClientAPI, opts *tagoptions.TagOptions, runner prompt.PromptRunner, logger zerolog.Logger) (out *s3.DeleteBucketTaggingOutput, err error) {
 	if opts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return out, nil
@@ -128,7 +117,7 @@ func DeleteAllBucketTags(svc internalawstypes.S3ClientAPI, opts *options3.TagOpt
 //
 // It accepts an S3API interface and TransferAccelerationOptions as arguments,
 // and returns a GetBucketAccelerateConfigurationOutput and any error encountered.
-func GetTransferAcceleration(svc internalawstypes.S3ClientAPI, opts *options6.TransferAccelerationOptions) (res *s3.GetBucketAccelerateConfigurationOutput, err error) {
+func GetTransferAcceleration(svc internalawstypes.S3ClientAPI, opts *taoptions.TransferAccelerationOptions) (res *s3.GetBucketAccelerateConfigurationOutput, err error) {
 	return svc.GetBucketAccelerateConfiguration(context.Background(), &s3.GetBucketAccelerateConfigurationInput{
 		Bucket: aws.String(opts.BucketName),
 	})
@@ -140,7 +129,7 @@ func GetTransferAcceleration(svc internalawstypes.S3ClientAPI, opts *options6.Tr
 // If the provided 'DryRun' or 'AutoApprove' options are set, the function will return early.
 // If not, it will set the bucket's transfer acceleration status based on the provided desired state.
 // It logs any errors encountered and returns them.
-func SetTransferAcceleration(svc internalawstypes.S3ClientAPI, opts *options6.TransferAccelerationOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
+func SetTransferAcceleration(svc internalawstypes.S3ClientAPI, opts *taoptions.TransferAccelerationOptions, runner prompt.PromptRunner, logger zerolog.Logger) error {
 	if opts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return nil
@@ -200,7 +189,7 @@ func SetTransferAcceleration(svc internalawstypes.S3ClientAPI, opts *options6.Tr
 //
 // It accepts an S3API interface and BucketPolicyOptions as arguments,
 // and returns a GetBucketPolicyOutput and any error encountered.
-func GetBucketPolicy(svc internalawstypes.S3ClientAPI, opts *options5.BucketPolicyOptions) (res *s3.GetBucketPolicyOutput, err error) {
+func GetBucketPolicy(svc internalawstypes.S3ClientAPI, opts *bucketpolicyoptions.BucketPolicyOptions) (res *s3.GetBucketPolicyOutput, err error) {
 	return svc.GetBucketPolicy(context.Background(), &s3.GetBucketPolicyInput{
 		Bucket: aws.String(opts.BucketName),
 	})
@@ -212,20 +201,20 @@ func GetBucketPolicy(svc internalawstypes.S3ClientAPI, opts *options5.BucketPoli
 //
 // It accepts an S3API interface and BucketPolicyOptions as arguments,
 // and returns the beautified policy as a string and any error encountered.
-func GetBucketPolicyString(svc internalawstypes.S3ClientAPI, opts *options5.BucketPolicyOptions) (out string, err error) {
+func GetBucketPolicyString(svc internalawstypes.S3ClientAPI, opts *bucketpolicyoptions.BucketPolicyOptions) (out string, err error) {
 	res, err := GetBucketPolicy(svc, opts)
 	if err != nil {
 		return out, errors.Wrap(err, "an error occurred while getting bucket policy")
 	}
 
-	return internalutil.BeautifyJSON(*res.Policy)
+	return utils.BeautifyJSON(*res.Policy)
 }
 
 // SetBucketPolicy sets the policy of an S3 bucket.
 //
 // It accepts an S3API interface and BucketPolicyOptions as arguments,
 // and returns a PutBucketPolicyOutput and any error encountered.
-func SetBucketPolicy(svc internalawstypes.S3ClientAPI, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *s3.PutBucketPolicyOutput, err error) {
+func SetBucketPolicy(svc internalawstypes.S3ClientAPI, opts *bucketpolicyoptions.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *s3.PutBucketPolicyOutput, err error) {
 	if opts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return res, nil
@@ -250,7 +239,7 @@ func SetBucketPolicy(svc internalawstypes.S3ClientAPI, opts *options5.BucketPoli
 // and execute a DeleteBucketPolicyInput request via the provided S3 service.
 // It returns a DeleteBucketPolicyOutput, which acknowledges the operation,
 // along with any error encountered during the process.
-func DeleteBucketPolicy(svc internalawstypes.S3ClientAPI, opts *options5.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *s3.DeleteBucketPolicyOutput, err error) {
+func DeleteBucketPolicy(svc internalawstypes.S3ClientAPI, opts *bucketpolicyoptions.BucketPolicyOptions, runner prompt.PromptRunner, logger zerolog.Logger) (res *s3.DeleteBucketPolicyOutput, err error) {
 	if opts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return res, nil
@@ -287,7 +276,7 @@ func GetBucketVersioning(svc internalawstypes.S3ClientAPI, opts *options.RootOpt
 // flags, confirm versioning state changes with the user if needed, and execute a
 // PutBucketVersioningInput request to set the bucket's versioning state.
 // The function logs the process, including any errors encountered, and returns these errors.
-func SetBucketVersioning(svc internalawstypes.S3ClientAPI, versioningOpts *options4.VersioningOptions, runner prompt.PromptRunner, logger zerolog.Logger) (err error) {
+func SetBucketVersioning(svc internalawstypes.S3ClientAPI, versioningOpts *versioningoptions.VersioningOptions, runner prompt.PromptRunner, logger zerolog.Logger) (err error) {
 	if versioningOpts.DryRun {
 		logger.Info().Msg(constants.InfDryRun)
 		return nil
@@ -306,20 +295,20 @@ func SetBucketVersioning(svc internalawstypes.S3ClientAPI, versioningOpts *optio
 		return err
 	}
 
-	if err = utils.DecideActualState(versioning, versioningOpts); err != nil {
+	if err = versioningutils.DecideActualState(versioning, versioningOpts); err != nil {
 		logger.Error().Msg(err.Error())
 		return err
 	}
 
-	logger.Info().Msgf(utils.InfCurrentState, versioningOpts.ActualState)
+	logger.Info().Msgf(versioningutils.InfCurrentState, versioningOpts.ActualState)
 	if versioningOpts.ActualState == versioningOpts.DesiredState {
 		logger.Warn().
 			Str("state", versioningOpts.ActualState).
-			Msg(utils.WarnDesiredState)
+			Msg(versioningutils.WarnDesiredState)
 		return nil
 	}
 
-	logger.Info().Msgf(utils.InfSettingVersioning, versioningOpts.DesiredState)
+	logger.Info().Msgf(versioningutils.InfSettingVersioning, versioningOpts.DesiredState)
 
 	var str string
 	switch versioningOpts.DesiredState {
@@ -339,7 +328,7 @@ func SetBucketVersioning(svc internalawstypes.S3ClientAPI, versioningOpts *optio
 		return err
 	}
 
-	logger.Info().Msgf(utils.InfSuccess, versioningOpts.DesiredState)
+	logger.Info().Msgf(versioningutils.InfSuccess, versioningOpts.DesiredState)
 	return nil
 }
 
@@ -353,18 +342,20 @@ func SetBucketVersioning(svc internalawstypes.S3ClientAPI, versioningOpts *optio
 func DeleteFiles(svc internalawstypes.S3ClientAPI, bucketName string, slice []types.Object, dryRun bool, logger zerolog.Logger) error {
 	for _, v := range slice {
 		logger.Debug().Str("key", *v.Key).Time("lastModifiedDate", *v.LastModified).
-			Float64("size", float64(v.Size)/1000000).Msg("will try to delete file")
+			Int64("size", *v.Size).Msg("will try to delete file")
 
-		if !dryRun {
-			if _, err := svc.DeleteObject(context.Background(), &s3.DeleteObjectInput{
-				Bucket: aws.String(bucketName),
-				Key:    aws.String(*v.Key),
-			}); err != nil {
-				return err
-			}
-
-			logger.Info().Str("key", *v.Key).Msg("successfully deleted file")
+		if dryRun {
+			continue
 		}
+
+		if _, err := svc.DeleteObject(context.Background(), &s3.DeleteObjectInput{
+			Bucket: aws.String(bucketName),
+			Key:    aws.String(*v.Key),
+		}); err != nil {
+			return err
+		}
+
+		logger.Info().Str("key", *v.Key).Msg("successfully deleted file")
 	}
 
 	return nil
@@ -401,7 +392,7 @@ func GetDesiredObjects(svc internalawstypes.S3ClientAPI, bucketName, regex strin
 // the file name pattern, then concurrently checks each object's content for the search text.
 // The function returns a list of object keys that contain the search text and a list of errors
 // encountered during the search process.
-func SearchString(svc internalawstypes.S3ClientAPI, opts *options2.SearchOptions) (matchedFiles []string, errs []error) {
+func SearchString(svc internalawstypes.S3ClientAPI, opts *searchoptions.SearchOptions) (matchedFiles []string, errs []error) {
 	var wg sync.WaitGroup
 	mu := &sync.Mutex{}
 
@@ -420,6 +411,12 @@ func SearchString(svc internalawstypes.S3ClientAPI, opts *options2.SearchOptions
 				Bucket: aws.String(opts.BucketName),
 				Key:    obj.Key,
 			})
+
+			defer func() {
+				if err := getResult.Body.Close(); err != nil {
+					errs = append(errs, errors.Wrap(err, "an error occurred while closing response body"))
+				}
+			}()
 
 			if err != nil {
 				mu.Lock()
@@ -441,12 +438,6 @@ func SearchString(svc internalawstypes.S3ClientAPI, opts *options2.SearchOptions
 				matchedFiles = append(matchedFiles, *obj.Key)
 				mu.Unlock()
 			}
-
-			defer func() {
-				if err := getResult.Body.Close(); err != nil {
-					panic(err)
-				}
-			}()
 		}(obj, &wg)
 	}
 

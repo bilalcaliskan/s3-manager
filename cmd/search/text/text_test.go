@@ -76,7 +76,7 @@ func TestExecuteTextCmd(t *testing.T) {
 				return &s3.GetObjectOutput{
 					AcceptRanges:  aws.String("bytes"),
 					Body:          body,
-					ContentLength: 1000,
+					ContentLength: aws.Int64(1000),
 					ContentType:   aws.String("text/plain"),
 					ETag:          aws.String("d73a503d212d9279e6b2ed8ac6bb81f3"),
 				}, nil
