@@ -41,7 +41,7 @@ s3-manager bucketpolicy add my_custom_policy.json
 			bucketPolicyOpts.RootOptions = rootOpts
 
 			if err := utils.CheckArgs(args, 1); err != nil {
-				logger.Error().Msg(err.Error())
+				logger.Error().Err(err).Msg("an error occurred while checking arguments")
 				return err
 			}
 
@@ -50,13 +50,13 @@ s3-manager bucketpolicy add my_custom_policy.json
 			logger.Info().Msg("trying to read target policy file")
 			file, err := os.Open(args[0])
 			if err != nil {
-				logger.Error().Msg(err.Error())
+				logger.Error().Err(err).Msg("an error occurred while opening target policy file")
 				return err
 			}
 
 			defer func() {
 				if err := file.Close(); err != nil {
-					panic(err)
+					logger.Warn().Err(err).Msg("an error occurred while closing target policy file")
 				}
 			}()
 
@@ -75,9 +75,7 @@ s3-manager bucketpolicy add my_custom_policy.json
 			logger.Info().Msg("trying to add bucket policy")
 			_, err = aws.SetBucketPolicy(svc, bucketPolicyOpts, confirmRunner, logger)
 			if err != nil {
-				logger.Error().
-					Str("error", err.Error()).
-					Msg("an error occurred while setting bucket policy")
+				logger.Error().Err(err).Msg("an error occurred while setting bucket policy")
 				return err
 			}
 

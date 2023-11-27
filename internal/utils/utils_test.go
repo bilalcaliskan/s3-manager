@@ -31,8 +31,8 @@ var mockObjects = []types.Object{{
 		DisplayName: aws.String("developer1"),
 		ID:          aws.String("3becc289963dfc26fe632e4d2fc78d2c7875fc4f030813629e28db2c1fbba4b7"),
 	},
-	Size:         2129,
-	StorageClass: types.ObjectStorageClass("STANDART"),
+	Size:         aws.Int64(2129),
+	StorageClass: types.ObjectStorageClassStandard,
 }, {
 	ChecksumAlgorithm: nil,
 	ETag:              aws.String("233b4ce689c7086b7958eb31d8f8b811"),
@@ -42,8 +42,8 @@ var mockObjects = []types.Object{{
 		DisplayName: aws.String("developer1"),
 		ID:          aws.String("3becc289963dfc26fe632e4d2fc78d2c7875fc4f030813629e28db2c1fbba4b7"),
 	},
-	Size:         2129,
-	StorageClass: types.ObjectStorageClass("STANDART"),
+	Size:         aws.Int64(2129),
+	StorageClass: types.ObjectStorageClassStandard,
 }}
 
 func TestContains(t *testing.T) {
@@ -92,13 +92,6 @@ func TestPrepareConstants(t *testing.T) {
 
 	client := s3.NewFromConfig(cfg)
 	assert.NotNil(t, client)
-
-	//sess, err := session.NewSession(&aws.Config{
-	//	Region:      aws.String(rootOpts.Region),
-	//	Credentials: credentials.NewStaticCredentials(rootOpts.AccessKey, rootOpts.SecretKey, ""),
-	//})
-	//assert.NotNil(t, sess)
-	//assert.Nil(t, err)
 
 	cases := []struct {
 		caseName string
