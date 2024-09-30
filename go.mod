@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.31.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.36
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.34
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.63.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.63.3
 	github.com/dimiro1/banner v1.1.0
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pkg/errors v0.9.1
