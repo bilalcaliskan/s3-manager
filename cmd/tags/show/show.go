@@ -2,12 +2,9 @@ package show
 
 import (
 	"fmt"
-
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
-
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
-
-	"github.com/bilalcaliskan/s3-manager/internal/utils"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/aws"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/pkg/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/utils"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/tags/options"
 

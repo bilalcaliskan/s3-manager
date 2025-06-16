@@ -3,16 +3,13 @@ package add
 import (
 	"errors"
 	"fmt"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/aws"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/pkg/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/prompt"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/utils"
 	"strings"
 
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
-
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
-	"github.com/bilalcaliskan/s3-manager/internal/utils"
-
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
-
 	"github.com/bilalcaliskan/s3-manager/cmd/tags/options"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"

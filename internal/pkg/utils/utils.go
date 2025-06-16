@@ -3,14 +3,12 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/pkg/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/logging"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/prompt"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
-
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )

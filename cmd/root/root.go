@@ -2,10 +2,12 @@ package root
 
 import (
 	"context"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/aws"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/logging"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/prompt"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/version"
 	"os"
 	"strings"
-
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/transferacceleration"
 
@@ -14,16 +16,14 @@ import (
 	"github.com/bilalcaliskan/s3-manager/cmd/tags"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/versioning"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
 	"github.com/dimiro1/banner"
 	"github.com/rs/zerolog"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/clean"
+	"github.com/bilalcaliskan/s3-manager/cmd/list"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/bilalcaliskan/s3-manager/cmd/search"
 
-	"github.com/bilalcaliskan/s3-manager/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -41,6 +41,7 @@ func init() {
 	rootCmd.AddCommand(tags.TagsCmd)
 	rootCmd.AddCommand(bucketpolicy.BucketPolicyCmd)
 	rootCmd.AddCommand(transferacceleration.TransferAccelerationCmd)
+	rootCmd.AddCommand(list.ListCmd)
 }
 
 var (

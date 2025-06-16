@@ -2,17 +2,14 @@ package cleaner
 
 import (
 	"fmt"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/aws"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/constants"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/prompt"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/utils"
 	"strings"
 
-	"github.com/bilalcaliskan/s3-manager/internal/aws/types"
-
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
-
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
-
 	start "github.com/bilalcaliskan/s3-manager/cmd/clean/options"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
-	"github.com/bilalcaliskan/s3-manager/internal/utils"
 	"github.com/rs/zerolog"
 )
 

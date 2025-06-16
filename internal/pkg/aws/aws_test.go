@@ -4,21 +4,19 @@ package aws
 
 import (
 	"context"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/pkg/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/constants"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/logging"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/prompt"
 	"io"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
-
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
-
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 
 	"github.com/pkg/errors"
 
@@ -29,8 +27,6 @@ import (
 	options4 "github.com/bilalcaliskan/s3-manager/cmd/tags/options"
 
 	options3 "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
-
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"

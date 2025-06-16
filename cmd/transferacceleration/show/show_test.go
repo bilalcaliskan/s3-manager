@@ -4,14 +4,12 @@ package show
 
 import (
 	"context"
+	internalaws "github.com/bilalcaliskan/s3-manager/internal/pkg/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/constants"
 	"testing"
-
-	internalaws "github.com/bilalcaliskan/s3-manager/internal/aws/types"
 
 	s3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
-
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )

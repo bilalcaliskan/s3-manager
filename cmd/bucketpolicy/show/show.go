@@ -2,16 +2,13 @@ package show
 
 import (
 	"fmt"
-
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/aws"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/pkg/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/utils"
 
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 
-	"github.com/bilalcaliskan/s3-manager/internal/utils"
-
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/bucketpolicy/options"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
-
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )

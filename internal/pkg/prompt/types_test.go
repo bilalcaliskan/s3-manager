@@ -3,9 +3,8 @@
 package prompt
 
 import (
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/constants"
 	"testing"
-
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
 
 	"github.com/stretchr/testify/assert"
 )

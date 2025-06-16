@@ -5,6 +5,8 @@ package utils
 import (
 	"context"
 	"errors"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/logging"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/prompt"
 	"testing"
 	"time"
 
@@ -15,8 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
-	"github.com/bilalcaliskan/s3-manager/internal/logging"
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
 	"github.com/spf13/cobra"
 
 	"github.com/stretchr/testify/assert"

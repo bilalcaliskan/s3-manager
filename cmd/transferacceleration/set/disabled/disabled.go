@@ -3,10 +3,10 @@ package disabled
 import (
 	rootopts "github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	options2 "github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
-	"github.com/bilalcaliskan/s3-manager/internal/aws"
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
-	"github.com/bilalcaliskan/s3-manager/internal/utils"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/aws"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/pkg/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/prompt"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/utils"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )

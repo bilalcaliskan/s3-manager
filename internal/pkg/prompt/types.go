@@ -2,9 +2,9 @@ package prompt
 
 import (
 	"errors"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/constants"
 	"strings"
 
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
 	"github.com/manifoldco/promptui"
 )
 

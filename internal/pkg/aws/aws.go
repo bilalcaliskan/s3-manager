@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/pkg/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/constants"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/prompt"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/utils"
 	"regexp"
 	"strings"
 	"sync"
@@ -23,10 +27,6 @@ import (
 	taoptions "github.com/bilalcaliskan/s3-manager/cmd/transferacceleration/options"
 	versioningoptions "github.com/bilalcaliskan/s3-manager/cmd/versioning/options"
 	versioningutils "github.com/bilalcaliskan/s3-manager/cmd/versioning/utils"
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
-	"github.com/bilalcaliskan/s3-manager/internal/utils"
 )
 
 func createConfig(opts *options.RootOptions) (cfg aws.Config, err error) {
@@ -386,6 +386,32 @@ func GetDesiredObjects(svc internalawstypes.S3ClientAPI, bucketName, regex strin
 	}
 
 	return objects, err
+}
+
+func ListAllObjects(svc internalawstypes.S3ClientAPI, bucketName string) ([]types.Object, error) {
+	var (
+		objects      []types.Object
+		continuation *string
+	)
+
+	for {
+		input := &s3.ListObjectsV2Input{
+			Bucket:            aws.String(bucketName),
+			ContinuationToken: continuation,
+		}
+		result, err := svc.ListObjectsV2(context.Background(), input)
+		if err != nil {
+			return objects, err
+		}
+		objects = append(objects, result.Contents...)
+
+		if !*result.IsTruncated {
+			break
+		}
+
+		continuation = result.NextContinuationToken
+	}
+	return objects, nil
 }
 
 // SearchString scans all objects in a specified S3 bucket for a given text string.

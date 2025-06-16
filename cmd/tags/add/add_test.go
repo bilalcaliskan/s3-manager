@@ -4,17 +4,14 @@ package add
 
 import (
 	"context"
+	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/pkg/aws/types"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/constants"
+	"github.com/bilalcaliskan/s3-manager/internal/pkg/prompt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	internalawstypes "github.com/bilalcaliskan/s3-manager/internal/aws/types"
-
-	"github.com/bilalcaliskan/s3-manager/internal/prompt"
-
-	"github.com/bilalcaliskan/s3-manager/internal/constants"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/bilalcaliskan/s3-manager/cmd/root/options"
 	"github.com/stretchr/testify/assert"
 )
