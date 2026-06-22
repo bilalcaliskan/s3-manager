@@ -9,7 +9,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install Go
         uses: actions/setup-go@v5
         with:
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install Go
         uses: actions/setup-go@v5
         with:
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
@@ -58,7 +58,7 @@ jobs:
     name: test (${{ matrix.name }}) on ${{ matrix.os }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install Go
         uses: actions/setup-go@v5
         with:
@@ -70,7 +70,7 @@ jobs:
   sonarcloud:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Install Go
@@ -102,7 +102,7 @@ jobs:
     name: build (${{ matrix.os }})
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install Go
         uses: actions/setup-go@v5
         with:
@@ -124,7 +124,7 @@ jobs:
       - builds
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: '0'
       - name: Bump version and push tag
@@ -140,7 +140,7 @@ jobs:
       - tag
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set outputs
